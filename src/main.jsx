@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import SplashScreen from "./pages/SplashScreen.jsx";
 import AuthScreen from "./pages/AuthScreen.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
-import { getSavedStudentSession, refreshStudentSession } from "./lib/auth.js";
 
 const sections = [
   ["home","⌂","الرئيسية"],["courses","▣","الكورسات"],["lessons","▶","المحاضرات"],["files","▤","الملفات والمذكرات"],["homework","✎","الواجبات"],["exams","▣","الامتحانات"],["results","▥","النتائج والمتابعة"],["schedule","◷","جدول الحصص"],["messages","✉","خدمة العملاء"],["profile","◉","ملفي الشخصي"]
@@ -18,10 +17,8 @@ const cards = [
   {icon:"◷",title:"المتابعة",desc:"الحضور والإنجاز ومستوى التقدم",count:"تقريرك الدراسي"}
 ];
 function App(){
- const [page,setPage]=useState(()=>getSavedStudentSession()?"restoring":"splash"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false);
- useEffect(()=>{let active=true;if(!getSavedStudentSession())return;refreshStudentSession().then(session=>{if(active)setPage(session?"home":"splash")}).catch(()=>{if(active)setPage("splash")});return()=>{active=false}},[]);
- const completeSplash=useCallback(()=>setPage("login"),[]);
- if(page==="restoring") return <div className="auth-entry-reveal"><div className="session-restoring"><span className="session-restoring-mark">∑</span><b>جارٍ تجهيز حسابك</b><small>لحظة واحدة ونفتح لك المنصة</small></div></div>;
+ const [page,setPage]=useState("splash"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false);
+ const completeSplash=()=>setPage("login");
  if(page==="splash") return <SplashScreen onComplete={completeSplash}/>;
  if(page==="login"||page==="signup") return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={setPage} onSuccess={()=>setPage("home")}/></div>;
  const title=sections.find(x=>x[0]===page)?.[2] || (page==="admin"?"لوحة المالك":page==="teacher"?"لوحة المستر":"المنصة");
