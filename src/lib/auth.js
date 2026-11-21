@@ -78,6 +78,7 @@ export async function refreshStudentSession() {
     refresh_token: data.refresh_token,
     expires_at: data.expires_at || Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
     token_type: data.token_type || "bearer",
+    user: data.user || session.user || null,
   };
   saveStudentSession(nextSession);
   return nextSession;
