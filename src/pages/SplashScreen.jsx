@@ -1,11 +1,25 @@
 import React from "react";
+import "./SplashScreen.css";
 
 const teacherPhoto = "https://raw.githubusercontent.com/elgorfyousef95-droid/emad-math-platform/main/IMG-20261121-WA0004.jpg";
+
+const floatingLines = [
+  { className: "splash-float splash-float-top", eyebrow: "تعلّم بثقة", text: "كل فكرة ليها طريقة أبسط" },
+  { className: "splash-float splash-float-right", eyebrow: "خطوة بخطوة", text: "من الفهم… للحل… للتفوّق" },
+  { className: "splash-float splash-float-left", eyebrow: "تدريب ذكي", text: "ثبّت المعلومة بالممارسة" },
+  { className: "splash-float splash-float-midright", eyebrow: "متابعة مستمرة", text: "تقدّمك يستحق الاهتمام" },
+  { className: "splash-float splash-float-midleft", eyebrow: "رياضيات بشكل مختلف", text: "افهم الفكرة قبل ما تحفظ القانون" },
+  { className: "splash-float splash-float-bottomline", eyebrow: "ابدأ رحلتك", text: "مكان واحد… لكل طموحك" }
+];
 
 export default function SplashScreen() {
   return (
     <main className="splash-screen" aria-label="منصة مستر عماد السنافيري">
-      <div className="splash-photo-backdrop" aria-hidden="true" />
+      <div className="splash-ambient" aria-hidden="true" />
+      <div className="splash-grid-glow" aria-hidden="true" />
+      <div className="splash-orbit-ring splash-orbit-ring-one" aria-hidden="true" />
+      <div className="splash-orbit-ring splash-orbit-ring-two" aria-hidden="true" />
+      <div className="splash-photo-halo" aria-hidden="true" />
       <img
         className="splash-background-image"
         src={teacherPhoto}
@@ -14,18 +28,34 @@ export default function SplashScreen() {
         decoding="async"
         onError={(event) => { event.currentTarget.style.display = "none"; }}
       />
-      <div className="splash-image-vignette" aria-hidden="true" />
-      <section className="splash-welcome-panel">
-        <span className="splash-overline splash-reveal splash-reveal-one">منصة مستر عماد السنافيري</span>
-        <h1 className="splash-reveal splash-reveal-two">افهم الرياضيات… <em>واصنع تفوقك</em></h1>
-        <p className="splash-reveal splash-reveal-three">شرح يبسّط الفكرة، وتدريب يثبّت المعلومة، ومتابعة تقرّبك من هدفك.</p>
-        <div className="splash-loading-row splash-reveal splash-reveal-four">
-          <span>نحضّر لك تجربة تعلّم متكاملة</span>
-          <span className="splash-orbit-loader" aria-hidden="true"><i /></span>
+
+      <div className="splash-brand-corner">
+        <span className="splash-brand-symbol">∑</span>
+        <span><b>مستر عماد السنافيري</b><small>منصة الرياضيات التعليمية</small></span>
+      </div>
+
+      <div className="splash-main-copy">
+        <span className="splash-kicker">تجربة تعليمية مختلفة</span>
+        <h1>الرياضيات <em>أوضح مما تتخيل</em></h1>
+        <p>افهم الفكرة، أتقن الحل، وخلي كل خطوة تقرّبك من هدفك.</p>
+      </div>
+
+      {floatingLines.map((line, index) => (
+        <div className={line.className} key={line.className} style={{ "--float-delay": `${0.35 + index * 0.42}s` }}>
+          <span>{line.eyebrow}</span>
+          <b>{line.text}</b>
         </div>
-        <div className="splash-progress" role="progressbar" aria-label="جارٍ تجهيز المنصة" aria-valuemin="0" aria-valuemax="100"><span /></div>
-      </section>
-      <div className="splash-bottom-mark" aria-hidden="true">رحلتك نحو التفوق تبدأ الآن</div>
+      ))}
+
+      <div className="splash-bottom-loader" aria-label="جارٍ تجهيز المنصة">
+        <div className="splash-loader-ring"><i /><b /></div>
+        <span>لحظات ونبدأ معاك</span>
+        <small>جاري تجهيز تجربتك التعليمية</small>
+      </div>
+
+      <div className="splash-progress" role="progressbar" aria-label="جارٍ تجهيز المنصة" aria-valuemin="0" aria-valuemax="100">
+        <span />
+      </div>
     </main>
   );
 }
