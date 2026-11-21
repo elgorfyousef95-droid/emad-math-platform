@@ -1,10 +1,21 @@
 import React from "react";
 
+const teacherPhoto = "https://raw.githubusercontent.com/elgorfyousef95-droid/emad-math-platform/main/IMG-20261121-WA0004.jpg";
+
 export default function SplashScreen() {
   return (
     <main className="splash-screen" aria-label="منصة مستر عماد السنافيري">
       <div className="splash-photo-backdrop" aria-hidden="true" />
-      <img className="splash-background-image" src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري" fetchPriority="high" />
+      <img
+        className="splash-background-image"
+        src={teacherPhoto}
+        alt=""
+        fetchPriority="high"
+        decoding="async"
+        onError={(event) => {
+          event.currentTarget.style.display = "none";
+        }}
+      />
       <div className="splash-image-vignette" aria-hidden="true" />
       <section className="splash-welcome-panel">
         <span className="splash-overline">منصة مستر عماد السنافيري</span>
