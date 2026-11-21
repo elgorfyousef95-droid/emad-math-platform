@@ -104,10 +104,16 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     setStep(0);
     setNotice("");
     setCreatedAccount(null);
+    setPassword("");
+    setConfirmPassword("");
+    setStudentId("");
+    setAvatarFile(null);
+    setForm({ fullName:"", phone:"", grade:"", group:"", parentName:"", parentPhone:"" });
   }, [mode]);
 
   const focusIntoView = event => {
-    window.setTimeout(() => event.currentTarget?.scrollIntoView?.({ behavior: "smooth", block: "center" }), 220);
+    const target = event.currentTarget;
+    window.setTimeout(() => target?.scrollIntoView?.({ behavior: "smooth", block: "center" }), 220);
   };
 
   const nextStep = () => {
