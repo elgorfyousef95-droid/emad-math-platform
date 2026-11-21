@@ -56,7 +56,7 @@ export default function SplashScreen({ onComplete }) {
         <p>افهم الفكرة، أتقن الحل، وخلي كل خطوة تقرّبك من هدفك.</p>
       </div>
 
-      <div className="splash-king-math" aria-label="كينج الرياضيات"><span className="king-orbit">✦</span><b>كينج الرياضيات</b><small>THE KING OF MATHEMATICS</small></div>
+      <div className="splash-king-math" aria-label="كينج الرياضيات"><span className="king-orbit" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2 2.4 7.1L22 12l-7.6 2.9L12 22l-2.4-7.1L2 12l7.6-2.9L12 2Z"/></svg></span><b>كينج الرياضيات</b><small>THE KING OF MATHEMATICS</small></div>
 
       {floatingLines.map((line, index) => (
         <div className={line.className} key={line.className} style={{ "--float-delay": `${0.35 + index * 0.42}s` }}>
