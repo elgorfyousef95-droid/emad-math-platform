@@ -73,7 +73,8 @@ function App(){
    {page==="home"?<HomePage profile={profile} subscription={activeSubscription?subscription:null} go={go} grade={grade} unread={unread}/>:null}
    {page==="subscriptions"?<SubscriptionsPage subscription={subscription} onActivated={async()=>{await loadWorkspace();notify({type:"success",title:"تم تفعيل الاشتراك",message:"تم تفعيل اشتراكك الشهري بنجاح."});}}/>:null}
    {page==="profile"?<ProfilePage profile={profile} loading={loading}/>:null}
-   {page==="settings"?<SettingsPage profile={profile}/>:null}\n   {page==="admin"&&profile?.role==="admin"?<AdminPage/>:null}
+   {page==="settings"?<SettingsPage profile={profile}/>:null}
+   {page==="admin"&&profile?.role==="admin"?<AdminPage/>:null}
    {page==="notifications"?<NotificationsPage notifications={notifications} onRead={async n=>{try{await markStudentNotificationRead(n.id);setNotifications(old=>old.map(x=>x.id===n.id?{...x,read_at:new Date().toISOString()}:x));}catch{notify({type:"error",title:"تعذر تحديث الإشعار",message:"حاول مرة أخرى."});}}} go={go}/>:null}
    {isLocked?<LockedPage go={go} grade={grade}/>:null}
    {!isLocked&&["courses","lessons","exams"].includes(page)?<LearningPage page={page} grade={grade}/>:null}
