@@ -1,6 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
+import SplashScreen from "./pages/SplashScreen.jsx";
+import AuthScreen from "./pages/AuthScreen.jsx";
 
 const sections = [
   ["home","⌂","الرئيسية"],["courses","▣","الكورسات"],["lessons","▶","المحاضرات"],["files","▤","الملفات والمذكرات"],["homework","✎","الواجبات"],["exams","▣","الامتحانات"],["results","▥","النتائج والمتابعة"],["schedule","◷","جدول الحصص"],["messages","✉","خدمة العملاء"],["profile","◉","ملفي الشخصي"]
@@ -14,7 +16,14 @@ const cards = [
   {icon:"◷",title:"المتابعة",desc:"الحضور والإنجاز ومستوى التقدم",count:"تقريرك الدراسي"}
 ];
 function App(){
- const [page,setPage]=useState("home"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false),[auth,setAuth]=useState(""),[notice,setNotice]=useState("");
+ const [page,setPage]=useState("splash"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false),[auth,setAuth]=useState(""),[notice,setNotice]=useState("");
+ useEffect(()=>{
+  if(page!=="splash") return;
+  const timer=window.setTimeout(()=>setPage("login"),5000);
+  return ()=>window.clearTimeout(timer);
+ },[page]);
+ if(page==="splash") return <SplashScreen/>;
+ if(page==="login"||page==="signup") return <AuthScreen mode={page} onModeChange={setPage}/>;
  const title=sections.find(x=>x[0]===page)?.[2] || (page==="admin"?"لوحة المالك":page==="teacher"?"لوحة المستر":"المنصة");
  const go=(p)=>{setPage(p);setMenu(false);setAuth("");};
  const body=()=>{
