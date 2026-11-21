@@ -201,7 +201,6 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
         const cropped = new File([blob], "student-avatar.jpg", { type: "image/jpeg", lastModified: Date.now() });
         setAvatarFile(cropped);
         if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-        setAvatarPreview(URL.createObjectURL(cropped));
         cancelAvatarCrop();
       }, "image/jpeg", 0.92);
     };
