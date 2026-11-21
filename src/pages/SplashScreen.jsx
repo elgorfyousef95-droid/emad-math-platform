@@ -15,8 +15,12 @@ const floatingLines = [
 export default function SplashScreen({ onComplete }) {
   const [isLeaving, setIsLeaving] = useState(false);
   useEffect(() => {
-    const exitStart = window.setTimeout(() => setIsLeaving(true), 9250);
-    return () => { window.clearTimeout(exitStart); };
+    const exitStart = window.setTimeout(() => setIsLeaving(true), 9000);
+    const finish = window.setTimeout(() => onComplete?.(), 10000);
+    return () => {
+      window.clearTimeout(exitStart);
+      window.clearTimeout(finish);
+    };
   }, [onComplete]);
   return (
     <main className={isLeaving ? "splash-screen splash-is-leaving" : "splash-screen"} aria-label="منصة مستر عماد السنافيري">
@@ -59,8 +63,6 @@ export default function SplashScreen({ onComplete }) {
         <span>لحظات ونبدأ معاك</span>
         <small>جاري تجهيز تجربتك التعليمية</small>
       </div>
-
-      <button type="button" className="splash-skip" onClick={() => onComplete?.()}>الدخول الآن <span aria-hidden="true">←</span></button>
 
       <div className="splash-progress" role="progressbar" aria-label="جارٍ تجهيز المنصة" aria-valuemin="0" aria-valuemax="100">
         <span />
