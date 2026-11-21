@@ -20,12 +20,12 @@ const cards = [
 function App(){
  const [page,setPage]=useState(()=>getSavedStudentSession()?"restoring":"splash"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false);
  useEffect(()=>{let active=true;if(!getSavedStudentSession())return;refreshStudentSession().then(session=>{if(active)setPage(session?"home":"splash")}).catch(()=>{if(active)setPage("splash")});return()=>{active=false}},[]);
- if(page==="restoring") return <div className="auth-entry-reveal"><div className="session-restoring"><span className="session-restoring-mark">∑</span><b>جارٍ تجهيز حسابك</b><small>لحظة واحدة ونفتح لك المنصة</small></div></div>;
  const completeSplash=useCallback(()=>setPage("login"),[]);
+ if(page==="restoring") return <div className="auth-entry-reveal"><div className="session-restoring"><span className="session-restoring-mark">∑</span><b>جارٍ تجهيز حسابك</b><small>لحظة واحدة ونفتح لك المنصة</small></div></div>;
  if(page==="splash") return <SplashScreen onComplete={completeSplash}/>;
  if(page==="login"||page==="signup") return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={setPage} onSuccess={()=>setPage("home")}/></div>;
  const title=sections.find(x=>x[0]===page)?.[2] || (page==="admin"?"لوحة المالك":page==="teacher"?"لوحة المستر":"المنصة");
- const go=(p)=>{setPage(p);setMenu(false);setAuth("");};
+ const go=(p)=>{setPage(p);setMenu(false);};
  const body=()=>{
   if(page==="login"||page==="signup") return <AuthPage mode={page} onSwitch={setPage}/>;
   if(page==="home") return <><section className="welcome"><div><span className="kicker">منصتك للتفوق تبدأ من هنا</span><h1>أهلاً بيك في منصة<br/><em>مستر عماد السنافيري</em></h1><p>كل اللي تحتاجه في الرياضيات، في مكان واحد. اتعلم، اتدرّب، اختبر نفسك، وتابع تقدمك خطوة بخطوة.</p><div className="hero-actions"><button className="gold" onClick={()=>go("courses")}>استكشف الكورسات ←</button><button className="outline" onClick={()=>go("exams")}>ابدأ امتحان تجريبي</button></div></div><div className="hero-graphic"><div className="math-circle">∑</div><span className="formula f1">f(x) = x² + 3x</span><span className="formula f2">∫ x dx</span><span className="formula f3">π · r²</span></div></section><section className="stats"><Stat n="01" t="تعلم منظم" d="كل محتواك في مكان واحد"/><Stat n="02" t="تدريب مستمر" d="واجبات وامتحانات متنوعة"/><Stat n="03" t="متابعة واضحة" d="اعرف مستواك أول بأول"/></section><div className="section-head"><div><span className="kicker">اكتشف المنصة</span><h2>كل أدوات تفوقك قدامك</h2></div><button className="text-btn" onClick={()=>go("courses")}>عرض كل الأقسام ←</button></div><div className="feature-grid">{cards.map((c,i)=><button className="feature-card" key={c.title} onClick={()=>go(["courses","lessons","files","homework","exams","results"][i])}><span className="card-icon">{c.icon}</span><b>{c.title}</b><p>{c.desc}</p><small>{c.count} ↗</small></button>)}</div></>;
