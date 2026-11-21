@@ -147,15 +147,3 @@
 }
 
 
-/* Reliable route handoff: parent timer is the fallback, this control is immediate. */
-.splash-skip{
- position:absolute;z-index:8;left:50%;bottom:max(116px,calc(env(safe-area-inset-bottom) + 105px));
- transform:translateX(-50%);display:inline-flex;align-items:center;gap:10px;
- padding:10px 19px;border:1px solid rgba(232,199,142,.48);border-radius:999px;
- background:rgba(5,14,25,.76);color:#f5dfb8;font:800 11px Cairo,sans-serif;
- box-shadow:0 8px 26px rgba(0,0,0,.24);backdrop-filter:blur(10px);
- cursor:pointer;transition:background .2s ease,transform .2s ease;
-}
-.splash-skip:active{transform:translateX(-50%) scale(.97)}
-.splash-skip span{font-size:15px}
-@media(max-width:700px){.splash-skip{bottom:max(105px,calc(env(safe-area-inset-bottom) + 96px));font-size:10px;padding:9px 16px}}
