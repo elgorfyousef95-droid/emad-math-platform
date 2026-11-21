@@ -1072,3 +1072,67 @@ html,body,#root{min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
   .auth-card{max-height:calc(100dvh - 48px)!important}
   .auth-footer{display:none!important}
 }
+
+
+/* Premium mobile signup typography and touch-friendly photo positioning */
+.auth-card .auth-form-heading h1{font-size:clamp(25px,3vw,30px)!important;line-height:1.45!important}
+.auth-card .auth-form-heading p{font-size:13px!important;line-height:1.9!important}
+.auth-card .auth-kicker{font-size:11px!important;letter-spacing:.1px}
+.auth-card .signup-field>span{font-size:13px!important;line-height:1.6}
+.auth-card .signup-field input,.auth-card .signup-field select,
+.auth-card .auth-input-wrap input{
+  min-height:54px!important;height:54px!important;padding-inline:15px!important;
+  font-size:16px!important;line-height:1.5!important;
+}
+.auth-card .signup-field input::placeholder,.auth-card .auth-input-wrap input::placeholder{font-size:13px!important}
+.auth-card .signup-fields{gap:17px!important;margin-top:20px!important}
+.signup-photo-picker{padding:16px!important;gap:15px!important}
+.signup-photo-copy>b{font-size:14px!important}
+.signup-photo-copy>span{font-size:12px!important;line-height:1.7}
+.signup-photo-copy>small{font-size:11px!important;line-height:1.7}
+.signup-photo-button{min-height:42px!important;padding:10px 15px!important;font-size:12px!important;border-radius:11px!important}
+.signup-progress-head{font-size:14px!important}
+.signup-progress-head small{font-size:11px!important}
+.signup-step-tabs{gap:10px!important;padding-block:15px 7px!important}
+.signup-step-tab{font-size:10px!important;gap:6px!important}
+.signup-step-tab i{width:26px!important;height:26px!important;flex-basis:26px!important;font-size:11px!important}
+.signup-actions{gap:12px!important;margin-top:22px!important}
+.signup-actions .signup-back{height:52px!important;flex-basis:94px!important;font-size:13px!important}
+.signup-actions .auth-submit{min-height:54px!important;font-size:14px!important}
+.avatar-crop-stage{touch-action:none!important;cursor:grab!important;user-select:none!important}
+.avatar-crop-stage:active{cursor:grabbing!important}
+.avatar-crop-stage img{
+  position:absolute!important;left:50%!important;top:50%!important;
+  width:auto;height:auto;max-width:none!important;max-height:none!important;
+  min-width:0!important;min-height:0!important;object-fit:fill!important;
+  transform-origin:center center!important;pointer-events:none!important;user-select:none!important;
+}
+.avatar-crop-hint{display:block;margin-top:11px;color:#aebbd0;font-size:11px;line-height:1.8;text-align:center}
+@media(max-width:600px){
+  .auth-card{padding:23px 18px 22px!important}
+  .auth-card .auth-form-heading h1{font-size:clamp(24px,6.5vw,28px)!important}
+  .auth-card .auth-form-heading p{font-size:13px!important}
+  .auth-card .signup-field>span{font-size:13px!important}
+  .auth-card .signup-fields{gap:16px!important}
+  .signup-photo-picker{padding:13px!important;gap:12px!important}
+  .signup-photo-preview{width:72px!important;height:72px!important;flex-basis:72px!important}
+  .signup-photo-copy>b{font-size:13px!important}
+  .signup-photo-copy>span,.signup-photo-copy>small{font-size:11px!important}
+  .signup-step-tabs{gap:9px!important}
+  .signup-step-tab{font-size:9px!important;gap:5px!important}
+  .signup-step-tab i{width:24px!important;height:24px!important;flex-basis:24px!important}
+  .signup-progress-head{font-size:13px!important}
+  .signup-progress-head small{font-size:10px!important}
+  .signup-actions .signup-back{flex-basis:86px!important}
+  .signup-actions .auth-submit{font-size:13px!important}
+  .avatar-crop-dialog>p{font-size:12px!important}
+  .avatar-crop-hint{font-size:12px!important}
+}
+@media(max-width:370px){
+  .auth-card{padding-inline:14px!important}
+  .signup-photo-picker{gap:9px!important;padding:11px!important}
+  .signup-photo-preview{width:62px!important;height:62px!important;flex-basis:62px!important}
+  .signup-step-tab{font-size:8px!important}
+  .signup-step-tab i{width:22px!important;height:22px!important;flex-basis:22px!important}
+  .signup-actions .signup-back{flex-basis:76px!important}
+}
