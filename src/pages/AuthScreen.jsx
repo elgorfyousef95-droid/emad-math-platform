@@ -64,6 +64,21 @@ async function copyValue(value, label) {
   }
 }
 
+function AuthField({ label, value, onChange, placeholder, type = "text", inputMode, autoComplete }) {
+  return (
+    <label className="signup-field">
+      <span>{label}</span>
+      <input type={type} inputMode={inputMode} autoComplete={autoComplete} value={value} onChange={e => onChange(e.target.value)} onFocus={event => {
+        const card = event.currentTarget.closest(".auth-card");
+        if (card) {
+          const fieldTop = event.currentTarget.getBoundingClientRect().top - card.getBoundingClientRect().top + card.scrollTop;
+          card.scrollTo({ top: Math.max(0, fieldTop - 110), behavior: "smooth" });
+        }
+      }} placeholder={placeholder}/>
+    </label>
+  );
+}
+
 export default function AuthScreen({ mode, onModeChange, onSuccess }) {
   const scrollRef = useRef(null);
   const [studentId, setStudentId] = useState("");
@@ -243,18 +258,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     }
   };
 
-  const AuthField = ({ label, value, onChange, placeholder, type = "text", inputMode, autoComplete }) => (
-    <label className="signup-field">
-      <span>{label}</span>
-      <input type={type} inputMode={inputMode} autoComplete={autoComplete} value={value} onChange={e => onChange(e.target.value)} onFocus={event => {
-        const card = event.currentTarget.closest(".auth-card");
-        if (card) {
-          const fieldTop = event.currentTarget.getBoundingClientRect().top - card.getBoundingClientRect().top + card.scrollTop;
-          card.scrollTo({ top: Math.max(0, fieldTop - 110), behavior: "smooth" });
-        }
-      }} placeholder={placeholder}/>
-    </label>
-  );
+
 
   return (
     <main className={`auth-screen auth-screen-${mode}`}>
