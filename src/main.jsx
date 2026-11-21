@@ -47,6 +47,7 @@ function App(){
  const loadWorkspace=async()=>{setLoading(true);try{const w=await loadStudentWorkspace();setProfile(w.profile);setSubscription(w.subscription);setNotifications(w.notifications);}catch(e){console.error("workspace_load",e);}finally{setLoading(false);}};
  const completeSplash=async()=>{try{const session=await refreshStudentSession();if(session?.access_token){await loadWorkspace();setPage("home");}else setPage("login");}catch{setPage("login");}};
  useEffect(()=>{if(page==="home"&& !profile)loadWorkspace();},[page]);
+ useEffect(()=>{const closeMenus=event=>{const target=event.target;if(!target.closest(".platform-navigation")&&!target.closest(".platform-mobile-menu"))setMobileNav(false);if(!target.closest(".platform-nav-more"))setMoreOpen(false);if(!target.closest(".platform-account-menu"))setAccountOpen(false);};document.addEventListener("pointerdown",closeMenus);return()=>document.removeEventListener("pointerdown",closeMenus);},[]);
  const grade=profile?.grade||"";
  const nav=navByGrade[grade]||navByGrade["الصف الأول الثانوي"];
  const unread=notifications.filter(n=>!n.read_at).length;
@@ -71,7 +72,7 @@ function App(){
    </div>
   </header>
   <div className="platform-subbar"><div><span>مستر عماد</span><Icon name="chevron" size={13}/><b>{pageTitles[page]||"المنصة"}</b></div><span className="platform-grade-label">{grade||"الصف الدراسي غير محدد"}</span></div>
-  <main className="platform-viewport" key={page}>
+  <main className={`platform-viewport page-${page}`} key={page}>
    {page==="home"?<HomePage profile={profile} subscription={activeSubscription?subscription:null} go={go} grade={grade} unread={unread}/>:null}
    {page==="subscriptions"?<SubscriptionsPage subscription={subscription} onActivated={async()=>{await loadWorkspace();notify({type:"success",title:"تم تفعيل الاشتراك",message:"تم تفعيل اشتراكك الشهري بنجاح."});}}/>:null}
    {page==="profile"?<ProfilePage profile={profile} loading={loading}/>:null}
