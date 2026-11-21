@@ -338,7 +338,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
                 </>}
 
                 {step === 1 && <div className="signup-fields">
-                  <label className="signup-field"><span>الصف الدراسي</span><select value={form.grade} onChange={e=>update("grade",e.target.value)} onFocus={focusIntoView}><option value="">اختر الصف الدراسي</option><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label>
+                  <label className="signup-field"><span>الصف الدراسي</span><select value={form.grade} onChange={e=>update("grade",e.target.value)}><option value="">اختر الصف الدراسي</option><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label>
                   <AuthField label="المجموعة أو ميعاد الحصة" value={form.group} onChange={v=>update("group",v)} placeholder="اكتب المجموعة أو الميعاد"/>
                 </div>}
 
