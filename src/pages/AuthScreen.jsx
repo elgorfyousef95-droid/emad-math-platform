@@ -92,6 +92,9 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
   const [avatarPreview, setAvatarPreview] = useState("");
   const [cropSource, setCropSource] = useState("");
   const [cropZoom, setCropZoom] = useState(1);
+  const [cropOffset, setCropOffset] = useState({ x: 0, y: 0 });
+  const cropStageRef = useRef(null);
+  const cropDragRef = useRef(null);
   const [loginBusy, setLoginBusy] = useState(false);
   const [signupBusy, setSignupBusy] = useState(false);
   const [createdAccount, setCreatedAccount] = useState(null);
@@ -174,6 +177,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     const source = URL.createObjectURL(file);
     setCropSource(source);
     setCropZoom(1);
+    setCropOffset({ x: 0, y: 0 });
     setNotice("");
     event.target.value = "";
   };
@@ -182,20 +186,28 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     if (cropSource) URL.revokeObjectURL(cropSource);
     setCropSource("");
     setCropZoom(1);
+    setCropOffset({ x: 0, y: 0 });
+    cropDragRef.current = null;
   };
 
   const confirmAvatarCrop = () => {
     if (!cropSource) return;
     const image = new Image();
     image.onload = () => {
-      const side = Math.min(image.naturalWidth, image.naturalHeight) / cropZoom;
-      const sx = (image.naturalWidth - side) / 2;
-      const sy = (image.naturalHeight - side) / 2;
+      const stageSize = cropStageRef.current?.clientWidth || 250;
+      const baseScale = Math.max(720 / image.naturalWidth, 720 / image.naturalHeight);
+      const displayWidth = image.naturalWidth * baseScale;
+      const displayHeight = image.naturalHeight * baseScale;
+      const sx = ((displayWidth * cropZoom - 720) / 2 - cropOffset.x * 720 / stageSize) / (baseScale * cropZoom);
+      const sy = ((displayHeight * cropZoom - 720) / 2 - cropOffset.y * 720 / stageSize) / (baseScale * cropZoom);
+      const side = 720 / (baseScale * cropZoom);
+      const safeX = Math.max(0, Math.min(image.naturalWidth - side, sx));
+      const safeY = Math.max(0, Math.min(image.naturalHeight - side, sy));
       const canvas = document.createElement("canvas");
       canvas.width = 720;
       canvas.height = 720;
       const context = canvas.getContext("2d");
-      context.drawImage(image, sx, sy, side, side, 0, 0, 720, 720);
+      context.drawImage(image, safeX, safeY, side, side, 0, 0, 720, 720);
       canvas.toBlob(blob => {
         if (!blob) return showNotice("تعذر تجهيز الصورة. اختار صورة أخرى.");
         const cropped = new File([blob], "student-avatar.jpg", { type: "image/jpeg", lastModified: Date.now() });
@@ -383,8 +395,27 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
           <section className="avatar-crop-dialog">
             <div className="avatar-crop-heading"><span>تجهيز صورة الحساب</span><button type="button" onClick={cancelAvatarCrop} aria-label="إغلاق">×</button></div>
             <p>حرّك مستوى التكبير حتى تظهر الصورة بالشكل المناسب داخل الإطار.</p>
-            <div className="avatar-crop-stage"><img src={cropSource} alt="معاينة قص الصورة" style={{ transform: `scale(${cropZoom})` }}/><span className="avatar-crop-ring"/></div>
-            <label className="avatar-crop-zoom"><span>تكبير الصورة</span><input type="range" min="1" max="2.5" step="0.05" value={cropZoom} onChange={event=>setCropZoom(Number(event.target.value))}/><b>{Math.round(cropZoom*100)}%</b></label>
+            <div ref={cropStageRef} className="avatar-crop-stage"
+              onPointerDown={event => {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                cropDragRef.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, x: cropOffset.x, y: cropOffset.y };
+              }}
+              onPointerMove={event => {
+                const drag = cropDragRef.current;
+                if (!drag || drag.pointerId !== event.pointerId) return;
+                const stageSize = cropStageRef.current?.clientWidth || 250;
+                const image = event.currentTarget.querySelector("img");
+                const ratio = image?.naturalWidth && image?.naturalHeight ? image.naturalWidth / image.naturalHeight : 1;
+                const maxX = Math.max(0, (stageSize * Math.max(1, ratio) * cropZoom - stageSize) / 2);
+                const maxY = Math.max(0, (stageSize * Math.max(1, 1 / ratio) * cropZoom - stageSize) / 2);
+                setCropOffset({ x: Math.max(-maxX, Math.min(maxX, drag.x + event.clientX - drag.startX)), y: Math.max(-maxY, Math.min(maxY, drag.y + event.clientY - drag.startY)) });
+              }}
+              onPointerUp={() => { cropDragRef.current = null; }}
+              onPointerCancel={() => { cropDragRef.current = null; }}>
+              <img src={cropSource} alt="معاينة قص الصورة" style={{ transform: "translate(" + cropOffset.x + "px, " + cropOffset.y + "px) scale(" + cropZoom + ")" }}/>
+              <span className="avatar-crop-ring"/>
+            </div>
+            <label className="avatar-crop-zoom"><span>تكبير الصورة</span><input type="range" min="1" max="2.5" step="0.05" value={cropZoom} onChange={event=>{setCropZoom(Number(event.target.value));setCropOffset({x:0,y:0})}}/><b>{Math.round(cropZoom*100)}%</b></label><small className="avatar-crop-hint">يمكنك سحب الصورة داخل الإطار لتحريكها لأعلى أو لأسفل أو الجانبين.</small>
             <div className="avatar-crop-actions"><button type="button" onClick={cancelAvatarCrop}>إلغاء</button><button type="button" onClick={confirmAvatarCrop}>اعتماد الصورة</button></div>
           </section>
         </div>
