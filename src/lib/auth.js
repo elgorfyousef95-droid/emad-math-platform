@@ -91,3 +91,58 @@ export function clearStudentSession() {
     // Ignore unavailable local storage.
   }
 }
+
+export async function studentApi(path, options = {}) {
+  const { url, key } = config();
+  const session = getSavedStudentSession();
+  if (!session?.access_token) throw new Error("not_authenticated");
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || body.code || "student_api_error");
+  }
+  return response.status === 204 ? null : response.json();
+}
+
+export async function loadStudentWorkspace() {
+  const [profiles, subscriptions, notifications] = await Promise.all([
+    studentApi("profiles?select=id,full_name,student_number,grade,group_name,avatar_url,is_verified,role&limit=1"),
+    studentApi("emad_student_subscriptions?select=id,grade,starts_at,ends_at&ends_at=gt." + encodeURIComponent(new Date().toISOString()) + "&order=ends_at.desc&limit=1"),
+    studentApi("emad_notifications?select=id,notification_type,title,body,action_url,read_at,created_at&order=created_at.desc&limit=30"),
+  ]);
+  return {
+    profile: profiles?.[0] || null,
+    subscription: subscriptions?.[0] || null,
+    notifications: notifications || [],
+  };
+}
+
+export async function redeemStudentSubscription(code) {
+  const { url, key } = config();
+  const session = getSavedStudentSession();
+  if (!session?.access_token) throw new Error("not_authenticated");
+  const response = await fetch(`${url}/rest/v1/rpc/emad_redeem_subscription_code`, {
+    method: "POST",
+    headers: { apikey: key, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_code: code }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || data.code || "subscription_activation_failed");
+  return data;
+}
+
+export async function markStudentNotificationRead(id) {
+  return studentApi(`emad_notifications?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify({ read_at: new Date().toISOString() }),
+  });
+}
