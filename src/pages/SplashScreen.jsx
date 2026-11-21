@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "./SplashScreen.css";
 
 const teacherPhoto = "https://raw.githubusercontent.com/elgorfyousef95-droid/emad-math-platform/main/IMG-20261121-WA0004.jpg";
@@ -14,10 +14,21 @@ const floatingLines = [
 
 export default function SplashScreen({ onComplete }) {
   const [isLeaving, setIsLeaving] = useState(false);
+  const hasStartedExit = useRef(false);
+  const completionTimer = useRef(null);
+  const startExit = useCallback(() => {
+    if (hasStartedExit.current) return;
+    hasStartedExit.current = true;
+    setIsLeaving(true);
+    completionTimer.current = window.setTimeout(() => onComplete?.(), 850);
+  }, [onComplete]);
   useEffect(() => {
-    const exitStart = window.setTimeout(() => setIsLeaving(true), 9000);
-    return () => window.clearTimeout(exitStart);
-  }, []);
+    const autoEnter = window.setTimeout(startExit, 9150);
+    return () => {
+      window.clearTimeout(autoEnter);
+      if (completionTimer.current) window.clearTimeout(completionTimer.current);
+    };
+  }, [startExit]);
   return (
     <main className={isLeaving ? "splash-screen splash-is-leaving" : "splash-screen"} aria-label="منصة مستر عماد السنافيري">
       <div className="splash-ambient" aria-hidden="true" />
@@ -53,6 +64,11 @@ export default function SplashScreen({ onComplete }) {
           <b>{line.text}</b>
         </div>
       ))}
+
+      <button className="splash-enter-button" type="button" onClick={startExit} disabled={isLeaving}>
+        الدخول الآن
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+      </button>
 
       <div className="splash-bottom-loader" aria-label="جارٍ تجهيز المنصة">
         <div className="splash-loader-ring"><i /><b /></div>
