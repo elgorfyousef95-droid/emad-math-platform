@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react";\nimport { notify } from "../components/MessageProvider.jsx";
 
 function Icon({ name }) {
   const common = { width: 19, height: 19, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
@@ -20,16 +20,16 @@ const stepTitles = ["البيانات الشخصية", "البيانات الد�
 export default function AuthScreen({ mode, onModeChange }) {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState("");\n  const showNotice = message => { setNotice(message); if (message) notify({ type: "warning", title: "راجع البيانات", message }); };
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ fullName:"", phone:"", grade:"", group:"", parentName:"", parentPhone:"" });
   const signup = mode === "signup";
   const update = (key, value) => setForm(current => ({ ...current, [key]: value }));
   const nextStep = () => {
-    if (step === 0 && (!form.fullName.trim() || !form.phone.trim())) return setNotice("اكتب الاسم بالكامل ورقم الهاتف للمتابعة.");
-    if (step === 1 && (!form.grade || !form.group.trim())) return setNotice("اختر الصف الدراسي واكتب المجموعة.");
-    if (step === 2 && (!form.parentName.trim() || !form.parentPhone.trim())) return setNotice("أكمل بيانات ولي الأمر للمتابعة.");
+    if (step === 0 && (!form.fullName.trim() || !form.phone.trim())) return showNotice("اكتب الاسم بالكامل ورقم الهاتف للمتابعة.");
+    if (step === 1 && (!form.grade || !form.group.trim())) return showNotice("اختر الصف الدراسي واكتب المجموعة.");
+    if (step === 2 && (!form.parentName.trim() || !form.parentPhone.trim())) return showNotice("أكمل بيانات ولي الأمر للمتابعة.");
     setNotice("");
     setStep(current => Math.min(3, current + 1));
   };
@@ -64,8 +64,8 @@ export default function AuthScreen({ mode, onModeChange }) {
             {step === 1 && <div className="signup-fields"><label className="signup-field"><span>الصف الدراسي</span><select value={form.grade} onChange={e=>update("grade",e.target.value)}><option value="">اختر الصف الدراسي</option><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label><Field label="المجموعة أو ميعاد الحصة" value={form.group} onChange={v=>update("group",v)} placeholder="اكتب المجموعة أو الميعاد"/></div>}
             {step === 2 && <div className="signup-fields"><Field label="اسم ولي الأمر" value={form.parentName} onChange={v=>update("parentName",v)} placeholder="اسم ولي الأمر بالكامل"/><Field label="رقم هاتف ولي الأمر" value={form.parentPhone} onChange={v=>update("parentPhone",v)} placeholder="01xxxxxxxxx" inputMode="tel"/></div>}
             {step === 3 && <div className="signup-review"><div><span>اسم الطالب</span><b>{form.fullName}</b></div><div><span>رقم الهاتف</span><b>{form.phone}</b></div><div><span>الصف الدراسي</span><b>{form.grade}</b></div><div><span>المجموعة</span><b>{form.group}</b></div><div><span>ولي الأمر</span><b>{form.parentName}</b></div><div><span>هاتف ولي الأمر</span><b>{form.parentPhone}</b></div><p>راجع البيانات قبل الإرسال. إنشاء الحساب الفعلي يحتاج إلى استكمال ربط قاعدة البيانات.</p></div>}
-            {notice && <div className="auth-notice" role="status">{notice}</div>}
-            <div className="signup-actions">{step > 0 && <button className="signup-back" type="button" onClick={()=>{setNotice("");setStep(v=>v-1)}}>السابق</button>}<button className="gold full auth-submit" type="button" onClick={()=>step < 3 ? nextStep() : setNotice("تمت مراجعة البيانات محلياً. التسجيل الفعلي لم يُفعّل بعد لعدم اكتمال ربط قاعدة البيانات.")}>{step === 3 ? "مراجعة وإرسال الطلب" : "متابعة إلى الخطوة التالية"} <Icon name="arrow"/></button></div>
+            
+            <div className="signup-actions">{step > 0 && <button className="signup-back" type="button" onClick={()=>{setNotice("");setStep(v=>v-1)}}>السابق</button>}<button className="gold full auth-submit" type="button" onClick={()=>step < 3 ? nextStep() : notify({type:"info",title:"مراجعة التسجيل",message:"تمت مراجعة البيانات محلياً. التسجيل الفعلي لم يُفعّل بعد لعدم اكتمال ربط قاعدة البيانات."})}>{step === 3 ? "مراجعة وإرسال الطلب" : "متابعة إلى الخطوة التالية"} <Icon name="arrow"/></button></div>
             <div className="auth-switch-row">لديك حساب بالفعل؟ <button type="button" onClick={() => onModeChange("login")}>تسجيل الدخول</button></div>
           </div>
         ) : (
@@ -76,9 +76,9 @@ export default function AuthScreen({ mode, onModeChange }) {
               <label htmlFor="student-password"><span className="auth-label-icon"><Icon name="lock"/></span>كلمة المرور</label>
               <div className="auth-input-wrap password-field"><input id="student-password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="اكتب كلمة المرور" autoComplete="current-password" /><button className="password-toggle" type="button" aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} onClick={() => setShowPassword(v => !v)}><Icon name="eye"/></button></div>
             </div>
-            <button className="auth-forgot" type="button" onClick={() => setNotice("لاستعادة رقم الطالب أو كلمة المرور، تواصل مع إدارة المنصة من خلال خدمة العملاء.")}>نسيت رقم الطالب أو كلمة المرور؟</button>
-            <button className="gold full auth-submit" type="button" onClick={() => setNotice("تسجيل الدخول الفعلي لم يُفعّل بعد، لأنه يحتاج إلى استكمال ربط قاعدة البيانات.")}>دخول إلى حسابي <Icon name="arrow"/></button>
-            {notice && <div className="auth-notice" role="status">{notice}</div>}
+            <button className="auth-forgot" type="button" onClick={() => notify({type:"info",title:"استعادة بيانات الدخول",message:"لاستعادة رقم الطالب أو كلمة المرور، تواصل مع إدارة المنصة من خلال خدمة العملاء."})}>نسيت رقم الطالب أو كلمة المرور؟</button>
+            <button className="gold full auth-submit" type="button" onClick={() => notify({type:"info",title:"تسجيل الدخول",message:"تسجيل الدخول الفعلي لم يُفعّل بعد، لأنه يحتاج إلى استكمال ربط قاعدة البيانات."})}>دخول إلى حسابي <Icon name="arrow"/></button>
+            
             <div className="auth-switch-row">ليس لديك حساب؟ <button type="button" onClick={() => onModeChange("signup")}>إنشاء حساب جديد</button></div>
             <div className="auth-secure-foot"><Icon name="shield"/><span>دخول مخصص لطلاب منصة مستر عماد السنافيري</span></div>
           </>
