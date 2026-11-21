@@ -16,12 +16,8 @@ export default function SplashScreen({ onComplete }) {
   const [isLeaving, setIsLeaving] = useState(false);
   useEffect(() => {
     const exitStart = window.setTimeout(() => setIsLeaving(true), 9000);
-    const finish = window.setTimeout(() => onComplete?.(), 10000);
-    return () => {
-      window.clearTimeout(exitStart);
-      window.clearTimeout(finish);
-    };
-  }, [onComplete]);
+    return () => window.clearTimeout(exitStart);
+  }, []);
   return (
     <main className={isLeaving ? "splash-screen splash-is-leaving" : "splash-screen"} aria-label="منصة مستر عماد السنافيري">
       <div className="splash-ambient" aria-hidden="true" />
