@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
+import "./home.css";
 import SplashScreen from "./pages/SplashScreen.jsx";
 import AuthScreen from "./pages/AuthScreen.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
