@@ -146,3 +146,17 @@ export async function markStudentNotificationRead(id) {
     body: JSON.stringify({ read_at: new Date().toISOString() }),
   });
 }
+
+export async function issueStudentSubscriptionCode(grade) {
+  const { url, key } = config();
+  const session = getSavedStudentSession();
+  if (!session?.access_token) throw new Error("not_authenticated");
+  const response = await fetch(`${url}/rest/v1/rpc/emad_issue_subscription_code`, {
+    method: "POST",
+    headers: { apikey: key, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_grade: grade }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || data.code || "subscription_code_issue_failed");
+  return data;
+}
