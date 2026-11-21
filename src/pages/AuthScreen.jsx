@@ -412,7 +412,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
               }}
               onPointerUp={() => { cropDragRef.current = null; }}
               onPointerCancel={() => { cropDragRef.current = null; }}>
-              <img src={cropSource} alt="معاينة قص الصورة" style={{ transform: "translate(" + cropOffset.x + "px, " + cropOffset.y + "px) scale(" + cropZoom + ")" }}/>
+              <img src={cropSource} alt="معاينة قص الصورة" onLoad={event => { const image = event.currentTarget; const ratio = image.naturalWidth / image.naturalHeight; image.style.width = ratio > 1 ? (ratio * 100) + "%" : "100%"; image.style.height = ratio > 1 ? "100%" : (100 / ratio) + "%"; }} style={{ transform: "translate(calc(-50% + " + cropOffset.x + "px), calc(-50% + " + cropOffset.y + "px)) scale(" + cropZoom + ")" }}/>
               <span className="avatar-crop-ring"/>
             </div>
             <label className="avatar-crop-zoom"><span>تكبير الصورة</span><input type="range" min="1" max="2.5" step="0.05" value={cropZoom} onChange={event=>{setCropZoom(Number(event.target.value));setCropOffset({x:0,y:0})}}/><b>{Math.round(cropZoom*100)}%</b></label><small className="avatar-crop-hint">يمكنك سحب الصورة داخل الإطار لتحريكها لأعلى أو لأسفل أو الجانبين.</small>
