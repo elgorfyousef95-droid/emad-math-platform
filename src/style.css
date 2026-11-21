@@ -772,3 +772,45 @@ html,body,#root{min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
 @media(max-width:600px){
   .auth-card,.auth-card-signup{transform:none!important}
 }
+
+
+/* Direct mobile + desktop adjustment for the actual AuthScreen cards */
+.auth-screen-login .auth-card-login{
+  transform:translateY(13px)!important;
+  background:linear-gradient(145deg,rgba(25,43,61,.91),rgba(10,24,40,.94) 58%,rgba(7,18,32,.96))!important;
+  border:1px solid rgba(214,190,151,.42)!important;
+  box-shadow:0 25px 75px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.12)!important;
+}
+.auth-screen-signup .auth-card-signup{
+  transform:translateY(7px)!important;
+  background:linear-gradient(145deg,rgba(29,43,59,.92),rgba(11,25,42,.95) 58%,rgba(7,18,32,.97))!important;
+  border:1px solid rgba(206,190,158,.4)!important;
+  box-shadow:0 25px 75px rgba(0,0,0,.44),inset 0 1px rgba(255,255,255,.12)!important;
+}
+.auth-screen-login .auth-card-login .auth-card-topline,
+.auth-screen-signup .auth-card-signup .auth-card-topline{
+  height:2px!important;
+  background:linear-gradient(90deg,transparent,rgba(241,216,174,.95) 50%,transparent)!important;
+}
+.auth-screen-login .auth-card-login .auth-input-wrap input,
+.auth-screen-signup .auth-card-signup .signup-field input,
+.auth-screen-signup .auth-card-signup .signup-field select{
+  background:rgba(5,15,27,.62)!important;
+  border-color:rgba(207,218,226,.3)!important;
+}
+.auth-screen-login .auth-card-login .auth-submit,
+.auth-screen-signup .auth-card-signup .auth-submit{
+  background:linear-gradient(110deg,#f1d9ad 0%,#d9b77b 52%,#bd9258 100%)!important;
+  color:#17283b!important;
+  box-shadow:0 9px 26px rgba(184,145,91,.27),inset 0 1px rgba(255,255,255,.55)!important;
+}
+@media(max-width:600px){
+  .auth-screen-login .auth-card-login{
+    transform:translateY(10px)!important;
+    max-height:calc(100svh - 30px)!important;
+  }
+  .auth-screen-signup .auth-card-signup{
+    transform:translateY(5px)!important;
+    max-height:calc(100svh - 26px)!important;
+  }
+}
