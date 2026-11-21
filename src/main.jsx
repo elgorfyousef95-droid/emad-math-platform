@@ -12,8 +12,8 @@ const navByGrade={
  "الصف الثاني الثانوي":[["home","الرئيسية","home"],["courses","الكورسات","book"],["lessons","المحاضرات","play"],["exams","الامتحانات","exam"],["homework","التدريبات","task"],["files","المذكرات","file"],["results","النتائج","chart"]],
  "الصف الثالث الثانوي":[["home","الرئيسية","home"],["courses","مراجعات المنهج","book"],["lessons","المحاضرات","play"],["exams","امتحانات الثانوية","exam"],["homework","واجبات ومراجعات","task"],["files","المذكرات والملخصات","file"],["results","تحليل المستوى","chart"]]
 };
-const moreNav=[["schedule","جدول الحصص","calendar"],["live","المحاضرات المباشرة","live"],["messages","الدعم الفني","support"],["ai","المساعد الذكي","spark"],["subscriptions","الاشتراكات والأكواد","ticket"],["profile","الملف الشخصي","user"],["settings","الإعدادات","settings"]];
-const pageTitles={home:"الرئيسية",courses:"المحتوى التعليمي",lessons:"المحاضرات",exams:"الامتحانات",homework:"الواجبات",files:"المذكرات والملفات",results:"النتائج",schedule:"جدول الحصص",live:"المحاضرات المباشرة",messages:"الدعم الفني",ai:"المساعد الذكي",subscriptions:"الاشتراكات والأكواد",profile:"الملف الشخصي",settings:"الإعدادات",admin:"إدارة المنصة"};
+const moreNav=[["schedule","جدول الحصص","calendar"],["live","المحاضرات المباشرة","live"],["messages","الدعم الفني","support"],["ai","المساعد الذكي","spark"],["subscriptions","الاشتراكات والأكواد","ticket"],["profile","الملف الشخصي","user"],["settings","الإعدادات","settings"],["groups","الجروبات الدراسية","users"]];
+const pageTitles={home:"الرئيسية",courses:"المحتوى التعليمي",lessons:"المحاضرات",exams:"الامتحانات",homework:"الواجبات",files:"المذكرات والملفات",results:"النتائج",schedule:"جدول الحصص",live:"المحاضرات المباشرة",messages:"الدعم الفني",ai:"المساعد الذكي",subscriptions:"الاشتراكات والأكواد",profile:"الملف الشخصي",settings:"الإعدادات",groups:"الجروبات الدراسية",admin:"إدارة المنصة"};
 function Icon({name,size=19}){
  const paths={
  home:<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,
@@ -29,6 +29,7 @@ function Icon({name,size=19}){
  spark:<><path d="m12 2 2.2 6.2L21 11l-6.8 2.2L12 20l-2.2-6.8L3 11l6.8-2.8z"/></>,
  ticket:<><path d="M4 7a2 2 0 0 0 0 4v2a2 2 0 0 0 0 4h16v-4a2 2 0 0 1 0-4V5H4z"/><path d="M13 8v2M13 14v2"/></>,
  user:<><circle cx="12" cy="8" r="3.5"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
+ users:<><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></>,
  settings:<><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.6-1.4-2.4 1.4-1.1a8 8 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.6 1.4 2.4-1.4 1.1a8 8 0 0 1 0 2Z"/></>,
  bell:<><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></>,
  chevron:<path d="m9 18 6-6-6-6"/>,
@@ -52,7 +53,7 @@ function App(){
  const logout=()=>{clearStudentSession();setProfile(null);setSubscription(null);setNotifications([]);go("login");};
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
  if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={setPage} onSuccess={async()=>{await loadWorkspace();setPage("home");}}/></div>;
- const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai"].includes(page);
+ const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;
  return <div className="platform-shell" dir="rtl">
@@ -78,7 +79,7 @@ function App(){
    {page==="notifications"?<NotificationsPage notifications={notifications} onRead={async n=>{try{await markStudentNotificationRead(n.id);setNotifications(old=>old.map(x=>x.id===n.id?{...x,read_at:new Date().toISOString()}:x));}catch{notify({type:"error",title:"تعذر تحديث الإشعار",message:"حاول مرة أخرى."});}}} go={go}/>:null}
    {isLocked?<LockedPage go={go} grade={grade}/>:null}
    {!isLocked&&["courses","lessons","exams"].includes(page)?<LearningPage page={page} grade={grade}/>:null}
-   {!isLocked&&["homework","files","results","schedule","live","ai"].includes(page)?<SectionPage page={page} go={go}/>:null}
+   {!isLocked&&["homework","files","results","schedule","live","ai","groups"].includes(page)?<SectionPage page={page} go={go}/>:null}
    {page==="messages"?<SectionPage page={page} go={go}/>:null}
    {page==="admin"?<SectionPage page={page} go={go}/>:null}
   </main>
@@ -94,7 +95,7 @@ function HomePage({profile,subscription,go,grade,unread}){
   <section className="platform-profile-strip"><div className="platform-profile-main">{profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<div className="platform-profile-placeholder"><Icon name="user" size={24}/></div>}<div><b>{profile?.full_name||"حساب الطالب"} {profile?.is_verified&&<span className="platform-verified" title="حساب موثق"><Icon name="crown" size={12}/></span>}</b><small>رقم الطالب: {profile?.student_number||"—"} · {grade||"الصف غير محدد"}</small></div></div><button onClick={()=>go("profile")}>عرض الملف الشخصي<Icon name="arrow" size={15}/></button></section>
   <section className="platform-section-block"><div className="platform-section-title"><div><span>مساحتك الدراسية</span><h2>الأقسام والخدمات</h2></div><small>كل خدمة في صفحة مستقلة</small></div><div className="platform-service-grid">{modules.map(([id,title,desc,ico],i)=><button key={id} className="platform-service-card" onClick={()=>go(id)}><span className={"platform-service-icon service-"+i}><Icon name={ico} size={22}/></span><span className="platform-service-copy"><b>{title}</b><small>{desc}</small></span><Icon name="chevron" size={17}/></button>)}</div></section>
   <section className="platform-wide-promos"><button className="platform-promo-card promo-support" onClick={()=>go("messages")}><span>STUDENT CARE</span><b>مركز الدعم الفني</b><small>خدمة مساعدة ومتابعة لطلباتك</small><Icon name="arrow" size={18}/></button><button className="platform-promo-card promo-ai" onClick={()=>go("ai")}><span>SMART MATH ASSISTANT</span><b>المساعد الذكي</b><small>مساحة مخصصة للشرح وحل المسائل</small><Icon name="arrow" size={18}/></button></section>
-  <section className="platform-home-footer-links"><button onClick={()=>go("notifications")}><Icon name="bell"/><span>الإشعارات</span>{unread>0&&<b>{unread}</b>}</button><button onClick={()=>go("subscriptions")}><Icon name="ticket"/><span>إدارة الاشتراك</span></button><button onClick={()=>go("settings")}><Icon name="settings"/><span>إعدادات الحساب</span></button></section>
+  <section className="platform-home-footer-links"><button onClick={()=>go("notifications")}><Icon name="bell"/><span>الإشعارات</span>{unread>0&&<b>{unread}</b>}</button><button onClick={()=>go("subscriptions")}><Icon name="ticket"/><span>إدارة الاشتراك</span></button><button onClick={()=>go("settings")}><Icon name="settings"/><span>إعدادات الحساب</span></button><button onClick={()=>go("groups")}><Icon name="users"/><span>الجروبات الدراسية</span></button></section>
  </div>;
 }
 function LockedPage({go,grade}){return <div className="platform-page"><PageBanner eyebrow="MEMBERSHIP REQUIRED" title="المحتوى التعليمي متاح للمشتركين" description="فعّل اشتراكك الشهري بكود مخصص لصفك الدراسي لفتح المحاضرات والامتحانات وباقي الخدمات." art="lock"/><section className="platform-lock-panel"><span className="platform-lock-icon"><Icon name="lock" size={30}/></span><h2>فعّل اشتراكك للمتابعة</h2><p>الاشتراك مرتبط بحسابك وبـ {grade||"صفك الدراسي"}، ولا يمكن فتح المحتوى قبل تفعيل كود صالح.</p><button className="platform-gold-button" onClick={()=>go("subscriptions")}>الانتقال للاشتراكات<Icon name="arrow"/></button></section></div>}
@@ -114,7 +115,7 @@ function LearningPage({page,grade}){
  return <div className="platform-page"><PageBanner eyebrow={"GRADE CONTENT / "+(grade||"STUDENT").toUpperCase()} title={cfg.title} description={cfg.desc} art={cfg.art}/><div className="platform-content-list-heading"><h2>{cfg.title}</h2><span>{items.length} عنصر</span></div>{busy?<div className="platform-empty-state">جارٍ تحميل المحتوى من قاعدة البيانات...</div>:items.length?<div className="platform-content-grid">{items.map(item=><article key={item.id}><span className="platform-content-icon"><Icon name={cfg.art}/></span><div><b>{item.title}</b><p>{item.description||item.subject||"محتوى تعليمي"}</p>{item.duration_minutes&&<small>المدة: {item.duration_minutes} دقيقة</small>}</div></article>)}</div>:<div className="platform-empty-state"><Icon name={cfg.art} size={34}/><b>لا يوجد محتوى منشور حاليًا</b><span>عند إضافة محتوى لصفك سيظهر هنا مباشرة.</span></div>}</div>;
 }
 function SectionPage({page,go}){
- const data={homework:["الواجبات والتدريبات","تابع التكليفات والتدريبات المطلوبة منك.","task"],files:["المذكرات والملفات","مكتبة المذكرات والملخصات وأوراق العمل.","file"],results:["النتائج وتحليل المستوى","تابع درجاتك وقياس تقدمك الدراسي.","chart"],schedule:["جدول الحصص","مواعيد المحاضرات والامتحانات في جدول منظم.","calendar"],live:["المحاضرات المباشرة","تابع مواعيد البث المباشر والمحاضرات التفاعلية.","live"],ai:["المساعد الذكي","مساعد رياضيات مخصص لصفك الدراسي.","spark"],messages:["الدعم الفني","تابع طلبات المساعدة وتواصل مع فريق المنصة.","support"],admin:["إدارة المنصة","إدارة المحتوى والطلاب والاشتراكات والصلاحيات.","settings"]}[page]||["القسم","", "book"];
+ const data={homework:["الواجبات والتدريبات","تابع التكليفات والتدريبات المطلوبة منك.","task"],files:["المذكرات والملفات","مكتبة المذكرات والملخصات وأوراق العمل.","file"],results:["النتائج وتحليل المستوى","تابع درجاتك وقياس تقدمك الدراسي.","chart"],schedule:["جدول الحصص","مواعيد المحاضرات والامتحانات في جدول منظم.","calendar"],live:["المحاضرات المباشرة","تابع مواعيد البث المباشر والمحاضرات التفاعلية.","live"],ai:["المساعد الذكي","مساعد رياضيات مخصص لصفك الدراسي.","spark"],groups:["الجروبات الدراسية","مساحات تواصل منظمة لطلاب نفس الصف والمجموعة، مع إشراف وإعلانات ومناقشات تعليمية.","users"],messages:["الدعم الفني","تابع طلبات المساعدة وتواصل مع فريق المنصة.","support"],admin:["إدارة المنصة","إدارة المحتوى والطلاب والاشتراكات والصلاحيات.","settings"]}[page]||["القسم","", "book"];
  return <div className="platform-page"><PageBanner eyebrow="STUDENT SERVICES" title={data[0]} description={data[1]} art={data[2]}/><div className="platform-empty-state"><Icon name={data[2]} size={36}/><b>مساحة {data[0]}</b><span>سيتم توصيل هذه الخدمة ببياناتها وأدواتها الفعلية في مرحلة تنفيذ القسم.</span>{page==="ai"&&<small>سيكون المساعد مرتبطًا بالصف الدراسي والمحتوى المعتمد.</small>}{page==="messages"&&<button className="platform-gold-button" onClick={()=>notify({type:"info",title:"الدعم الفني",message:"سيتم تفعيل المحادثات المباشرة في مرحلة بناء خدمة الدعم."})}>طلب مساعدة</button>}</div></div>;
 }
 
