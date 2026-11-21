@@ -123,3 +123,32 @@
  .platform-navigation.is-open{animation:platformMenuIn .16s ease-out}
 }
 @keyframes platformMenuIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+
+/* Unified right-side navigation drawer */
+.platform-mobile-menu{display:flex!important;width:42px;height:42px;flex:0 0 42px;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #d9b66a45;border-radius:12px;background:linear-gradient(145deg,#172b43,#0e1b2d);cursor:pointer}
+.platform-mobile-menu span{display:block;width:17px;height:2px;border-radius:3px;background:#e8c77f;transition:transform .2s}
+.platform-navigation{position:fixed!important;z-index:121;top:0;right:0;bottom:0;width:min(330px,86vw);height:100dvh;max-height:none!important;display:flex!important;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:7px;padding:88px 16px 24px!important;overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(165deg,#14263d 0%,#0c1728 55%,#091321 100%)!important;border:0!important;border-left:1px solid #d9b66a45!important;border-radius:0 0 0 0!important;box-shadow:-22px 0 65px #0008!important;transform:translateX(110%);visibility:hidden;opacity:0;transition:transform .25s ease,opacity .2s ease,visibility .25s}
+.platform-navigation.is-open{transform:translateX(0);visibility:visible;opacity:1}
+.platform-navigation>button,.platform-nav-more>button{width:100%;min-height:47px;display:flex!important;align-items:center;justify-content:flex-start;gap:13px;padding:11px 14px!important;border:1px solid transparent;border-radius:12px;background:transparent;color:#dce4ee;text-align:right;font-size:12px;font-weight:750}
+.platform-navigation>button span{display:inline!important}
+.platform-navigation>button svg,.platform-nav-more>button svg{color:#d9b66a}
+.platform-navigation>button.active,.platform-navigation>button:hover,.platform-nav-more>button:hover{border-color:#d9b66a35;background:linear-gradient(100deg,#d9b66a18,#ffffff08);color:#f4d99c}
+.platform-nav-more{width:100%;position:relative}
+.platform-nav-more>button{width:100%}
+.platform-nav-more>button>svg:last-child{margin-right:auto}
+.platform-navigation .platform-menu-pop{position:static;display:grid;margin:5px 0 0;padding:7px;background:#091625;border:1px solid #ffffff12;border-radius:12px;box-shadow:none}
+.platform-navigation .platform-menu-pop button{min-height:40px}
+.platform-drawer-backdrop{position:fixed;inset:0;z-index:120;border:0;background:rgba(2,7,14,.66);backdrop-filter:blur(3px);cursor:pointer}
+.platform-topbar{position:relative;z-index:122}
+.platform-logo{margin-left:auto}
+.platform-subbar{position:relative;z-index:1}
+@media(max-width:760px){
+ .platform-navigation{top:0;right:0;left:auto;width:min(320px,86vw);padding-top:82px!important}
+ .platform-top-actions{margin-right:0;margin-left:auto}
+ .platform-logo{margin-left:0;flex:1}
+}
+@media(min-width:761px){
+ .platform-topbar{gap:16px}
+ .platform-navigation{right:0}
+}
