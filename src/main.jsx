@@ -19,7 +19,7 @@ function App(){
  const [page,setPage]=useState("splash"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false),[auth,setAuth]=useState(""),[notice,setNotice]=useState("");
  useEffect(()=>{
   if(page!=="splash") return;
-  const timer=window.setTimeout(()=>setPage("login"),5000);
+  const timer=window.setTimeout(()=>setPage("login"),8000);
   return ()=>window.clearTimeout(timer);
  },[page]);
  if(page==="splash") return <SplashScreen/>;
