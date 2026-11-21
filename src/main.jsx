@@ -1,27 +1,34 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 
-function App() {
-  return (
-    <main className="shell">
-      <header className="topbar">
-        <a className="brand" href="#"><span className="brand-mark">∑</span><span>مستر عماد <small>منصة الرياضيات</small></span></a>
-        <nav><a href="#features">مميزات المنصة</a><a href="#about">عن المستر</a><a className="login-link" href="#login">تسجيل الدخول</a></nav>
-      </header>
-      <section className="hero">
-        <div className="hero-copy">
-          <div className="eyebrow"><span></span> تعلّم بذكاء.. وحقق هدفك</div>
-          <h1>الرياضيات<br/><em>بقت أوضح وأسهل</em></h1>
-          <p>منصة تعليمية متكاملة مع مستر عماد السنافيري. شرح منظم، تدريبات تفاعلية، وامتحانات تساعدك تتابع مستواك خطوة بخطوة.</p>
-          <div className="actions"><a className="primary" href="#login">ابدأ رحلتك التعليمية <b>←</b></a><a className="secondary" href="#features">اكتشف المنصة</a></div>
-          <div className="proof"><span>✦</span> شرح واضح <i></i> متابعة مستمرة <i></i> تدريب وامتحانات</div>
-        </div>
-        <div className="math-art" aria-hidden="true"><div className="orbit orbit-one"></div><div className="orbit orbit-two"></div><div className="formula">∫ f(x) dx</div><div className="sigma">Σ</div><div className="pi">π</div><div className="graph"><span></span></div></div>
-      </section>
-      <section className="features" id="features"><div><b>01</b><h2>شرح مرتب</h2><p>كل درس متقسم بشكل واضح عشان تذاكر من غير تشتت.</p></div><div><b>02</b><h2>تدريبات متنوعة</h2><p>أسئلة بمستويات مختلفة لتثبيت الفهم والتطبيق.</p></div><div><b>03</b><h2>امتحانات ومتابعة</h2><p>اختبر نفسك وتابع تقدمك في كل خطوة.</p></div></section>
-      <footer id="about"><span>مستر عماد السنافيري</span><span>منصة تعليمية قيد التجهيز © 2026</span></footer>
-    </main>
-  );
+const sections = [
+  ["home","⌂","الرئيسية"],["courses","▣","الكورسات"],["lessons","▶","المحاضرات"],["files","▤","الملفات والمذكرات"],["homework","✎","الواجبات"],["exams","▣","الامتحانات"],["results","▥","النتائج والمتابعة"],["schedule","◷","جدول الحصص"],["messages","✉","خدمة العملاء"],["profile","◉","ملفي الشخصي"]
+];
+const cards = [
+  {icon:"▣",title:"الكورسات",desc:"تابع كورساتك ومحتوى كل مجموعة",count:"إدارة المحتوى"},
+  {icon:"▶",title:"المحاضرات",desc:"شرح الدروس ومتابعة المشاهدة",count:"مكتبة الدروس"},
+  {icon:"▤",title:"الملفات والمذكرات",desc:"مذكرات وملخصات وملفات PDF",count:"مركز التحميل"},
+  {icon:"✎",title:"الواجبات",desc:"حل واجباتك وتسليمها ومراجعتها",count:"تدريب مستمر"},
+  {icon:"▥",title:"الامتحانات",desc:"اختبارات إلكترونية ونتائج فورية",count:"قياس المستوى"},
+  {icon:"◷",title:"المتابعة",desc:"الحضور والإنجاز ومستوى التقدم",count:"تقريرك الدراسي"}
+];
+function App(){
+ const [page,setPage]=useState("home"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false),[auth,setAuth]=useState(""),[notice,setNotice]=useState("");
+ const title=sections.find(x=>x[0]===page)?.[2] || (page==="admin"?"لوحة المالك":page==="teacher"?"لوحة المستر":"المنصة");
+ const go=(p)=>{setPage(p);setMenu(false);setAuth("");};
+ const body=()=>{
+  if(page==="login"||page==="signup") return <AuthPage mode={page} onSwitch={setPage}/>;
+  if(page==="home") return <><section className="welcome"><div><span className="kicker">منصتك للتفوق تبدأ من هنا</span><h1>أهلاً بيك في منصة<br/><em>مستر عماد السنافيري</em></h1><p>كل اللي تحتاجه في الرياضيات، في مكان واحد. اتعلم، اتدرّب، اختبر نفسك، وتابع تقدمك خطوة بخطوة.</p><div className="hero-actions"><button className="gold" onClick={()=>go("courses")}>استكشف الكورسات ←</button><button className="outline" onClick={()=>go("exams")}>ابدأ امتحان تجريبي</button></div></div><div className="hero-graphic"><div className="math-circle">∑</div><span className="formula f1">f(x) = x² + 3x</span><span className="formula f2">∫ x dx</span><span className="formula f3">π · r²</span></div></section><section className="stats"><Stat n="01" t="تعلم منظم" d="كل محتواك في مكان واحد"/><Stat n="02" t="تدريب مستمر" d="واجبات وامتحانات متنوعة"/><Stat n="03" t="متابعة واضحة" d="اعرف مستواك أول بأول"/></section><div className="section-head"><div><span className="kicker">اكتشف المنصة</span><h2>كل أدوات تفوقك قدامك</h2></div><button className="text-btn" onClick={()=>go("courses")}>عرض كل الأقسام ←</button></div><div className="feature-grid">{cards.map((c,i)=><button className="feature-card" key={c.title} onClick={()=>go(["courses","lessons","files","homework","exams","results"][i])}><span className="card-icon">{c.icon}</span><b>{c.title}</b><p>{c.desc}</p><small>{c.count} ↗</small></button>)}</div></>;
+  if(page==="admin"||page==="teacher") return <Dashboard role={page} onGo={go}/>;
+  if(page==="profile") return <div className="panel"><h2>ملفي الشخصي</h2><p>هنا هتظهر بيانات الطالب وصورته ومجموعته وملخص تقدمه الدراسي بعد تسجيل الدخول.</p><div className="notice">ملفك الشخصي مرتبط بحسابك بعد تفعيل نظام الحسابات الآمن.</div></div>;
+  if(page==="messages") return <div className="panel"><h2>خدمة العملاء</h2><p>ابعت استفسارك لفريق المنصة، وتابع حالة طلبك من نفس المكان.</p><label>عنوان الرسالة</label><input placeholder="اكتب عنوان الاستفسار"/><label>تفاصيل الرسالة</label><textarea placeholder="اكتب رسالتك بالتفصيل"/><button className="gold" onClick={()=>setNotice("نموذج خدمة العملاء جاهز، وسيتم تفعيل الإرسال بعد ربط الحسابات.")}>إرسال الاستفسار</button>{notice&&<div className="notice">{notice}</div>}</div>;
+  const descriptions={courses:"الكورسات والمجموعات التعليمية المتاحة.",lessons:"كل المحاضرات مرتبة حسب الكورس والوحدة والدرس.",files:"المذكرات والملخصات وأوراق العمل والملفات القابلة للتحميل.",homework:"الواجبات المطلوبة ومواعيد التسليم والتصحيح.",exams:"امتحانات إلكترونية بتوقيت ودرجات ونتائج.",results:"درجاتك وتحليلك ونقاط القوة والجوانب التي تحتاج إلى تدريب.",schedule:"مواعيد المحاضرات والامتحانات والتنبيهات القادمة."};
+  return <div className="panel"><div className="section-head"><div><span className="kicker">مساحتك التعليمية</span><h2>{title}</h2></div><span className="pill">قيد التجهيز</span></div><p>{descriptions[page]}</p><div className="empty-state"><div className="empty-icon">✦</div><h3>هنجهز القسم ده بشكل كامل</h3><p>القسم ده هيضم أدواته وملفاته وصفحاته الخاصة، وهيتربط بقاعدة البيانات عشان يعرض بيانات حقيقية.</p><button className="outline" onClick={()=>go("home")}>العودة للرئيسية</button></div></div>;
+ };
+ return <div className="app-shell"><aside className={menu?"sidebar open":"sidebar"}><div className="brand"><div className="brand-logo">∑</div><div><b>مستر عماد</b><small>منصة الرياضيات</small></div><button className="close-menu" onClick={()=>setMenu(false)}>×</button></div><div className="user-mini"><div className="avatar">ط</div><div><b>زائر المنصة</b><small>أهلاً بيك في رحلتك</small></div></div><div className="nav-label">القائمة الرئيسية</div><nav>{sections.map(s=><button key={s[0]} className={page===s[0]?"nav-item active":"nav-item"} onClick={()=>go(s[0])}><span>{s[1]}</span>{s[2]}</button>)}</nav><div className="nav-label">الإدارة</div><button className={page==="teacher"?"nav-item active":"nav-item"} onClick={()=>go("teacher")}>♧ لوحة المستر</button><button className={page==="admin"?"nav-item active":"nav-item"} onClick={()=>go("admin")}>⚙ لوحة المالك</button><div className="side-bottom"><button onClick={()=>setAuth("login")}>تسجيل الدخول</button><button className="side-sign" onClick={()=>setAuth("signup")}>إنشاء حساب طالب</button></div></aside><main className="main-area"><header className="topbar"><button className="hamb" onClick={()=>setMenu(!menu)}>☰</button><div><span className="crumb">المنصة</span><b> / {title}</b></div><div className="top-actions"><button onClick={()=>setNotice("لا توجد إشعارات جديدة حاليًا.")}>♧</button><button className="top-login" onClick={()=>setAuth("login")}>دخول الطالب</button></div></header><div className="page-content">{body()}</div><footer className="footer"><span>مستر عماد السنافيري</span><span>منصة تعليمية متكاملة • 2026</span></footer></main>{auth&&<div className="modal-backdrop" onClick={()=>setAuth("")}><div className="modal" onClick={e=>e.stopPropagation()}><button className="modal-close" onClick={()=>setAuth("")}>×</button><AuthPage mode={auth} onSwitch={setAuth}/></div></div>}</div>;
 }
-createRoot(document.getElementById("root")).render(<App />);
+function Stat({n,t,d}){return <div className="stat"><b>{n}</b><div><strong>{t}</strong><small>{d}</small></div></div>}
+function AuthPage({mode,onSwitch}){return <div className="auth-box"><span className="kicker">حسابك التعليمي</span><h2>{mode==="login"?"سجّل دخولك للمنصة":"أنشئ حسابك كطالب"}</h2><p>{mode==="login"?"استخدم رقم الطالب وكلمة المرور للدخول.":"املأ بياناتك، وسيتم إنشاء رقم طالب خاص بك بعد تفعيل التسجيل."}</p>{mode==="signup"&&<><label>الاسم بالكامل</label><input placeholder="الاسم رباعي"/><label>رقم الهاتف</label><input placeholder="01xxxxxxxxx"/><label>اسم ولي الأمر</label><input placeholder="اسم ولي الأمر"/><label>السنة الدراسية / المجموعة</label><select defaultValue=""><option value="" disabled>اختر المجموعة</option><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select><label>نوع الاشتراك</label><select><option>عام</option><option>خاص</option></select></>}{mode==="login"&&<><label>رقم الطالب</label><input placeholder="أدخل رقم الطالب"/><label>كلمة المرور</label><input type="password" placeholder="كلمة المرور"/></>}<button className="gold full" onClick={()=>alert("سيتم تفعيل الحسابات والتحقق الآمن بعد استكمال ربط قاعدة البيانات.")}>{mode==="login"?"تسجيل الدخول":"إنشاء الحساب"}</button><button className="switch-auth" onClick={()=>onSwitch(mode==="login"?"signup":"login")}>{mode==="login"?"ليس لديك حساب؟ أنشئ حسابًا":"لديك حساب بالفعل؟ سجّل الدخول"}</button></div>}
+function Dashboard({role,onGo}){const admin=role==="admin";return <div className="panel"><span className="kicker">مساحة الإدارة</span><h2>{admin?"لوحة المالك والتحكم الكامل":"لوحة المستر التعليمية"}</h2><p>{admin?"إدارة المنصة والمستخدمين والصلاحيات والإعدادات والتقارير.":"إدارة الكورسات والمحاضرات والواجبات والامتحانات ومتابعة الطلاب."}</p><div className="admin-grid">{(admin?["إدارة الطلاب والحسابات","إدارة المستر والصلاحيات","إدارة الاشتراكات والمدفوعات","إعدادات المنصة","التقارير والإحصائيات","سجل العمليات"]:["إضافة كورس","إدارة المحاضرات","رفع المذكرات والملفات","إنشاء واجب","إنشاء امتحان","متابعة درجات الطلاب"]).map((x,i)=><button key={x} className="admin-tile" onClick={()=>onGo(["profile","courses","files","homework","exams","results"][i])}><b>0{i+1}</b><span>{x}</span><small>فتح القسم ←</small></button>)}</div><div className="notice">لوحات الإدارة ظاهرة في هذه النسخة كتصميم أولي. لن تُمنح صلاحيات فعلية إلا بعد إعداد تسجيل الدخول والتحقق من الدور من الخادم.</div></div>}
+createRoot(document.getElementById("root")).render(<App/>);
