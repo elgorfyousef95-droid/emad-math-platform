@@ -1,4 +1,5 @@
-import React, { useState } from "react";\nimport { notify } from "../components/MessageProvider.jsx";
+import React, { useState } from "react";
+import { notify } from "../components/MessageProvider.jsx";
 
 function Icon({ name }) {
   const common = { width: 19, height: 19, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
