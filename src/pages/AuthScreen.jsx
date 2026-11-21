@@ -37,8 +37,8 @@ export default function AuthScreen({ mode, onModeChange }) {
       <section className="auth-card">
         <div className="auth-card-topline" />
         <header className="auth-card-brand">
-          <div className="auth-monogram"><span>EM</span><i /></div>
-          <div className="auth-brand-copy">
+          
+          <div className="auth-brand-copy auth-brand-copy-primary">
             <b>مستر عماد السنافيري</b>
             <span>منصة الرياضيات التعليمية</span>
           </div>
