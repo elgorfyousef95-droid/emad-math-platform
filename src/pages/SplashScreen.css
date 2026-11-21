@@ -92,3 +92,26 @@
  .splash-orbit-ring,.splash-loader-ring{animation:none}
  .splash-float,.splash-main-copy,.splash-brand-corner,.splash-bottom-loader{opacity:1;animation:none}
 }
+
+/* Ten-second signature reveal and seamless hand-off */
+.splash-progress span{animation-duration:10s!important}
+.splash-king-math{position:absolute;z-index:4;left:50%;top:clamp(245px,39vh,390px);transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;min-width:210px;padding:9px 24px 10px;border-top:1px solid rgba(232,199,142,.55);border-bottom:1px solid rgba(232,199,142,.38);background:linear-gradient(90deg,transparent,rgba(5,13,23,.5) 22%,rgba(5,13,23,.5) 78%,transparent);text-align:center;opacity:0;animation:kingReveal 1s 1.9s cubic-bezier(.2,.75,.25,1) forwards;pointer-events:none}
+.splash-king-math:before,.splash-king-math:after{content:"";position:absolute;top:50%;width:6px;height:6px;border:1px solid #e8c78e;transform:translateY(-50%) rotate(45deg);box-shadow:0 0 12px #e8c78e}
+.splash-king-math:before{left:12px}.splash-king-math:after{right:12px}
+.splash-king-math .king-orbit{font-size:14px;color:#f5d9a6;text-shadow:0 0 15px #e8c78e;animation:kingPulse 2.3s ease-in-out infinite}
+.splash-king-math b{font-size:clamp(17px,2.2vw,24px);font-weight:950;letter-spacing:.4px;color:#ffe4b2;text-shadow:0 0 18px rgba(232,199,142,.45),0 3px 12px #000}
+.splash-king-math small{font-size:7px;letter-spacing:3px;color:rgba(255,235,202,.78);font-weight:700}
+@keyframes kingReveal{from{opacity:0;filter:blur(8px);translate:0 12px}to{opacity:1;filter:blur(0);translate:0 0}}
+@keyframes kingPulse{0%,100%{transform:scale(.9);opacity:.7}50%{transform:scale(1.18);opacity:1}}
+.splash-is-leaving{animation:splashSceneExit .7s cubic-bezier(.7,0,.84,0) both;pointer-events:none}
+.splash-is-leaving .splash-progress span{width:100%!important}
+@keyframes splashSceneExit{0%{opacity:1;transform:scale(1);filter:brightness(1)}55%{opacity:1;filter:brightness(1.35);transform:scale(1.018)}100%{opacity:0;filter:brightness(1.8);transform:scale(1.045)}}
+.auth-entry-reveal{min-height:100%;animation:authSceneEnter .8s cubic-bezier(.16,1,.3,1) both;transform-origin:center}
+@keyframes authSceneEnter{0%{opacity:0;transform:translateY(18px) scale(.985);filter:blur(7px)}65%{opacity:1;filter:blur(0)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:700px){
+ .splash-king-math{top:clamp(265px,40vh,360px);min-width:170px;padding:7px 18px}
+ .splash-king-math b{font-size:17px}
+ .splash-king-math small{font-size:6px;letter-spacing:2px}
+}
+@media(max-height:650px) and (orientation:landscape){.splash-king-math{top:38%;padding:4px 14px}.splash-king-math b{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.splash-is-leaving,.auth-entry-reveal{animation:none}.splash-king-math{opacity:1;animation:none}}
