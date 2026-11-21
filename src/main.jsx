@@ -17,13 +17,8 @@ const cards = [
 ];
 function App(){
  const [page,setPage]=useState("splash"),[role,setRole]=useState("student"),[menu,setMenu]=useState(false),[auth,setAuth]=useState(""),[notice,setNotice]=useState("");
- useEffect(()=>{
-  if(page!=="splash") return;
-  const timer=window.setTimeout(()=>setPage("login"),8000);
-  return ()=>window.clearTimeout(timer);
- },[page]);
- if(page==="splash") return <SplashScreen/>;
- if(page==="login"||page==="signup") return <AuthScreen mode={page} onModeChange={setPage}/>;
+ if(page==="splash") return <SplashScreen onComplete={()=>setPage("login")}/>;
+ if(page==="login"||page==="signup") return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={setPage}/></div>;
  const title=sections.find(x=>x[0]===page)?.[2] || (page==="admin"?"لوحة المالك":page==="teacher"?"لوحة المستر":"المنصة");
  const go=(p)=>{setPage(p);setMenu(false);setAuth("");};
  const body=()=>{
