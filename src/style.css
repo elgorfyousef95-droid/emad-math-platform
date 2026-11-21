@@ -650,3 +650,39 @@ html,body,#root{min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
  .auth-form-heading h1{font-size:22px!important}
  .signup-step-tab span{font-size:7px!important}
 }
+
+
+/* Cinematic 8-second opening */
+.splash-welcome-panel{
+  bottom:max(48px,calc(env(safe-area-inset-bottom) + 34px))!important;
+  width:min(650px,calc(100% - 34px))!important;
+  padding:20px 26px 17px!important;
+  background:linear-gradient(125deg,rgba(5,13,24,.82),rgba(12,25,40,.72) 55%,rgba(22,29,38,.68))!important;
+  border:1px solid rgba(238,211,160,.34)!important;
+  box-shadow:0 22px 75px rgba(0,0,0,.42),inset 0 1px rgba(255,255,255,.1)!important;
+  backdrop-filter:blur(15px) saturate(1.15)!important;
+  -webkit-backdrop-filter:blur(15px) saturate(1.15)!important;
+}
+.splash-welcome-panel:before{
+  content:"";position:absolute;inset:0 auto 0 0;width:3px;border-radius:20px 0 0 20px;
+  background:linear-gradient(180deg,transparent,#e8c78d 45%,transparent);opacity:.8;
+}
+.splash-reveal{opacity:0;transform:translateY(13px);animation:splashTextReveal .8s cubic-bezier(.2,.75,.25,1) forwards}
+.splash-reveal-one{animation-delay:.25s}
+.splash-reveal-two{animation-delay:.85s}
+.splash-reveal-three{animation-delay:1.55s}
+.splash-reveal-four{animation-delay:2.25s}
+.splash-welcome-panel h1 em{font-style:normal;color:#edcf98;text-shadow:0 0 25px rgba(226,190,127,.2)}
+.splash-progress span{animation-duration:8s!important}
+.splash-bottom-mark{font-size:9px!important;letter-spacing:.5px;text-shadow:0 2px 14px #000}
+@keyframes splashTextReveal{to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){
+ .splash-welcome-panel{bottom:max(43px,calc(env(safe-area-inset-bottom) + 29px))!important;padding:16px 15px 13px!important;width:calc(100% - 24px)!important}
+ .splash-welcome-panel h1{font-size:20px!important;line-height:1.5!important}
+ .splash-welcome-panel>p{font-size:10px!important;line-height:1.85!important}
+ .splash-loading-row{font-size:9px!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .splash-reveal{opacity:1;transform:none;animation:none}
+ .splash-orbit-loader{animation:none!important}
+}
