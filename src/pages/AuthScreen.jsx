@@ -75,6 +75,8 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
   const [step, setStep] = useState(0);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState("");
+  const [cropSource, setCropSource] = useState("");
+  const [cropZoom, setCropZoom] = useState(1);
   const [loginBusy, setLoginBusy] = useState(false);
   const [signupBusy, setSignupBusy] = useState(false);
   const [createdAccount, setCreatedAccount] = useState(null);
@@ -108,12 +110,19 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     setConfirmPassword("");
     setStudentId("");
     setAvatarFile(null);
+    setCropSource("");
+    setCropZoom(1);
     setForm({ fullName:"", phone:"", grade:"", group:"", parentName:"", parentPhone:"" });
   }, [mode]);
 
   const focusIntoView = event => {
     const target = event.currentTarget;
-    window.setTimeout(() => target?.scrollIntoView?.({ behavior: "smooth", block: "center" }), 220);
+    window.setTimeout(() => {
+      const card = target?.closest?.(".auth-card");
+      if (!card || !target) return;
+      const fieldTop = target.getBoundingClientRect().top - card.getBoundingClientRect().top + card.scrollTop;
+      card.scrollTo({ top: Math.max(0, fieldTop - 105), behavior: "smooth" });
+    }, 120);
   };
 
   const nextStep = () => {
@@ -147,8 +156,42 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
       event.target.value = "";
       return showNotice("حجم الصورة أكبر من 3 ميجابايت. اختار صورة أصغر.");
     }
-    setAvatarFile(file);
+    const source = URL.createObjectURL(file);
+    setCropSource(source);
+    setCropZoom(1);
     setNotice("");
+    event.target.value = "";
+  };
+
+  const cancelAvatarCrop = () => {
+    if (cropSource) URL.revokeObjectURL(cropSource);
+    setCropSource("");
+    setCropZoom(1);
+  };
+
+  const confirmAvatarCrop = () => {
+    if (!cropSource) return;
+    const image = new Image();
+    image.onload = () => {
+      const side = Math.min(image.naturalWidth, image.naturalHeight) / cropZoom;
+      const sx = (image.naturalWidth - side) / 2;
+      const sy = (image.naturalHeight - side) / 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = 720;
+      canvas.height = 720;
+      const context = canvas.getContext("2d");
+      context.drawImage(image, sx, sy, side, side, 0, 0, 720, 720);
+      canvas.toBlob(blob => {
+        if (!blob) return showNotice("تعذر تجهيز الصورة. اختار صورة أخرى.");
+        const cropped = new File([blob], "student-avatar.jpg", { type: "image/jpeg", lastModified: Date.now() });
+        setAvatarFile(cropped);
+        if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarPreview(URL.createObjectURL(cropped));
+        cancelAvatarCrop();
+      }, "image/jpeg", 0.92);
+    };
+    image.onerror = () => showNotice("تعذر قراءة الصورة. جرّب ملفًا آخر.");
+    image.src = cropSource;
   };
 
   const submitSignup = async () => {
@@ -200,19 +243,25 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     }
   };
 
-  const Field = ({ label, value, onChange, placeholder, type = "text", inputMode, autoComplete }) => (
+  const AuthField = ({ label, value, onChange, placeholder, type = "text", inputMode, autoComplete }) => (
     <label className="signup-field">
       <span>{label}</span>
-      <input type={type} inputMode={inputMode} autoComplete={autoComplete} value={value} onChange={e => onChange(e.target.value)} onFocus={focusIntoView} placeholder={placeholder}/>
+      <input type={type} inputMode={inputMode} autoComplete={autoComplete} value={value} onChange={e => onChange(e.target.value)} onFocus={event => {
+        const card = event.currentTarget.closest(".auth-card");
+        if (card) {
+          const fieldTop = event.currentTarget.getBoundingClientRect().top - card.getBoundingClientRect().top + card.scrollTop;
+          card.scrollTo({ top: Math.max(0, fieldTop - 110), behavior: "smooth" });
+        }
+      }} placeholder={placeholder}/>
     </label>
   );
 
   return (
-    <main ref={scrollRef} className={`auth-screen auth-screen-${mode}`}>
+    <main className={`auth-screen auth-screen-${mode}`}>
       <div className="auth-screen-bg" />
       <div className="auth-glow auth-glow-one" />
       <div className="auth-glow auth-glow-two" />
-      <section className={`auth-card ${signup ? "auth-card-signup" : "auth-card-login"} ${createdAccount ? "auth-card-created" : ""}`}>
+      <section ref={scrollRef} className={`auth-card ${signup ? "auth-card-signup" : "auth-card-login"} ${createdAccount ? "auth-card-created" : ""}`}>
         <div className="auth-card-topline" />
         {!createdAccount && <>
           <header className="auth-card-brand">
@@ -268,25 +317,25 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
                     <div className="signup-photo-copy"><b>صورة الحساب</b><span>صورة واضحة لملفك الشخصي</span><label className="signup-photo-button"><input type="file" accept="image/jpeg,image/png,image/webp" onChange={chooseAvatar}/> <Icon name="image" size={16}/> {avatarFile ? "تغيير الصورة" : "اختيار صورة"}</label><small>JPG أو PNG أو WEBP · حتى 3 ميجابايت</small></div>
                   </div>
                   <div className="signup-fields">
-                    <Field label="الاسم بالكامل" value={form.fullName} onChange={v=>update("fullName",v)} placeholder="اكتب الاسم رباعي" autoComplete="name"/>
-                    <Field label="رقم الهاتف" value={form.phone} onChange={v=>update("phone",v)} placeholder="01xxxxxxxxx" inputMode="tel" autoComplete="tel"/>
+                    <AuthField label="الاسم بالكامل" value={form.fullName} onChange={v=>update("fullName",v)} placeholder="اكتب الاسم رباعي" autoComplete="name"/>
+                    <AuthField label="رقم الهاتف" value={form.phone} onChange={v=>update("phone",v)} placeholder="01xxxxxxxxx" inputMode="tel" autoComplete="tel"/>
                   </div>
                 </>}
 
                 {step === 1 && <div className="signup-fields">
                   <label className="signup-field"><span>الصف الدراسي</span><select value={form.grade} onChange={e=>update("grade",e.target.value)} onFocus={focusIntoView}><option value="">اختر الصف الدراسي</option><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label>
-                  <Field label="المجموعة أو ميعاد الحصة" value={form.group} onChange={v=>update("group",v)} placeholder="اكتب المجموعة أو الميعاد"/>
+                  <AuthField label="المجموعة أو ميعاد الحصة" value={form.group} onChange={v=>update("group",v)} placeholder="اكتب المجموعة أو الميعاد"/>
                 </div>}
 
                 {step === 2 && <div className="signup-fields">
-                  <Field label="اسم ولي الأمر" value={form.parentName} onChange={v=>update("parentName",v)} placeholder="اسم ولي الأمر بالكامل"/>
-                  <Field label="رقم هاتف ولي الأمر" value={form.parentPhone} onChange={v=>update("parentPhone",v)} placeholder="01xxxxxxxxx" inputMode="tel"/>
+                  <AuthField label="اسم ولي الأمر" value={form.parentName} onChange={v=>update("parentName",v)} placeholder="اسم ولي الأمر بالكامل"/>
+                  <AuthField label="رقم هاتف ولي الأمر" value={form.parentPhone} onChange={v=>update("parentPhone",v)} placeholder="01xxxxxxxxx" inputMode="tel"/>
                 </div>}
 
                 {step === 3 && <div className="signup-fields">
-                  <Field label="أنشئ كلمة مرور" value={password} onChange={setPassword} placeholder="8 أحرف على الأقل" type={showPassword ? "text" : "password"} autoComplete="new-password"/>
+                  <AuthField label="أنشئ كلمة مرور" value={password} onChange={setPassword} placeholder="8 أحرف على الأقل" type={showPassword ? "text" : "password"} autoComplete="new-password"/>
                   <div className="signup-password-tools"><button type="button" onClick={()=>setShowPassword(v=>!v)}><Icon name="eye" size={16}/>{showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}</button><span>استخدم كلمة مرور يصعب تخمينها.</span></div>
-                  <Field label="تأكيد كلمة المرور" value={confirmPassword} onChange={setConfirmPassword} placeholder="اكتب كلمة المرور مرة أخرى" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password"/>
+                  <AuthField label="تأكيد كلمة المرور" value={confirmPassword} onChange={setConfirmPassword} placeholder="اكتب كلمة المرور مرة أخرى" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password"/>
                   <div className="signup-password-tools"><button type="button" onClick={()=>setShowConfirmPassword(v=>!v)}><Icon name="eye" size={16}/>{showConfirmPassword ? "إخفاء التأكيد" : "إظهار التأكيد"}</button></div>
                 </div>}
 
@@ -326,6 +375,17 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
           </>
         )}
       </section>
+      {cropSource && (
+        <div className="avatar-crop-overlay" role="dialog" aria-modal="true" aria-label="ضبط صورة الحساب">
+          <section className="avatar-crop-dialog">
+            <div className="avatar-crop-heading"><span>تجهيز صورة الحساب</span><button type="button" onClick={cancelAvatarCrop} aria-label="إغلاق">×</button></div>
+            <p>حرّك مستوى التكبير حتى تظهر الصورة بالشكل المناسب داخل الإطار.</p>
+            <div className="avatar-crop-stage"><img src={cropSource} alt="معاينة قص الصورة" style={{ transform: `scale(${cropZoom})` }}/><span className="avatar-crop-ring"/></div>
+            <label className="avatar-crop-zoom"><span>تكبير الصورة</span><input type="range" min="1" max="2.5" step="0.05" value={cropZoom} onChange={event=>setCropZoom(Number(event.target.value))}/><b>{Math.round(cropZoom*100)}%</b></label>
+            <div className="avatar-crop-actions"><button type="button" onClick={cancelAvatarCrop}>إلغاء</button><button type="button" onClick={confirmAvatarCrop}>اعتماد الصورة</button></div>
+          </section>
+        </div>
+      )}
       <footer className="auth-footer"><span>مستر عماد السنافيري</span><i/><span>خطوتك القادمة تبدأ من هنا</span></footer>
     </main>
   );
