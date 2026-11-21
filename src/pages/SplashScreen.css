@@ -115,3 +115,33 @@
 }
 @media(max-height:650px) and (orientation:landscape){.splash-king-math{top:38%;padding:4px 14px}.splash-king-math b{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.splash-is-leaving,.auth-entry-reveal{animation:none}.splash-king-math{opacity:1;animation:none}}
+
+
+/* Keep the King of Mathematics title in the upper title zone, clear of the teacher's face. */
+.splash-king-math{
+  top:clamp(66px,9.5vh,112px)!important;
+  z-index:4;
+}
+.splash-main-copy{
+  top:clamp(145px,20vh,205px)!important;
+}
+/* Finish the outgoing scene before mounting the login page; avoid a cut-off transition. */
+.splash-is-leaving{
+  animation:splashSceneExit .85s cubic-bezier(.7,0,.84,0) both!important;
+}
+@keyframes splashSceneExit{
+  0%{opacity:1;transform:scale(1);filter:brightness(1)}
+  55%{opacity:1;filter:brightness(1.28);transform:scale(1.012)}
+  100%{opacity:0;filter:brightness(1.55);transform:scale(1.025)}
+}
+.auth-entry-reveal{
+  animation:authSceneEnter .95s cubic-bezier(.16,1,.3,1) both!important;
+}
+@media(max-width:700px){
+  .splash-king-math{top:clamp(58px,9vh,82px)!important;min-width:160px}
+  .splash-main-copy{top:clamp(125px,19vh,155px)!important}
+}
+@media(max-height:650px) and (orientation:landscape){
+  .splash-king-math{top:56px!important}
+  .splash-main-copy{top:112px!important}
+}
