@@ -440,3 +440,89 @@ html,body,#root{min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
  .splash-background-image{object-fit:contain;object-position:center center}
  .splash-welcome-panel{margin-bottom:22px;width:min(700px,calc(100% - 48px))}
 }
+
+
+/* Fixed authentication viewport: only the centered card scrolls */
+.auth-screen{
+  position:fixed!important;inset:0!important;width:100%;height:100svh;min-height:0!important;
+  overflow:hidden!important;display:flex!important;align-items:center!important;justify-content:center!important;
+  padding:18px 14px!important;overscroll-behavior:none;touch-action:pan-y;
+}
+.auth-card{
+  width:min(100%,510px);max-height:calc(100svh - 36px);overflow-y:auto!important;overflow-x:hidden!important;
+  overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(220,190,132,.55) transparent;
+  -webkit-overflow-scrolling:touch;touch-action:pan-y;scroll-behavior:smooth;
+}
+.auth-card::-webkit-scrollbar{width:5px}
+.auth-card::-webkit-scrollbar-track{background:transparent}
+.auth-card::-webkit-scrollbar-thumb{background:rgba(220,190,132,.42);border-radius:8px}
+.auth-footer{position:fixed!important;bottom:max(8px,env(safe-area-inset-bottom))!important;pointer-events:none}
+.auth-card-signup{width:min(100%,560px);padding-top:30px}
+.signup-progress-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 10px}
+.signup-progress-head span{font-size:12px;font-weight:900;color:#f2d9a8}
+.signup-progress-head small{font-size:10px;color:#9cacc0}
+.signup-progress-track{height:4px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden;margin-bottom:16px}
+.signup-progress-track span{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#b98c4e,#f1dba9);transition:width .3s ease}
+.signup-step-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:18px}
+.signup-step-tab{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;color:#8190a5;font-size:9px;line-height:1.5}
+.signup-step-tab i{width:27px;height:27px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.16);border-radius:50%;font-style:normal;font-size:10px;font-weight:800;background:rgba(255,255,255,.04)}
+.signup-step-tab.active{color:#f0d49d;font-weight:900}
+.signup-step-tab.active i,.signup-step-tab.done i{border-color:#d9b77b;background:rgba(217,183,123,.16);color:#f5dca9}
+.signup-step-tab.done{color:#c8b58e}
+.signup-fields{display:grid;gap:13px}
+.signup-field{display:grid;gap:7px;color:#e5eaf1;font-size:11px;font-weight:800}
+.signup-field input,.signup-field select{width:100%;height:51px;padding:0 14px;border:1px solid rgba(201,215,232,.2);border-radius:12px;background:rgba(3,12,24,.72);color:#fff;font:inherit;font-size:12px;outline:none}
+.signup-field input::placeholder{color:#78899f}
+.signup-field input:focus,.signup-field select:focus{border-color:#d9b77b;box-shadow:0 0 0 3px rgba(217,183,123,.1)}
+.signup-field select option{background:#102036;color:#fff}
+.signup-actions{display:flex;align-items:center;gap:10px;margin-top:18px}
+.signup-actions .auth-submit{flex:1;margin-top:0}
+.signup-back{height:52px;min-width:88px;padding:0 15px;border:1px solid rgba(255,255,255,.18);border-radius:12px;background:rgba(255,255,255,.06);color:#e8edf4;font-size:11px;font-weight:800}
+.signup-review{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.signup-review>div{min-width:0;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:11px;background:rgba(3,12,24,.45)}
+.signup-review span,.signup-review b{display:block;overflow-wrap:anywhere}
+.signup-review span{font-size:9px;color:#91a1b6;margin-bottom:5px}
+.signup-review b{font-size:11px;color:#f3d9a7}
+.signup-review p{grid-column:1/-1;margin:5px 0 0;color:#aab8ca;font-size:10px;line-height:1.9}
+.auth-screen-signup .auth-form-heading{margin-bottom:17px}
+.auth-screen-signup .auth-card-rule{margin:18px 0}
+@media(max-width:600px){
+ .auth-screen{padding:12px 10px!important}
+ .auth-card{max-height:calc(100svh - 24px);padding:24px 19px 20px}
+ .auth-card-signup{padding-top:23px}
+ .auth-footer{display:none}
+ .auth-screen-signup .auth-form-heading h1{font-size:23px}
+ .signup-step-tab{font-size:8px}
+ .signup-review{gap:7px}
+ .signup-review>div{padding:10px}
+}
+@media(max-width:360px){
+ .auth-card{padding-right:15px;padding-left:15px}
+ .signup-step-tab span{font-size:7px}
+ .signup-actions .auth-submit{font-size:10px}
+ .signup-back{min-width:70px}
+}
+
+/* Welcome screen: keep the supplied portrait intact; place copy above it */
+.splash-screen{align-items:flex-start!important;justify-content:center!important}
+.splash-background-image{object-fit:contain!important;object-position:center center!important}
+.splash-photo-backdrop{background-image:url('/IMG-20261121-WA0004.jpg')!important;background-position:center center!important;background-size:contain!important;background-repeat:no-repeat!important;filter:blur(20px) brightness(.32)!important}
+.splash-image-vignette{background:linear-gradient(180deg,rgba(5,11,20,.72) 0%,rgba(5,11,20,.24) 24%,rgba(5,11,20,0) 52%,rgba(5,11,20,.08) 100%)!important}
+.splash-welcome-panel{
+  position:absolute!important;top:max(22px,env(safe-area-inset-top))!important;left:50%!important;transform:translateX(-50%)!important;
+  width:min(700px,calc(100% - 34px))!important;margin:0!important;padding:19px 25px 17px!important;
+  background:linear-gradient(135deg,rgba(7,17,30,.82),rgba(12,24,39,.7))!important;
+  border:1px solid rgba(238,211,160,.34)!important;border-radius:20px!important;
+  box-shadow:0 16px 55px rgba(0,0,0,.3)!important;backdrop-filter:blur(12px)!important;
+  animation:splashPanelIn .75s cubic-bezier(.2,.75,.25,1) both;
+}
+.splash-welcome-panel h1{font-size:clamp(20px,3vw,29px)!important}
+.splash-welcome-panel>p{font-size:clamp(10px,1.35vw,12px)!important}
+@media(max-width:600px){
+ .splash-background-image{object-position:center center!important}
+ .splash-welcome-panel{top:max(14px,env(safe-area-inset-top))!important;width:calc(100% - 22px)!important;padding:14px 13px 12px!important;border-radius:15px!important}
+ .splash-welcome-panel h1{font-size:19px!important;margin:5px 0 3px!important}
+ .splash-welcome-panel>p{font-size:9px!important;line-height:1.75!important}
+ .splash-loading-row{margin:9px 0 7px!important;font-size:8px!important}
+ .splash-welcome-panel small{font-size:8px!important}
+}
