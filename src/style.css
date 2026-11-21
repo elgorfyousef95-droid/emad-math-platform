@@ -834,3 +834,137 @@ html,body,#root{min-height:100%;width:100%;max-width:100%;overflow-x:hidden}
 @keyframes emadToastIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes emadFadeIn{from{opacity:0}to{opacity:1}}
 @media(max-width:600px){.emad-toast{top:12px;padding:13px}.emad-dialog{padding:25px 18px 18px}}
+
+
+/* Student account creation: mobile-first scrolling and final credentials */
+.auth-screen{
+  height:100svh!important;
+  min-height:100svh!important;
+  max-height:100svh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  padding-top:max(18px,env(safe-area-inset-top))!important;
+  padding-bottom:max(76px,calc(env(safe-area-inset-bottom) + 62px))!important;
+  scroll-behavior:smooth;
+  scroll-padding-top:22px;
+}
+.auth-card{
+  flex:0 0 auto;
+  max-height:none!important;
+  margin:0 auto 16px!important;
+  overflow:visible!important;
+  scroll-margin-top:18px;
+}
+.auth-card-created{width:min(100%,510px)!important}
+.auth-card .signup-fields{display:grid;gap:14px;margin-top:18px}
+.auth-card .signup-field{display:flex;flex-direction:column;gap:8px;margin:0!important;color:#dce3ed}
+.auth-card .signup-field>span{font-size:11px;font-weight:800;color:#e1e8f1}
+.auth-card .signup-field input,
+.auth-card .signup-field select{
+  width:100%;height:51px;padding:0 14px;border-radius:12px;
+  border:1px solid rgba(201,215,232,.22);background:rgba(3,12,24,.72);
+  color:#f7f8fb;font-size:12px;outline:none;
+}
+.auth-card .signup-field select{appearance:auto}
+.auth-card .signup-field input:focus,
+.auth-card .signup-field select:focus{
+  border-color:rgba(231,197,137,.85);
+  box-shadow:0 0 0 4px rgba(217,183,123,.11);
+}
+.signup-photo-picker{
+  display:flex;align-items:center;gap:15px;padding:15px;margin:15px 0 18px;
+  border:1px solid rgba(219,190,139,.23);border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+}
+.signup-photo-preview{
+  width:78px;height:78px;flex:0 0 78px;border-radius:50%;
+  display:grid;place-items:center;overflow:hidden;
+  color:#e3c58e;background:rgba(3,12,24,.8);
+  border:2px solid rgba(224,194,141,.62);
+}
+.signup-photo-preview img,.signup-success-profile img,.signup-review-photo img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.signup-photo-copy{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}
+.signup-photo-copy>b{font-size:12px;color:#f3e7d2}
+.signup-photo-copy>span,.signup-photo-copy>small{font-size:10px;color:#9eacc0}
+.signup-photo-button{
+  display:inline-flex!important;align-items:center;gap:7px!important;
+  margin:3px 0!important;padding:8px 12px;border-radius:9px;
+  border:1px solid rgba(226,195,139,.38);background:rgba(220,185,124,.1);
+  color:#f0d6a7!important;font-size:10px!important;font-weight:800;
+  cursor:pointer;
+}
+.signup-photo-button input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+.signup-progress-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;color:#f0d6a7;font-size:12px;font-weight:800}
+.signup-progress-head small{color:#aeb9c8;font-size:10px}
+.signup-progress-track{height:4px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.1)}
+.signup-progress-track span{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#b78a50,#f0d6a7);transition:width .25s ease}
+.signup-step-tabs{display:flex;gap:8px;overflow-x:auto;padding:13px 0 5px;scrollbar-width:none}
+.signup-step-tabs::-webkit-scrollbar{display:none}
+.signup-step-tab{display:flex;flex:1 0 auto;align-items:center;gap:6px;min-width:0;color:#77869a;font-size:9px;white-space:nowrap}
+.signup-step-tab i{width:23px;height:23px;flex:0 0 23px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.2);border-radius:50%;font-size:10px;font-style:normal}
+.signup-step-tab.active{color:#f0d6a7}.signup-step-tab.active i,.signup-step-tab.done i{color:#152337;background:#e4c28a;border-color:#e4c28a}
+.signup-step-tab.done{color:#c3d0df}
+.signup-actions{display:flex;gap:10px;align-items:center;margin-top:20px}
+.signup-actions .auth-submit{margin-top:0!important;min-width:0}
+.signup-actions .signup-back{height:49px;flex:0 0 82px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(255,255,255,.055);color:#dce3ed;font-size:11px;font-weight:800}
+.auth-card .auth-submit:disabled{opacity:.65;cursor:wait;transform:none}
+.signup-review{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:16px}
+.signup-review>div:not(.signup-review-photo){display:flex;flex-direction:column;gap:5px;padding:11px;border:1px solid rgba(255,255,255,.1);border-radius:11px;background:rgba(255,255,255,.035);min-width:0}
+.signup-review>div span{font-size:9px;color:#9baabd}
+.signup-review>div b{font-size:11px;color:#f2e8d7;overflow-wrap:anywhere}
+.signup-review-photo{grid-column:1/-1;display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.045);color:#f4e7d2;font-size:12px;font-weight:800}
+.signup-review-photo img{width:48px;height:48px;border-radius:50%;border:1px solid #d7b77e}
+.signup-review>p{grid-column:1/-1;margin:3px 0 0;color:#aab8ca;font-size:10px;line-height:1.9}
+.signup-password-tools{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:-6px}
+.signup-password-tools button{display:inline-flex;align-items:center;gap:6px;padding:5px 0;border:0;background:none;color:#e6c78d;font-size:10px;font-weight:800}
+.signup-password-tools span{color:#92a1b5;font-size:9px}
+.signup-success{text-align:center;direction:rtl}
+.signup-success-icon{width:58px;height:58px;margin:4px auto 13px;border-radius:19px;display:grid;place-items:center;color:#16283c;background:linear-gradient(140deg,#f1d7a2,#c89c5f);box-shadow:0 12px 30px rgba(196,151,83,.22)}
+.signup-success>.auth-kicker{justify-content:center}
+.signup-success h1{margin:9px 0 7px;color:#f7ead4;font-size:24px}
+.signup-success-lead{margin:0 auto 18px;max-width:340px;color:#aebbd0;font-size:11px;line-height:1.9}
+.signup-success-profile{display:flex;align-items:center;gap:12px;text-align:right;padding:12px;border:1px solid rgba(219,190,139,.25);border-radius:14px;background:rgba(255,255,255,.04);margin-bottom:12px}
+.signup-success-profile img{width:58px;height:58px;flex:0 0 58px;border-radius:50%;border:2px solid #d5b477}
+.signup-success-profile div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.signup-success-profile b{color:#f5e8d2;font-size:13px}
+.signup-success-profile span{color:#9eacc0;font-size:10px}
+.signup-verified-pending{display:flex;align-items:center;gap:9px;text-align:right;padding:11px 12px;margin-bottom:11px;border:1px solid rgba(219,190,139,.18);border-radius:12px;background:rgba(220,185,124,.055);color:#e2c58e}
+.signup-verified-pending>span{display:flex;flex:1;flex-direction:column;gap:3px}
+.signup-verified-pending b{font-size:10px;color:#f1dfbf}
+.signup-verified-pending small{font-size:9px;color:#9eacc0;line-height:1.6}
+.signup-verified-pending em{font-style:normal;color:#d7bd91;font-size:9px;white-space:nowrap}
+.signup-credential{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:12px;margin-top:9px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(3,12,24,.56);text-align:right}
+.signup-credential>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.signup-credential span{color:#9eacc0;font-size:10px}
+.signup-credential strong{color:#f3e3c7;font-size:16px;letter-spacing:.4px;overflow-wrap:anywhere}
+.signup-credential .credential-password{font-size:14px;letter-spacing:2px}
+.signup-credential button{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;padding:9px 10px;border:1px solid rgba(220,188,132,.35);border-radius:9px;background:rgba(220,188,132,.09);color:#f0d6a7;font-size:10px;font-weight:800}
+.signup-credential button svg{width:14px;height:14px}
+.signup-security-note{display:flex;align-items:center;justify-content:center;gap:7px;margin:13px 0 3px;color:#9aa9bd;font-size:9px;line-height:1.8}
+.signup-success .auth-submit{margin-top:15px!important}
+.auth-login-form{width:100%}
+.auth-login-form .auth-submit{width:100%}
+@media(max-width:600px){
+  .auth-screen{padding-right:12px!important;padding-left:12px!important;padding-top:14px!important;padding-bottom:max(82px,calc(env(safe-area-inset-bottom) + 68px))!important}
+  .auth-card{width:min(100%,460px)!important;padding:24px 17px 22px!important;margin-bottom:15px!important}
+  .auth-card-created{padding:24px 15px 20px!important}
+  .signup-photo-picker{padding:12px;gap:11px}
+  .signup-photo-preview{width:68px;height:68px;flex-basis:68px}
+  .signup-step-tab{font-size:8px;gap:4px}
+  .signup-step-tab i{width:21px;height:21px;flex-basis:21px}
+  .signup-review{gap:7px}
+  .signup-review>div:not(.signup-review-photo){padding:9px}
+  .signup-credential{padding:10px}
+  .signup-credential strong{font-size:14px}
+  .signup-credential button{padding:8px;font-size:9px}
+}
+@media(min-width:721px) and (min-height:760px){
+  .auth-screen{justify-content:center!important}
+  .auth-card{margin-top:auto!important;margin-bottom:auto!important}
+}
