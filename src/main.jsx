@@ -2,7 +2,8 @@ import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import SplashScreen from "./pages/SplashScreen.jsx";
-import AuthScreen from "./pages/AuthScreen.jsx";\nimport MessageProvider, { notify } from "./components/MessageProvider.jsx";
+import AuthScreen from "./pages/AuthScreen.jsx";
+import MessageProvider, { notify } from "./components/MessageProvider.jsx";
 
 const sections = [
   ["home","⌂","الرئيسية"],["courses","▣","الكورسات"],["lessons","▶","المحاضرات"],["files","▤","الملفات والمذكرات"],["homework","✎","الواجبات"],["exams","▣","الامتحانات"],["results","▥","النتائج والمتابعة"],["schedule","◷","جدول الحصص"],["messages","✉","خدمة العملاء"],["profile","◉","ملفي الشخصي"]
