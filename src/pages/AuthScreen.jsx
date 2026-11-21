@@ -21,7 +21,8 @@ const stepTitles = ["البيانات الشخصية", "البيانات الد�
 export default function AuthScreen({ mode, onModeChange }) {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
-  const [notice, setNotice] = useState("");\n  const showNotice = message => { setNotice(message); if (message) notify({ type: "warning", title: "راجع البيانات", message }); };
+  const [notice, setNotice] = useState("");
+  const showNotice = message => { setNotice(message); if (message) notify({ type: "warning", title: "راجع البيانات", message }); };
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(0);
   const [form, setForm] = useState({ fullName:"", phone:"", grade:"", group:"", parentName:"", parentPhone:"" });
