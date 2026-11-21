@@ -166,6 +166,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     payload.append("avatar", avatarFile);
     try {
       const result = await createStudentAccount(payload);
+      setShowPassword(false);
       if (result.session) saveStudentSession(result.session);
       setCreatedAccount({
         studentNumber: String(result.student_number),
