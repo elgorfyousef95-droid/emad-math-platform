@@ -256,3 +256,82 @@
  .emad-home-bottom-links button>span{width:29px;height:29px}.emad-home-bottom-links button>b{font-size:8px}.emad-home-bottom-links button>small{font-size:7px}
 }
 @media(max-width:380px){.emad-module-card{padding:9px 7px;gap:6px}.emad-module-text b{font-size:9px}.emad-module-text small{font-size:7px}.emad-module-arrow{display:none}.emad-feature-card>b{font-size:12px}}
+
+
+/* 2026 premium visual direction: photography-led, page-specific imagery */
+.emad-welcome-hero{
+ background:
+  linear-gradient(90deg,rgba(5,13,25,.97) 0%,rgba(7,17,31,.91) 43%,rgba(7,17,31,.50) 100%),
+  url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1900&q=88") center 48%/cover,
+  linear-gradient(120deg,#10233a,#091421);
+ border-color:rgba(231,195,123,.38);
+ min-height:430px;
+}
+.emad-welcome-hero:before{opacity:.11;background-size:34px 34px}
+.emad-welcome-copy{max-width:710px}
+.emad-welcome-copy h1{font-size:clamp(34px,4.5vw,58px);text-shadow:0 8px 35px #0009}
+.emad-hero-visual{min-height:310px}
+.emad-teacher-photo-frame{
+ position:absolute;z-index:2;width:min(245px,72%);height:285px;overflow:hidden;
+ border:2px solid rgba(239,207,145,.78);border-radius:115px 115px 25px 25px;
+ background:#13243a;box-shadow:0 25px 65px #0009,0 0 0 9px #e9c47712;
+ transform:rotate(2deg);
+}
+.emad-teacher-photo-frame img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.emad-teacher-photo-frame:after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,#071321d9)}
+.emad-teacher-photo-frame span{position:absolute;z-index:3;bottom:13px;right:0;left:0;text-align:center;color:#f4d89e;font-size:11px;font-weight:900}
+.emad-hero-visual .emad-orbit{z-index:1;pointer-events:none}
+.emad-hero-visual .emad-math-core{z-index:3;width:104px;height:104px;border-radius:30px;transform:translate(-75px,70px) rotate(-9deg);opacity:.96}
+.emad-hero-visual .emad-math-core span{font-size:72px}
+.emad-hero-visual .emad-math-core b,.emad-hero-visual .emad-math-core i,.emad-hero-visual .emad-math-core small{font-size:13px}
+.emad-hero-visual .note-top{z-index:4;top:3px;left:0}
+.emad-hero-visual .note-bottom{z-index:4;bottom:2px;right:0}
+.emad-module-card{background-color:#11233a}
+.emad-module-card:before{
+ content:"";position:absolute;inset:0 auto 0 0;width:31%;opacity:.20;
+ background-size:cover;background-position:center;mask-image:linear-gradient(90deg,#000,transparent);
+ pointer-events:none;
+}
+.emad-module-card:nth-child(1):before{background-image:url("https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(2):before{background-image:url("https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(3):before{background-image:url("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(4):before{background-image:url("https://images.unsplash.com/photo-1455390582262-044c6a8?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(5):before{background-image:url("https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(6):before{background-image:url("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(7):before{background-image:url("https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(8):before{background-image:url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(9):before{background-image:url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card:nth-child(10):before{background-image:url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=500&q=75")}
+.emad-module-card>*{position:relative;z-index:1}
+.emad-feature-support{background:linear-gradient(90deg,#112c3beF,#123a4be0),url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1000&q=80") center/cover}
+.emad-feature-ai{background:linear-gradient(90deg,#24213deF,#332c4de0),url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1000&q=80") center/cover}
+.platform-page-banner{
+ background:
+  linear-gradient(100deg,rgba(9,22,38,.96) 0%,rgba(12,27,45,.88) 57%,rgba(12,27,45,.50) 100%),
+  var(--page-artwork) center 45%/cover,
+  linear-gradient(110deg,#132740,#0d1a2b);
+ border-color:rgba(218,185,119,.25);
+ min-height:190px;
+}
+.platform-page-banner:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,#07132135,transparent 60%)}
+.platform-page-banner>div{position:relative;z-index:1}
+.platform-banner-art{color:#f0d08b88;filter:drop-shadow(0 8px 25px #0008)}
+.platform-page-banner h1{font-size:clamp(25px,3vw,36px);font-weight:950}
+.platform-page-banner p{color:#d0d8e3}
+.platform-shell{background:radial-gradient(ellipse at 50% -30%,#253c58 0%,#0b1525 48%,#070d17 100%)}
+.platform-topbar{border-bottom-color:#e9c47730}
+.platform-navigation>button,.platform-nav-more>button{font-size:12px}
+@media(max-width:760px){
+ .emad-welcome-hero{background:
+  linear-gradient(180deg,rgba(5,13,25,.91),rgba(7,17,31,.88)),
+  url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1100&q=82") center/cover}
+ .emad-hero-visual{min-height:250px;height:250px}
+ .emad-teacher-photo-frame{height:220px;width:175px}
+ .emad-hero-visual .emad-orbit{width:195px;height:195px}
+ .emad-hero-visual .emad-orbit.orbit-two{width:225px;height:225px}
+ .emad-hero-visual .emad-math-core{width:78px;height:78px;transform:translate(-60px,60px) rotate(-9deg)}
+ .emad-hero-visual .emad-math-core span{font-size:55px}
+ .emad-welcome-hero{padding-top:22px}
+ .platform-page-banner{min-height:160px;padding:22px 18px}
+ .platform-page-banner p{font-size:10px}
+}
