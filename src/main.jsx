@@ -92,7 +92,25 @@ function App(){
   <div className="platform-bottom-line"><span>مستر عماد السنافيري</span><span>منصة تعليمية متخصصة</span><span>© 2026</span></div>
  </div>;
 }
-function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner"><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
+const pageArtwork={
+ book:"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1500&q=85",
+ play:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=85",
+ exam:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
+ task:"https://images.unsplash.com/photo-1455390582262-044c加6a8?auto=format&fit=crop&w=1500&q=85",
+ file:"https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1500&q=85",
+ chart:"https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1500&q=85",
+ calendar:"https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1500&q=85",
+ live:"https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1500&q=85",
+ spark:"https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1500&q=85",
+ users:"https://images.unsplash.com/photo-152220向2176988-66273c2fd55f?auto=format&fit=crop&w=1500&q=85",
+ support:"https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1500&q=85",
+ settings:"https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1500&q=85",
+ lock:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
+ ticket:"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1500&q=85",
+ user:"https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1500&q=85",
+ bell:"https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1500&q=85"
+};
+function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
  const name=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
  const modules=[
@@ -124,6 +142,7 @@ function HomePage({profile,subscription,go,grade,unread}){
     </div>
    </div>
    <div className="emad-hero-visual" aria-hidden="true">
+    <div className="emad-teacher-photo-frame"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/><span>مستر عماد السنافيري</span></div>
     <div className="emad-orbit orbit-one"/><div className="emad-orbit orbit-two"/>
     <div className="emad-math-core"><span>∑</span><b>f(x)</b><i>π</i><small>∫</small></div>
     <div className="emad-float-note note-top">x² + y²</div><div className="emad-float-note note-bottom">MATH / 2026</div>
