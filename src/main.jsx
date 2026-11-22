@@ -90,14 +90,69 @@ function App(){
 }
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner"><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
- const name=profile?.full_name?.trim()?.split(/\s+/)[0]||"طالبنا";
- const modules=[["courses","المحتوى التعليمي","الكورسات والوحدات","book"],["lessons","المحاضرات","شرح الدروس","play"],["exams","الامتحانات","اختبارات وتقييمات","exam"],["homework","الواجبات","التدريبات المطلوبة","task"],["files","المذكرات والملفات","مكتبتك التعليمية","file"],["results","النتائج","متابعة مستواك","chart"],["schedule","جدول الحصص","مواعيدك الدراسية","calendar"],["live","المحاضرات المباشرة","حصص البث المباشر","live"]];
- return <div className="platform-page">
-  <section className="platform-home-hero"><div className="platform-home-hero-content"><span className="platform-eyebrow">YOUR LEARNING JOURNEY</span><h1>أهلاً {name}،<br/><em>مستقبلك يبدأ من هنا.</em></h1><p>مساحتك التعليمية منظمة حسب صفك الدراسي، وكل أدواتك في مكان واحد.</p><div className="platform-hero-meta"><span><Icon name="book" size={15}/>{grade||"لم يتم تحديد الصف"}</span><span><Icon name="ticket" size={15}/>{subscription?"اشتراك نشط":"لم يتم تفعيل الاشتراك"}</span></div><button className="platform-gold-button" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"متابعة التعلم":"تفعيل الاشتراك"}<Icon name="arrow" size={17}/></button></div><div className="platform-hero-equation"><span>∫</span><b>f(x)</b><i>π</i><small>∑</small></div></section>
-  <section className="platform-profile-strip"><div className="platform-profile-main">{profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<div className="platform-profile-placeholder"><Icon name="user" size={24}/></div>}<div><b>{profile?.full_name||"حساب الطالب"} {profile?.is_verified&&<span className="platform-verified" title="حساب موثق"><Icon name="crown" size={12}/></span>}</b><small>رقم الطالب: {profile?.student_number||"—"} · {grade||"الصف غير محدد"}</small></div></div><button onClick={()=>go("profile")}>عرض الملف الشخصي<Icon name="arrow" size={15}/></button></section>
-  <section className="platform-section-block"><div className="platform-section-title"><div><span>مساحتك الدراسية</span><h2>الأقسام والخدمات</h2></div><small>كل خدمة في صفحة مستقلة</small></div><div className="platform-service-grid">{modules.map(([id,title,desc,ico],i)=><button key={id} className="platform-service-card" onClick={()=>go(id)}><span className={"platform-service-icon service-"+i}><Icon name={ico} size={22}/></span><span className="platform-service-copy"><b>{title}</b><small>{desc}</small></span><Icon name="chevron" size={17}/></button>)}</div></section>
-  <section className="platform-wide-promos"><button className="platform-promo-card promo-support" onClick={()=>go("messages")}><span>STUDENT CARE</span><b>مركز الدعم الفني</b><small>خدمة مساعدة ومتابعة لطلباتك</small><Icon name="arrow" size={18}/></button><button className="platform-promo-card promo-ai" onClick={()=>go("ai")}><span>SMART MATH ASSISTANT</span><b>المساعد الذكي</b><small>مساحة مخصصة للشرح وحل المسائل</small><Icon name="arrow" size={18}/></button></section>
-  <section className="platform-home-footer-links"><button onClick={()=>go("notifications")}><Icon name="bell"/><span>الإشعارات</span>{unread>0&&<b>{unread}</b>}</button><button onClick={()=>go("subscriptions")}><Icon name="ticket"/><span>إدارة الاشتراك</span></button><button onClick={()=>go("settings")}><Icon name="settings"/><span>إعدادات الحساب</span></button><button onClick={()=>go("groups")}><Icon name="users"/><span>الجروبات الدراسية</span></button></section>
+ const name=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
+ const modules=[
+  ["courses","المحتوى التعليمي","الكورسات والوحدات الدراسية","book"],
+  ["lessons","المحاضرات والدروس","شرح المنهج خطوة بخطوة","play"],
+  ["exams","مركز الامتحانات","اختبر فهمك وتابع تقييماتك","exam"],
+  ["homework","الواجبات والتدريبات","تدريباتك ومهامك الدراسية","task"],
+  ["files","المكتبة التعليمية","المذكرات والملفات الدراسية","file"],
+  ["results","درجاتي ونتائجي","راجع نتائجك عند نشرها","chart"],
+  ["schedule","الجدول الدراسي","مواعيد الحصص والمحاضرات","calendar"],
+  ["live","المحاضرات المباشرة","ادخل إلى حصص البث المباشر","live"],
+  ["groups","الجروبات الدراسية","تواصل داخل مجموعتك الدراسية","users"],
+  ["ai","المساعد الذكي","مساعدة في فهم مسائل الرياضيات","spark"]
+ ];
+ return <div className="platform-page emad-home-v2">
+  <section className="emad-welcome-hero">
+   <div className="emad-welcome-copy">
+    <span className="platform-eyebrow">EMAD EL SANAFIRY · MATH LEARNING</span>
+    <div className="emad-hero-kicker"><span className="emad-kicker-dot"/> بوابتك التعليمية المتكاملة</div>
+    <h1>أهلاً بيك يا {name}<br/><em>هنا تبدأ خطوة جديدة نحو التفوق.</em></h1>
+    <p>كل ما تحتاجه في رحلتك مع الرياضيات، منظم في مكان واحد ومخصص لصفك الدراسي.</p>
+    <div className="emad-welcome-tags">
+     <span><Icon name="book" size={15}/>{grade||"لم يتم تحديد الصف"}</span>
+     <span className={subscription?"is-active":""}><Icon name="shield" size={15}/>{subscription?"اشتراكك مفعل":"الاشتراك غير مفعل"}</span>
+    </div>
+    <div className="emad-hero-actions">
+     <button className="platform-gold-button" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ المذاكرة الآن":"تفعيل الاشتراك"}<Icon name="arrow" size={17}/></button>
+     <button className="emad-outline-button" onClick={()=>go("schedule")}>عرض الجدول<Icon name="calendar" size={16}/></button>
+    </div>
+   </div>
+   <div className="emad-hero-visual" aria-hidden="true">
+    <div className="emad-orbit orbit-one"/><div className="emad-orbit orbit-two"/>
+    <div className="emad-math-core"><span>∑</span><b>f(x)</b><i>π</i><small>∫</small></div>
+    <div className="emad-float-note note-top">x² + y²</div><div className="emad-float-note note-bottom">MATH / 2026</div>
+   </div>
+   <div className="emad-hero-bottom"><span>تعلم بفهم</span><span/><span>تدرّب بثقة</span><span/><span>تقدّم باستمرار</span></div>
+  </section>
+
+  <section className="emad-student-overview">
+   <div className="emad-student-identity">
+    {profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<div className="platform-profile-placeholder"><Icon name="user" size={23}/></div>}
+    <div><small>مساحتك الشخصية</small><b>{profile?.full_name||"حساب الطالب"} {profile?.is_verified&&<span className="platform-verified" title="حساب موثق"><Icon name="crown" size={12}/></span>}</b><span>رقم الطالب: {profile?.student_number||"—"}</span></div>
+   </div>
+   <div className="emad-overview-divider"/>
+   <div className="emad-overview-item"><span className="emad-overview-icon"><Icon name="graduation-cap" size={18}/></span><div><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div></div>
+   <div className="emad-overview-item"><span className="emad-overview-icon"><Icon name="ticket" size={18}/></span><div><small>حالة الاشتراك</small><b className={subscription?"emad-status-active":"emad-status-off"}>{subscription?"نشط":"غير مفعل"}</b></div></div>
+   <button className="emad-profile-link" onClick={()=>go("profile")}>ملفي الشخصي<Icon name="arrow" size={15}/></button>
+  </section>
+
+  <section className="emad-home-section">
+   <div className="emad-section-heading"><div><span>YOUR LEARNING SPACE</span><h2>كل أدواتك الدراسية</h2><p>اختار القسم اللي عايز تبدأ منه.</p></div><div className="emad-heading-mark">01 <i/> 03</div></div>
+   <div className="emad-module-grid">{modules.map(([id,title,desc,ico],i)=><button key={id} className="emad-module-card" onClick={()=>go(id)}><span className={"emad-module-icon module-"+i}><Icon name={ico} size={22}/></span><span className="emad-module-text"><b>{title}</b><small>{desc}</small></span><span className="emad-module-arrow"><Icon name="arrow" size={15}/></span></button>)}</div>
+  </section>
+
+  <section className="emad-home-feature-row">
+   <button className="emad-feature-card emad-feature-support" onClick={()=>go("messages")}><span className="emad-feature-label">STUDENT SUPPORT</span><span className="emad-feature-symbol"><Icon name="support" size={27}/></span><b>محتاج مساعدة؟</b><small>تواصل مع مركز الدعم الفني وتابع طلباتك.</small><span className="emad-feature-link">افتح مركز الدعم <Icon name="arrow" size={15}/></span></button>
+   <button className="emad-feature-card emad-feature-ai" onClick={()=>go("ai")}><span className="emad-feature-label">SMART MATH ASSISTANT</span><span className="emad-feature-symbol"><Icon name="spark" size={27}/></span><b>اسأل المساعد الذكي</b><small>ابدأ بسؤال أو مسألة تحتاج إلى شرح.</small><span className="emad-feature-link">اكتشف المساعد <Icon name="arrow" size={15}/></span></button>
+  </section>
+
+  <section className="emad-home-bottom-links">
+   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={18}/></span><b>مركز الإشعارات</b><small>تابع آخر التنبيهات</small>{unread>0&&<i>{unread>99?"99+":unread}</i>}</button>
+   <button onClick={()=>go("subscriptions")}><span><Icon name="ticket" size={18}/></span><b>اشتراكاتي</b><small>إدارة وتفعيل الاشتراك</small></button>
+   <button onClick={()=>go("settings")}><span><Icon name="settings" size={18}/></span><b>إعدادات الحساب</b><small>تحكم في تفضيلاتك</small></button>
+  </section>
  </div>;
 }
 function LockedPage({go,grade}){return <div className="platform-page"><PageBanner eyebrow="MEMBERSHIP REQUIRED" title="المحتوى التعليمي متاح للمشتركين" description="فعّل اشتراكك الشهري بكود مخصص لصفك الدراسي لفتح المحاضرات والامتحانات وباقي الخدمات." art="lock"/><section className="platform-lock-panel"><span className="platform-lock-icon"><Icon name="lock" size={30}/></span><h2>فعّل اشتراكك للمتابعة</h2><p>الاشتراك مرتبط بحسابك وبـ {grade||"صفك الدراسي"}، ولا يمكن فتح المحتوى قبل تفعيل كود صالح.</p><button className="platform-gold-button" onClick={()=>go("subscriptions")}>الانتقال للاشتراكات<Icon name="arrow"/></button></section></div>}
