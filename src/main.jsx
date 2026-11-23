@@ -120,7 +120,7 @@ function HomePage({profile,subscription,go,grade,unread}){
    <div className="sd-teacher">
     <div className="sd-orbit sd-orbit-one"/><div className="sd-orbit sd-orbit-two"/>
     <div className="sd-equation sd-equation-one">∑ f(x)</div><div className="sd-equation sd-equation-two">x² + y²</div>
-    <div className="sd-teacher-photo"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/></div>
+    <div className="sd-teacher-photo"><img src="https://raw.githubusercontent.com/elgorfyousef95-droid/emad-math-platform/redesign/homepage-foundation-2026/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري" loading="eager" referrerPolicy="no-referrer"/></div>
     <div className="sd-teacher-label"><small>YOUR MATHEMATICS TEACHER</small><b>مستر عماد السنافيري</b></div>
    </div>
    <div className="sd-hero-bottom"><span>01 / STUDENT SPACE</span><span>LEARN · PRACTICE · ACHIEVE</span></div>
