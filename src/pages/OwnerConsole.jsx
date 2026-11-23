@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   portalApi,
   portalLogin,
+  setupPortalAccounts,
   refreshPortalSession,
   logoutPortalSession,
   uploadPortalImage,
@@ -47,6 +48,11 @@ export default function OwnerConsole() {
   const [notice, setNotice] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginBusy, setLoginBusy] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
+  const [bootstrapToken, setBootstrapToken] = useState("");
+  const [setupOwnerPassword, setSetupOwnerPassword] = useState("");
+  const [setupTeacherPassword, setSetupTeacherPassword] = useState("");
+  const [setupTeacherName, setSetupTeacherName] = useState("مستر عماد السنافيري");
   const [replyDrafts, setReplyDrafts] = useState({});
   const [selectedCourse, setSelectedCourse] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -443,7 +449,18 @@ export default function OwnerConsole() {
   };
 
   if (busy) return <main className="owner-shell"><div className="owner-loading">جارٍ تأمين وفتح مركز تحكم المالك...</div></main>;
-  if (!profile || profile.role !== "owner") return <main className="owner-shell owner-login-shell" dir="rtl"><section className="owner-login-card"><span>EMAD EL SANAFIRY · OWNER ACCESS</span><h1>بوابة المالك</h1><p>دخول مستقل عن حسابات الطلاب والمدرسين.</p><form onSubmit={async(e)=>{e.preventDefault();setLoginBusy(true);setError("");try{await portalLogin("owner",loginPassword);setLoginPassword("");await load();}catch{setError("كلمة المرور غير صحيحة أو تعذر الاتصال. حاول مرة أخرى.");}finally{setLoginBusy(false);}}}><label>كلمة مرور المالك<input type="password" required autoComplete="current-password" value={loginPassword} onChange={e=>setLoginPassword(e.target.value)} placeholder="اكتب كلمة المرور"/></label><button className="owner-primary-button" disabled={loginBusy}>{loginBusy?"جارٍ التحقق...":"تسجيل الدخول"}</button></form>{error&&<p className="owner-error">{error}</p>}<button className="owner-secondary-button" onClick={()=>{logoutPortalSession("owner");setLoginPassword("");setError("");}}>مسح الجلسة والمحاولة مجددًا</button></section></main>;
+  if (!profile || profile.role !== "owner") return <main className="owner-shell owner-login-shell" dir="rtl"><section className="owner-login-card"><span>EMAD EL SANAFIRY · OWNER ACCESS</span><h1>{showSetup?"الإعداد الأول لبوابتي الإدارة":"بوابة المالك"}</h1><p>{showSetup?"إنشاء مستقل لحساب المالك وحساب المدرس. لا تحتاج إلى حساب طالب أو بريد إلكتروني.":"دخول مستقل تمامًا عن حسابات الطلاب والمدرسين."}</p>
+    {!showSetup?<><form onSubmit={async(e)=>{e.preventDefault();setLoginBusy(true);setError("");try{await portalLogin("owner",loginPassword);setLoginPassword("");await load();}catch{setError("كلمة المرور غير صحيحة أو تعذر الاتصال. حاول مرة أخرى.");}finally{setLoginBusy(false);}}}><label>كلمة مرور المالك<input type="password" required autoComplete="current-password" value={loginPassword} onChange={e=>setLoginPassword(e.target.value)} placeholder="اكتب كلمة المرور"/></label><button className="owner-primary-button" disabled={loginBusy}>{loginBusy?"جارٍ التحقق...":"تسجيل الدخول"}</button></form><button className="owner-secondary-button" onClick={()=>{setShowSetup(true);setError("");}}>إعداد حسابات البوابتين لأول مرة</button></>:<form onSubmit={async(e)=>{e.preventDefault();if(setupOwnerPassword.length<12||setupTeacherPassword.length<12||setupOwnerPassword===setupTeacherPassword){setError("استخدم كلمتي مرور مختلفتين، وكل واحدة 12 حرفًا على الأقل.");return;}setLoginBusy(true);setError("");try{await setupPortalAccounts(bootstrapToken,setupOwnerPassword,setupTeacherPassword,setupTeacherName);await portalLogin("owner",setupOwnerPassword);setBootstrapToken("");setSetupOwnerPassword("");setSetupTeacherPassword("");await load();}catch(e){setError(e.message==="bootstrap_invalid"?"رمز الإعداد غير صحيح أو انتهت صلاحيته أو تم استخدامه من قبل.":"تعذر إنشاء حسابي البوابتين. راجع البيانات وحاول مرة أخرى.");}finally{setLoginBusy(false);}}}>
+      <label>رمز الإعداد لمرة واحدة<input type="password" required value={bootstrapToken} onChange={e=>setBootstrapToken(e.target.value)} placeholder="أدخل رمز الإعداد"/></label>
+      <label>كلمة مرور المالك<input type="password" required minLength={12} autoComplete="new-password" value={setupOwnerPassword} onChange={e=>setSetupOwnerPassword(e.target.value)} placeholder="12 حرفًا على الأقل"/></label>
+      <label>كلمة مرور المدرس<input type="password" required minLength={12} autoComplete="new-password" value={setupTeacherPassword} onChange={e=>setSetupTeacherPassword(e.target.value)} placeholder="كلمة مرور مختلفة"/></label>
+      <label>اسم المدرس<input required value={setupTeacherName} onChange={e=>setSetupTeacherName(e.target.value)} maxLength={100}/></label>
+      <button className="owner-primary-button" disabled={loginBusy}>{loginBusy?"جارٍ إنشاء البوابتين...":"إنشاء الحسابين والدخول للمالك"}</button>
+      <button type="button" className="owner-secondary-button" onClick={()=>{setShowSetup(false);setError("");}}>العودة لتسجيل الدخول</button>
+    </form>}
+    {error&&<p className="owner-error">{error}</p>}
+    <button className="owner-secondary-button" onClick={()=>{logoutPortalSession("owner");setLoginPassword("");setError("");}}>مسح جلسة المالك</button>
+   </section></main>;
 
   return <main className="owner-shell owner-control-center" dir="rtl">
     <header className="owner-header owner-hero">
