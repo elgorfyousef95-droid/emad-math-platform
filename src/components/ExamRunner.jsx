@@ -15,9 +15,13 @@ export default function ExamRunner({exam,profile,studentApi,onClose}){
      current=Array.isArray(created)?created[0]:created;
     }
     if(!current?.id)throw new Error("attempt_create_failed");
-    const qs=await studentApi("exam_questions?select=id,question_type,prompt,choices,points,sort_order&exam_id=eq."+encodeURIComponent(exam.id)+"&order=sort_order.asc");
+    const [qs,savedAnswers]=await Promise.all([
+     studentApi("exam_questions?select=id,question_type,prompt,choices,points,sort_order&exam_id=eq."+encodeURIComponent(exam.id)+"&order=sort_order.asc"),
+     studentApi("exam_answers?select=question_id,answer&attempt_id=eq."+encodeURIComponent(current.id))
+    ]);
     if(!alive)return;
     setAttempt(current);setQuestions(qs||[]);
+    setAnswers(Object.fromEntries((savedAnswers||[]).map(row=>[row.question_id,row.answer])));
    }catch(e){if(alive)setError(e.message==="student_profile_required"?"لازم تدخل بحساب طالب مستقل.":e.message==="active_subscription_required"?"الامتحان متاح للطلاب أصحاب الاشتراك النشط أو التسجيل المعتمد.":"تعذر فتح الامتحان. تأكد من الاشتراك وموعد الامتحان.");}
    finally{if(alive)setLoading(false);}
   })();
@@ -27,7 +31,7 @@ export default function ExamRunner({exam,profile,studentApi,onClose}){
   if(submitting.current||!attempt)return;
   submitting.current=true;setSaving(true);setError("");
   try{
-   const rows=questions.filter(q=>answers[q.id]!==undefined&&answers[q.id]!==""&&!(Array.isArray(answers[q.id])&&!answers[q.id].length)).map(q=>({attempt_id:attempt.id,question_id:q.id,answer:answers[q.id]}));
+   const rows=questions.filter(q=>answers[q.id]!==undefined&&answers[q.id]!==""&&!(Array.isArray(answers[q.id])&&!answers[q.id].length)).map(q=>({attempt_id:attempt.id,question_id:q.id,answer:q.question_type==="multiple_choice"?(q.choices||[]).filter(option=>(answers[q.id]||[]).includes(option)):answers[q.id]}));
    if(rows.length)await studentApi("exam_answers?on_conflict=attempt_id,question_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify(rows)});
    const submitted=await studentApi("rpc/submit_exam_attempt",{method:"POST",body:JSON.stringify({p_attempt_id:attempt.id})});
    setResult(submitted);
@@ -50,7 +54,13 @@ export default function ExamRunner({exam,profile,studentApi,onClose}){
   window.addEventListener("beforeunload",warn);return()=>window.removeEventListener("beforeunload",warn);
  },[attempt,result]);
  const formatTime=value=>String(Math.floor(value/60)).padStart(2,"0")+":"+String(value%60).padStart(2,"0");
- const setAnswer=(id,value)=>setAnswers(old=>({...old,[id]:value}));
+ const setAnswer=(id,value)=>{
+  setAnswers(old=>({...old,[id]:value}));
+  if(!attempt)return;
+  const question=questions.find(q=>q.id===id);
+  const stored=question?.question_type==="multiple_choice"?(question.choices||[]).filter(option=>(value||[]).includes(option)):value;
+  studentApi("exam_answers?on_conflict=attempt_id,question_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({attempt_id:attempt.id,question_id:id,answer:stored})}).catch(()=>setError("تعذر حفظ إجابة واحدة. سيُعاد إرسال الإجابات عند التسليم."));
+ };
  const total=questions.reduce((sum,q)=>sum+Number(q.points||0),0);
  return <div className="exam-runner-backdrop" dir="rtl"><section className="exam-runner-shell">
   <header className="exam-runner-header"><div><span>EMAD EXAM EXPERIENCE</span><h2>{exam.title}</h2><small>{profile.full_name} · {questions.length} سؤال · {exam.duration_minutes} دقيقة</small></div><div className={"exam-runner-clock "+(seconds<300?"urgent":"")}>{formatTime(seconds)}</div><button onClick={onClose} aria-label="إغلاق">×</button></header>
