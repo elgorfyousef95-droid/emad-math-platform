@@ -5,7 +5,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLIC_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const MAX_ATTACHMENT_SIZE = 15 * 1024 * 1024;
 const ALLOWED = new Set([
-  "image/jpeg","image/png","image/webp","application/pdf",
+  "image/jpeg","image/png","image/webp","audio/webm","audio/ogg","audio/mp4","audio/mpeg","audio/wav","application/pdf",
   "application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation"
