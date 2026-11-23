@@ -137,8 +137,8 @@ export async function loadStudentWorkspace() {
   // could otherwise load a different student's profile.
   const [profiles, subscriptions, notifications] = await Promise.all([
     studentApi("profiles?select=id,full_name,student_number,grade,group_name,avatar_url,is_verified,role&id=eq." + encodeURIComponent(userId) + "&limit=1"),
-    studentApi("emad_student_subscriptions?select=id,grade,starts_at,ends_at&ends_at=gt." + encodeURIComponent(new Date().toISOString()) + "&order=ends_at.desc&limit=1"),
-    studentApi("emad_notifications?select=id,notification_type,title,body,action_url,read_at,created_at&order=created_at.desc&limit=30"),
+    studentApi("emad_student_subscriptions?select=id,grade,starts_at,ends_at&student_id=eq." + encodeURIComponent(userId) + "&ends_at=gt." + encodeURIComponent(new Date().toISOString()) + "&order=ends_at.desc&limit=1"),
+    studentApi("emad_notifications?select=id,notification_type,title,body,action_url,read_at,created_at&recipient_id=eq." + encodeURIComponent(userId) + "&order=created_at.desc&limit=30"),
   ]);
   const profile = profiles?.[0] || null;
   if (!profile || profile.id !== userId) throw new Error("authenticated_profile_not_found");
@@ -164,7 +164,10 @@ export async function redeemStudentSubscription(code) {
 }
 
 export async function markStudentNotificationRead(id) {
-  return studentApi(`emad_notifications?id=eq.${encodeURIComponent(id)}`, {
+  const session = getSavedStudentSession();
+  const userId = getSessionUserId(session);
+  if (!userId) throw new Error("session_identity_missing");
+  return studentApi(`emad_notifications?id=eq.${encodeURIComponent(id)}&recipient_id=eq.${encodeURIComponent(userId)}`, {
     method: "PATCH",
     headers: { Prefer: "return=minimal" },
     body: JSON.stringify({ read_at: new Date().toISOString() }),
