@@ -27,6 +27,9 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const [profileCard,setProfileCard]=useState(null);
  const [attachmentUrls,setAttachmentUrls]=useState({});
  const [pinBusy,setPinBusy]=useState(false);
+ const [recording,setRecording]=useState(false);
+ const recorderRef=useRef(null);
+ const streamRef=useRef(null);
  const bottomRef=useRef(null);
  const messageListRef=useRef(null);
  const stickToBottom=useRef(true);
@@ -118,13 +121,28 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   try{
    let attachment=null;
    if(file)attachment=await uploadEmadChatAttachment(portal,selectedId,file);
-   const body={conversation_id:selectedId,sender_id:myId,message_type:attachment?(attachment.mime.startsWith("image/")?"image":"file"):"text",body:text,attachment_path:attachment?.path||null,attachment_name:attachment?.name||null,attachment_mime:attachment?.mime||null,attachment_size:attachment?.size||null};
+   const body={conversation_id:selectedId,sender_id:myId,message_type:attachment?(attachment.mime.startsWith("image/")?"image":attachment.mime.startsWith("audio/")?"audio":"file"):"text",body:text,attachment_path:attachment?.path||null,attachment_name:attachment?.name||null,attachment_mime:attachment?.mime||null,attachment_size:attachment?.size||null};
    await emadChatApi(portal,"emad_messages",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify(body)});
    setDraft("");setFile(null);if(fileRef.current)fileRef.current.value="";
    await loadMessages();await loadConversations();
   }catch(e){console.error("emad_chat_send",e);setError(e.message==="attachment_too_large"?"حجم الملف أكبر من 15 ميجابايت.":e.message==="unsupported_attachment"?"نوع الملف غير مسموح.":"تعذر إرسال الرسالة. حاول مرة أخرى.");}
   finally{setSending(false);}
  };
+
+ const startVoiceRecording=async()=>{
+  if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){setError("تسجيل الصوت غير مدعوم في هذا المتصفح.");return;}
+  try{
+   const stream=await navigator.mediaDevices.getUserMedia({audio:true});streamRef.current=stream;
+   const preferred=["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/mp4"].find(type=>MediaRecorder.isTypeSupported?.(type));
+   const recorder=new MediaRecorder(stream,preferred?{mimeType:preferred}:undefined);recorderRef.current=recorder;const chunks=[];
+   recorder.ondataavailable=e=>{if(e.data?.size)chunks.push(e.data);};
+   recorder.onerror=()=>setError("تعذر تسجيل الرسالة الصوتية.");
+   recorder.onstop=()=>{const type=recorder.mimeType||"audio/webm";const ext=type.includes("ogg")?"ogg":type.includes("mp4")?"m4a":"webm";const voice=new File(chunks,"voice-note-"+Date.now()+"."+ext,{type});if(voice.size>15*1024*1024){setError("التسجيل أكبر من الحد المسموح 15 ميجابايت.");}else{setFile(voice);setError("");}stream.getTracks().forEach(track=>track.stop());streamRef.current=null;setRecording(false);};
+   recorder.start(250);setRecording(true);setError("");
+  }catch(e){setError(e.name==="NotAllowedError"?"اسمح باستخدام الميكروفون لتسجيل رسالة صوتية.":"تعذر تشغيل الميكروفون.");}
+ };
+ const stopVoiceRecording=()=>{if(recorderRef.current?.state==="recording")recorderRef.current.stop();};
+ useEffect(()=>()=>{if(recorderRef.current?.state==="recording")recorderRef.current.stop();streamRef.current?.getTracks().forEach(track=>track.stop());},[]);
 
  const togglePin=async()=>{
   const row=members.find(m=>m.conversation_id===selectedId&&m.user_id===myId);
@@ -206,7 +224,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
          {!mine?<button className="emad-chat-sender" onClick={()=>openProfile(message.sender_id)}>{sender.full_name||"عضو"}{sender.is_verified?<i>✓</i>:null}</button>:null}
          <div className="emad-chat-bubble">
           {message.body?<p>{message.body}</p>:null}
-          {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">📎 {message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
+          {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:message.message_type==="audio"?<div className="emad-chat-audio"><span>رسالة صوتية</span><audio controls preload="metadata" src={url}/></div>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">📎 {message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
          </div>
          <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?" · تم الإرسال":""}{isOwner?<button className="emad-chat-delete-message" onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</small>
         </div>
@@ -217,7 +235,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
      <div className="emad-chat-composer">
       {file?<div className="emad-chat-file-chip"><span>{file.name}</span><button onClick={()=>{setFile(null);if(fileRef.current)fileRef.current.value="";}}>×</button></div>:null}
       <textarea value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} rows={2} placeholder="اكتب رسالتك هنا..."/>
-      <div className="emad-chat-compose-actions"><label className="emad-chat-attach">＋ إرفاق صورة أو ملف<input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={e=>setFile(e.target.files?.[0]||null)}/></label><small>الحد الأقصى 15 ميجابايت</small><button onClick={send} disabled={sending||(!draft.trim()&&!file)}>{sending?"جارٍ الإرسال...":"إرسال الرسالة"} <span>➤</span></button></div>
+      <div className="emad-chat-compose-actions"><label className="emad-chat-attach">＋ إرفاق ملف<input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={e=>setFile(e.target.files?.[0]||null)}/></label><button type="button" className={"emad-chat-record "+(recording?"recording":"")} onClick={recording?stopVoiceRecording:startVoiceRecording}>{recording?"إيقاف التسجيل":"تسجيل صوت"}</button><small>الحد الأقصى 15 ميجابايت</small><button onClick={send} disabled={sending||(!draft.trim()&&!file)}>{sending?"جارٍ الإرسال...":"إرسال الرسالة"} <span>➤</span></button></div>
      </div>
     </>:<div className="emad-chat-empty large">اختار محادثة من القائمة لبدء التواصل.</div>}
    </section>
