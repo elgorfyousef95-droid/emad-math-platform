@@ -418,3 +418,46 @@ as $$
 $$;
 revoke all on function public.emad_chat_profile_cards(uuid[]) from public;
 grant execute on function public.emad_chat_profile_cards(uuid[]) to authenticated;
+
+-- Tighten membership writes: users may join only their matching grade group
+-- and cannot promote themselves or rewrite membership ownership.
+drop policy if exists emad_members_join_grade_group on public.emad_conversation_members;
+create policy emad_members_join_grade_group on public.emad_conversation_members
+for insert to authenticated
+with check (
+  user_id=auth.uid() and left_at is null and exists (
+    select 1 from public.emad_conversations c
+    join public.profiles p on p.id=auth.uid()
+    where c.id=conversation_id and c.kind='grade_group'
+      and (
+        (member_role='student' and p.role='student' and p.grade=c.grade)
+        or (member_role='teacher' and p.role='teacher' and private.teacher_can_access_grade(c.grade))
+      )
+  )
+);
+
+drop policy if exists emad_members_owner_manage on public.emad_conversation_members;
+drop policy if exists emad_members_owner_delete on public.emad_conversation_members;
+create policy emad_members_owner_delete on public.emad_conversation_members
+for delete to authenticated
+using (private.emad_chat_is_owner());
+
+revoke update on public.emad_conversation_members from authenticated;
+grant update(last_read_at,is_pinned,pinned_at) on public.emad_conversation_members to authenticated;
+
+revoke update on public.emad_messages from authenticated;
+grant select,insert,delete on public.emad_messages to authenticated;
+
+revoke update on public.emad_message_receipts from authenticated;
+grant update(read_at) on public.emad_message_receipts to authenticated;
+
+drop policy if exists emad_receipts_insert_self on public.emad_message_receipts;
+create policy emad_receipts_insert_self on public.emad_message_receipts
+for insert to authenticated
+with check (
+  user_id=auth.uid() and exists (
+    select 1 from public.emad_messages msg
+    where msg.id=message_id
+      and private.emad_chat_can_access_conversation(msg.conversation_id)
+  )
+);
