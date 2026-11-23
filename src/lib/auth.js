@@ -110,7 +110,9 @@ export async function studentApi(path, options = {}) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || body.code || "student_api_error");
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  const raw = await response.text();
+  return raw ? JSON.parse(raw) : null;
 }
 
 function getSessionUserId(session) {
