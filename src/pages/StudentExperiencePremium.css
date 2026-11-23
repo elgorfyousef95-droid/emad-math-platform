@@ -350,3 +350,75 @@
  .student-experience .sd-welcome-row{padding:17px!important}
  .student-experience .platform-page-banner{background-position:center!important}
 }
+
+
+/* Quick tools: turn each shortcut into a full photographic tile like the feature cards */
+.student-experience .sd-quick-section{
+ padding:clamp(18px,2.5vw,28px)!important;
+ border:1px solid #d8b67555!important;
+ border-radius:21px!important;
+ box-shadow:0 22px 48px #0007!important;
+}
+.student-experience .sd-quick-grid{
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:14px!important;
+}
+.student-experience .sd-quick-grid button{
+ position:relative!important;isolation:isolate!important;overflow:hidden!important;
+ min-height:154px!important;padding:17px!important;
+ display:flex!important;flex-direction:column!important;align-items:flex-start!important;
+ justify-content:flex-end!important;gap:10px!important;
+ border:1px solid #d8b67555!important;border-radius:17px!important;
+ background-color:#10243a!important;background-position:center!important;
+ background-size:cover!important;
+ box-shadow:0 12px 28px #0006!important;
+ text-align:right!important;
+}
+.student-experience .sd-quick-grid button:before{
+ content:"";position:absolute;inset:0;z-index:-1;
+ background:linear-gradient(180deg,rgba(4,13,24,.10) 0%,rgba(5,15,28,.52) 38%,rgba(4,13,25,.94) 100%);
+ transition:background .25s ease,transform .35s ease;pointer-events:none;
+}
+.student-experience .sd-quick-grid button:hover:before{
+ background:linear-gradient(180deg,rgba(4,13,24,.02),rgba(5,15,28,.42) 35%,rgba(4,13,25,.91));
+}
+.student-experience .sd-quick-grid button>*{position:relative;z-index:1}
+.student-experience .sd-quick-grid button>b{
+ color:#fff!important;font-size:13px!important;font-weight:900!important;
+ text-shadow:0 2px 9px #000!important;
+}
+.student-experience .sd-quick-grid button>svg:last-child{
+ position:absolute!important;left:15px!important;bottom:17px!important;
+ margin:0!important;color:#f0d49e!important;
+}
+.student-experience .sd-quick-icon{
+ width:42px!important;height:42px!important;border-radius:13px!important;
+ background:#08182bc9!important;color:#f1d49c!important;
+ border:1px solid #e7c98b80!important;box-shadow:0 5px 18px #0005!important;
+}
+.student-experience .sd-quick-grid button:nth-child(1){
+ background-image:url("https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=900&q=88")!important;
+}
+.student-experience .sd-quick-grid button:nth-child(2){
+ background-image:url("https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=900&q=88")!important;
+}
+.student-experience .sd-quick-grid button:nth-child(3){
+ background-image:url("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=88")!important;
+}
+.student-experience .sd-quick-grid button:nth-child(4){
+ background-image:url("https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=88")!important;
+}
+.student-experience .sd-quick-grid button:nth-child(5){
+ background-image:url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=88")!important;
+}
+.student-experience .sd-quick-grid button:nth-child(6){
+ background-image:url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=900&q=88")!important;
+}
+@media(max-width:760px){
+ .student-experience .sd-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ .student-experience .sd-quick-grid button{min-height:136px!important;padding:13px!important}
+ .student-experience .sd-quick-grid button>b{font-size:12px!important}
+}
+@media(max-width:360px){
+ .student-experience .sd-quick-grid{grid-template-columns:1fr!important}
+}
