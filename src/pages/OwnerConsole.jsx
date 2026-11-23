@@ -9,6 +9,7 @@ import {
   logoutPortalSession,
   uploadPortalImage,
   uploadPortalVideo,
+  deletePortalVideo,
 } from "../lib/portalAuth.js";
 
 const GRADES = ["الصف الأول الثانوي", "الصف الثاني الثانوي", "الصف الثالث الثانوي"];
@@ -48,6 +49,7 @@ export default function OwnerConsole() {
   const [saving, setSaving] = useState("");
   const [busy, setBusy] = useState(true);
   const [uploading, setUploading] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -214,16 +216,28 @@ export default function OwnerConsole() {
 
   const uploadLessonVideo = async (file) => {
     if (!file) return;
-    setUploading("lesson-video"); setError(""); setNotice("");
+    setUploading("lesson-video"); setUploadProgress(0); setError(""); setNotice("");
     try {
-      const path = await uploadPortalVideo(file, "owner");
+      const path = await uploadPortalVideo(file, "owner", (percent) => setUploadProgress(percent));
       const previewUrl = await getLectureVideoUrl(path, "owner");
       setLessonForm((old) => ({ ...old, video_url: path }));
       setLessonVideoPreviewUrl(previewUrl);
       setNotice("تم رفع الفيديو الخاص. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
     } catch (e) {
-      setError(e.message === "video_too_large" ? "حجم الفيديو أكبر من 100 ميجابايت." : e.message === "unsupported_video_type" ? "الصيغ المسموحة MP4 وWEBM وMOV." : "تعذر رفع الفيديو. تحقق من الاتصال وصلاحيات التخزين.");
+      setError(e.message === "video_too_large" ? "حجم الفيديو أكبر من 1 جيجابايت." : e.message === "unsupported_video_type" ? "الصيغ المسموحة MP4 وWEBM وMOV." : "تعذر رفع الفيديو. تحقق من الاتصال وصلاحيات التخزين.");
     } finally { setUploading(""); }
+  };
+
+  const deleteLesson = async (lesson) => {
+    if (!window.confirm("حذف المحاضرة «" + lesson.title + "» نهائيًا؟")) return;
+    setSaving(lesson.id); setError(""); setNotice("");
+    try {
+      await portalApi("owner", "lessons?id=eq." + encodeURIComponent(lesson.id), { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      try { await deletePortalVideo(lesson.video_url, "owner"); } catch (mediaError) { console.warn("lecture_media_cleanup", mediaError); }
+      setLessons((old) => old.filter((x) => x.id !== lesson.id));
+      setNotice("تم حذف المحاضرة من الكورس.");
+    } catch (e) { setError("تعذر حذف المحاضرة. " + (e.message || "")); }
+    finally { setSaving(""); }
   };
 
   const toggleLesson = async (lesson) => {
@@ -552,8 +566,8 @@ export default function OwnerConsole() {
             <form className="owner-form owner-edit-course-form" onSubmit={saveCourseEdits}><h4>تعديل بيانات الكورس</h4><label>اسم الكورس<input required value={editCourseForm.title} onChange={e=>setEditCourseForm({...editCourseForm,title:e.target.value})}/></label><div className="owner-form-two"><label>الصف<select value={editCourseForm.grade} onChange={e=>setEditCourseForm({...editCourseForm,grade:e.target.value})}>{GRADES.map(x=><option key={x}>{x}</option>)}</select></label><label>المادة<input value={editCourseForm.subject} onChange={e=>setEditCourseForm({...editCourseForm,subject:e.target.value})}/></label></div><label>المدرس المسؤول<select value={editCourseForm.teacher_id} onChange={e=>setEditCourseForm({...editCourseForm,teacher_id:e.target.value})}>{teachers.map(x=><option key={x.id} value={x.id}>{x.full_name||"مدرس"}</option>)}<option value={profile.id}>المالك</option></select></label><label>السعر<input type="number" min="0" value={editCourseForm.price_egp} onChange={e=>setEditCourseForm({...editCourseForm,price_egp:e.target.value})}/></label><label>الوصف<textarea rows="3" value={editCourseForm.description} onChange={e=>setEditCourseForm({...editCourseForm,description:e.target.value})}/></label><button className="owner-primary-button" disabled={saving===selected.id}>حفظ تعديلات الكورس</button></form>
             <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
             <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
-              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}
-              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 100 ميجابايت {uploading==="lesson-video"?" · جارٍ الرفع...":""}</small></label>{lessonForm.video_url&&<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline/>}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
+              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="owner-lesson-actions"><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="owner-danger-button" disabled={saving===lesson.id} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}
+              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 1 جيجابايت، رفع متقطع قابل للاستكمال {uploading==="lesson-video"?" · جارٍ الرفع "+uploadProgress+"%":""}</small></label>{uploading==="lesson-video"&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>يمكن إعادة اختيار الملف نفسه لاستكمال الرفع إذا انقطع الاتصال.</small></div>}{lessonForm.video_url&&<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
             </div></div>}
         </div>
       </div>
