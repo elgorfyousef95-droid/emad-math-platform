@@ -65,8 +65,8 @@ function PortalAccess({portal,onSuccess}){
    await portalLogin("owner",ownerPassword);
    await onSuccess();
   }catch(e){
-   const messages={bootstrap_invalid:"رمز الإعداد غير صحيح أو انتهت صلاحيته أو تم استخدامه من قبل.",portal_account_create_failed:"تعذر إنشاء حساب إحدى البوابتين. أعد المحاولة باستخدام نفس بيانات الإعداد."};
-   setError(messages[e.message]||"تعذر إعداد البوابتين. راجع جلسة المالك وحاول مرة أخرى.");
+   const messages={bootstrap_invalid:"رمز الإعداد غير صحيح أو انتهت صلاحيته أو تم استخدامه من قبل.",invalid_portal_setup_data:"تأكد أن كلمتي المرور مختلفتان وكل واحدة 12 حرفًا على الأقل.",portal_user_lookup_failed:"تعذر التحقق من حسابات البوابات. حاول مرة أخرى.",portal_account_create_failed:"تعذر إنشاء حساب إحدى البوابتين. أعد المحاولة باستخدام نفس بيانات الإعداد.",portal_account_update_failed:"تعذر تحديث كلمة مرور إحدى البوابات.",portal_profile_create_failed:"تم إنشاء حساب الدخول لكن تعذر تجهيز ملف البوابة.",bootstrap_consume_failed:"تعذر تأكيد اكتمال الإعداد. تواصل مع الدعم."};
+   setError(messages[e.message]||"تعذر إعداد البوابتين. راجع رمز الإعداد والبيانات وحاول مرة أخرى.");
   }finally{setBusy(false);}
  };
  return <main className="portal-access-shell" dir="rtl"><section className="portal-access-card">
