@@ -4,6 +4,7 @@ import "./style.css";
 import "./home.css";
 import SplashScreen from "./pages/SplashScreen.jsx";
 import AuthScreen from "./pages/AuthScreen.jsx";
+import StudentExperience from "./pages/StudentExperience.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
 import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode } from "./lib/auth.js";
 
@@ -61,27 +62,7 @@ function App(){
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;
- return <div className="platform-shell" dir="rtl">
-  <header className="platform-topbar">
-   <button className="platform-mobile-menu" aria-label="فتح القائمة الرئيسية" aria-expanded={mobileNav} onClick={()=>setMobileNav(v=>!v)}><span/><span/><span/></button>
-   <button className="platform-logo" onClick={()=>go("home")} aria-label="العودة للرئيسية"><span className="platform-logo-icon"><Icon name="crown" size={22}/></span><span className="platform-brand-copy"><b>مستر عماد السنافيري</b><small>منصة الرياضيات التعليمية</small></span></button>
-   <div className="platform-top-actions">
-    <button className="platform-notification-button" aria-label="الإشعارات" onClick={()=>go("notifications")}><Icon name="bell" size={19}/>{unread>0&&<span className="platform-count">{unread>99?"99+":unread}</span>}</button>
-    <div className="platform-account-menu"><button className="platform-account-trigger" onClick={()=>{setAccountOpen(v=>!v);setMoreOpen(false);}}>{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span className="platform-avatar-fallback"><Icon name="user" size={18}/></span>}<span className="platform-account-copy"><b>{profile?.full_name||"حساب الطالب"}</b><small>{grade||"الملف الشخصي"}</small></span><span className="platform-account-chevron"><Icon name="chevron" size={13}/></span></button>{accountOpen&&<div className="platform-menu-pop platform-account-pop">{[["profile","الملف الشخصي","user"],["subscriptions","اشتراكاتي","ticket"],["settings","الإعدادات","settings"],["messages","الدعم الفني","support"]].map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}{profile?.role==="admin"&&<button onClick={()=>go("admin")}><Icon name="settings" size={17}/>إدارة المنصة</button>}<button onClick={logout}><Icon name="logout" size={17}/>تسجيل الخروج</button></div>}</div>
-   </div>
-  </header>
-  <nav className="platform-quickbar" aria-label="اختصارات سريعة">
-   {[["home","الرئيسية","home"],["courses","الكورسات","book"],["exams","الامتحانات","exam"],["schedule","الجدول","calendar"],["ai","المساعد الذكي","spark"]].map(([id,label,ico])=><button key={id} className={page===id?"active":""} onClick={()=>go(id)}><Icon name={ico} size={16}/><span>{label}</span></button>)}
-  </nav>
-  <div className="platform-navrail">
-   {mobileNav&&<button className="platform-drawer-backdrop" aria-label="إغلاق القائمة" onClick={()=>setMobileNav(false)}/>}
-   <nav className={mobileNav?"platform-navigation is-open":"platform-navigation"} aria-label="القائمة الرئيسية">
-    {nav.map(([id,label,ico])=><button key={id} className={page===id?"active":""} onClick={()=>go(id)}><Icon name={ico} size={17}/><span>{label}</span></button>)}
-    <div className="platform-nav-more"><button className={moreOpen?"active":""} onClick={()=>{setMoreOpen(v=>!v);setAccountOpen(false);}}><Icon name="spark" size={17}/><span>المزيد</span><Icon name="chevron" size={14}/></button>{moreOpen&&<div className="platform-menu-pop">{moreNav.map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}</div>}</div>
-   </nav>
-  </div>
-  <div className="platform-subbar"><div><span>مستر عماد</span><Icon name="chevron" size={13}/><b>{pageTitles[page]||"المنصة"}</b></div><span className="platform-grade-label">{grade||"الصف الدراسي غير محدد"}</span></div>
-  <main className={`platform-viewport page-${page}`} key={page}>
+ return <StudentExperience page={page} profile={profile} grade={grade} unread={unread} go={go} logout={logout}>
    {page==="home"?<HomePage profile={profile} subscription={activeSubscription?subscription:null} go={go} grade={grade} unread={unread}/>:null}
    {page==="subscriptions"?<SubscriptionsPage subscription={subscription} onActivated={async()=>{await loadWorkspace();notify({type:"success",title:"تم تفعيل الاشتراك",message:"تم تفعيل اشتراكك الشهري بنجاح."});}}/>:null}
    {page==="profile"?<ProfilePage profile={profile} subscription={subscription} notifications={notifications} grade={grade} go={go} loading={loading}/>:null}
@@ -93,9 +74,7 @@ function App(){
    {!isLocked&&["homework","files","results","schedule","live","ai","groups"].includes(page)?<SectionPage page={page} go={go} profile={profile}/>:null}
    {page==="messages"?<SectionPage page={page} go={go} profile={profile}/>:null}
    {page==="admin"?<SectionPage page={page} go={go}/>:null}
-  </main>
-  <div className="platform-bottom-line"><span>مستر عماد السنافيري</span><span>منصة تعليمية متخصصة</span><span>© 2026</span></div>
- </div>;
+  </StudentExperience>;
 }
 const pageArtwork={
  book:"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1500&q=85",
