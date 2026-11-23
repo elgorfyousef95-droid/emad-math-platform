@@ -1,0 +1,54 @@
+/* Responsive layout foundation for phones, tablets and desktop. */
+:root{--page-gutter:clamp(12px,3vw,32px)}
+*,*::before,*::after{box-sizing:border-box}
+html{width:100%;min-width:320px;overflow-x:clip;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{width:100%;min-width:320px;max-width:100%;margin:0;overflow-x:clip}
+#root{width:100%;min-width:0;max-width:100%;overflow-x:clip}
+img,video,iframe,canvas,svg{max-width:100%}
+img,video{height:auto}
+button,input,select,textarea{max-width:100%;font:inherit}
+input,select,textarea{min-width:0}
+button{touch-action:manipulation}
+:where(main,section,article,aside,header,footer,nav,form,div){min-width:0}
+:where(h1,h2,h3,h4,p,a,button,label,small,strong,span,td,th){overflow-wrap:anywhere}
+:where(.platform-page,.owner-shell,.teacher-shell,.owner-control-center,.portal-access-shell,.student-shell,.app-shell){width:100%;max-width:100%;min-width:0}
+:where(.platform-page,.owner-shell,.teacher-shell,.owner-control-center){padding-inline:var(--page-gutter)}
+:where(.platform-content-grid,.learning-media-grid,.platform-home-grid,.platform-dashboard-grid,.owner-quick-grid,.owner-overview-columns,.owner-management-grid,.platform-subscription-layout,.profile-v2-overview,.hw-assignment-grid,.sd-announcement-grid,.teacher-student-grid){grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))}
+:where(.platform-panel,.owner-form-card,.owner-library-card,.teacher-panel,.portal-access-card){width:100%;max-width:100%;min-width:0}
+:where(.platform-table-wrap,.table-wrap,.owner-table-wrap){max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{max-width:100%}
+:where(.platform-banner,.page-banner,.owner-hero,.teacher-header){max-width:100%;min-width:0}
+:where(.platform-banner img,.page-banner img,.owner-hero img){max-width:100%;object-fit:cover}
+:where(.platform-content-grid,.learning-media-grid,.hw-assignment-grid)>*,:where(.owner-media-grid,.owner-quick-grid)>*{min-width:0}
+@media(max-width:900px){
+ :where(.owner-stats-wide,.owner-tabs-rich){grid-template-columns:repeat(2,minmax(0,1fr))}
+ :where(.owner-management-grid,.owner-overview-columns){grid-template-columns:minmax(0,1fr)}
+ :where(.learning-media-grid,.platform-content-grid,.hw-assignment-grid){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:600px){
+ :root{--page-gutter:12px}
+ body{font-size:14px}
+ :where(.platform-page,.owner-shell,.teacher-shell,.owner-control-center){padding-inline:12px}
+ :where(.platform-content-grid,.learning-media-grid,.hw-assignment-grid,.platform-home-grid,.platform-dashboard-grid,.platform-subscription-layout,.profile-v2-overview,.sd-announcement-grid){grid-template-columns:minmax(0,1fr)}
+ :where(.owner-stats-wide,.owner-tabs-rich,.owner-quick-grid,.owner-media-grid,.owner-payment-stats){grid-template-columns:repeat(2,minmax(0,1fr))}
+ :where(.owner-form-two,.teacher-tabs){grid-template-columns:minmax(0,1fr)}
+ :where(.portal-access-card,.owner-login-card){padding:clamp(16px,5vw,24px)}
+ :where(.platform-panel,.owner-form-card,.owner-library-card){padding:clamp(12px,3.5vw,18px)}
+ :where(.owner-header-actions,.teacher-header-actions){display:flex;flex-wrap:wrap;gap:8px}
+ :where(.owner-header-actions,.teacher-header-actions)>*{min-width:0;flex:1 1 auto}
+ :where(.platform-gold-button,.owner-primary-button,.owner-secondary-button){width:100%;justify-content:center}
+ :where(.sd-announcement-grid article){min-width:0}
+ :where(.sd-announcement-grid article>img,.sd-announcement-fallback){width:clamp(76px,25vw,100px)}
+ :where(.learning-detail-backdrop){padding:8px}
+ :where(.learning-detail-modal){width:100%;max-height:94dvh;padding:15px}
+ :where(.learning-detail-image,.learning-detail-placeholder){height:auto;max-height:34vh;aspect-ratio:16/9}
+}
+@media(max-width:380px){
+ :where(.owner-stats-wide,.owner-tabs-rich,.owner-quick-grid,.owner-media-grid,.owner-payment-stats){grid-template-columns:minmax(0,1fr)}
+ :where(.owner-lesson-manager>article){grid-template-columns:24px minmax(0,1fr)}
+ :where(.owner-lesson-manager>article button){grid-column:2}
+ :where(.teacher-message-head,.owner-footer){flex-wrap:wrap}
+}
+@media(min-width:1200px){
+ :where(.platform-page,.owner-control-center,.teacher-shell){margin-inline:auto}
+}

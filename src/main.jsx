@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import "./home.css";
+import "./responsive.css";
 import SplashScreen from "./pages/SplashScreen.jsx";
 import AuthScreen from "./pages/AuthScreen.jsx";
 import StudentExperience from "./pages/StudentExperience.jsx";
