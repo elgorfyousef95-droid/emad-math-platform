@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import ChatWorkspace from "../components/ChatWorkspace.jsx";
+import { getLectureVideoUrl } from "../lib/lectureMedia.js";
 import {
   portalApi,
   portalLogin,
@@ -73,6 +74,7 @@ export default function OwnerConsole() {
   const [homeworkQuestionForm, setHomeworkQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
   const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
+  const [lessonVideoPreviewUrl, setLessonVideoPreviewUrl] = useState("");
 
   const read = async (path) => {
     try { return await portalApi("owner", path); }
@@ -204,6 +206,7 @@ export default function OwnerConsole() {
       if (!created?.id) throw new Error("lesson_not_created");
       setLessons((old) => [...old, created]);
       setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
+      setLessonVideoPreviewUrl("");
       setNotice("تمت إضافة المحاضرة كمسودة.");
     } catch (e) { setError("تعذر إضافة المحاضرة. " + (e.message || "")); }
     finally { setSaving(""); }
@@ -213,9 +216,11 @@ export default function OwnerConsole() {
     if (!file) return;
     setUploading("lesson-video"); setError(""); setNotice("");
     try {
-      const url = await uploadPortalVideo(file, "owner");
-      setLessonForm((old) => ({ ...old, video_url: url }));
-      setNotice("تم رفع الفيديو من جهازك. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
+      const path = await uploadPortalVideo(file, "owner");
+      const previewUrl = await getLectureVideoUrl(path, "owner");
+      setLessonForm((old) => ({ ...old, video_url: path }));
+      setLessonVideoPreviewUrl(previewUrl);
+      setNotice("تم رفع الفيديو الخاص. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
     } catch (e) {
       setError(e.message === "video_too_large" ? "حجم الفيديو أكبر من 100 ميجابايت." : e.message === "unsupported_video_type" ? "الصيغ المسموحة MP4 وWEBM وMOV." : "تعذر رفع الفيديو. تحقق من الاتصال وصلاحيات التخزين.");
     } finally { setUploading(""); }
@@ -548,7 +553,7 @@ export default function OwnerConsole() {
             <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
             <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
               {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}
-              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 100 ميجابايت {uploading==="lesson-video"?" · جارٍ الرفع...":""}</small></label>{lessonForm.video_url&&<video className="owner-video-preview" src={lessonForm.video_url} controls playsInline/>}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
+              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 100 ميجابايت {uploading==="lesson-video"?" · جارٍ الرفع...":""}</small></label>{lessonForm.video_url&&<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline/>}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
             </div></div>}
         </div>
       </div>
