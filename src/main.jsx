@@ -117,68 +117,69 @@ const pageArtwork={
 };
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
- const name=profile?.full_name?.trim()?.split(/\s+/)[0]||"طالبنا";
+ const name=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
  const modules=[
   ["courses","المحتوى التعليمي","الكورسات والوحدات الدراسية","book","https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=900&q=85","01"],
   ["lessons","المحاضرات والدروس","شرح المنهج خطوة بخطوة","play","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85","02"],
   ["exams","مركز الامتحانات","اختبر فهمك وتابع تقييماتك","exam","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=85","03"],
-  ["homework","الواجبات والتدريبات","تدريباتك ومهامك الدراسية","task","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=900&q=85","04"],
+  ["homework","الواجبات والتدريبات","تدريبات ومهامك الدراسية","task","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=900&q=85","04"],
   ["files","المكتبة التعليمية","المذكرات والملفات الدراسية","file","https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=900&q=85","05"],
-  ["results","درجاتي ونتائجي","راجع نتائجك عند نشرها","chart","https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85","06"],
+  ["results","النتائج وتحليل المستوى","راجع نتائجك عند نشرها","chart","https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85","06"],
   ["schedule","الجدول الدراسي","مواعيد الحصص والمحاضرات","calendar","https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=900&q=85","07"],
-  ["live","المحاضرات المباشرة","ادخل إلى حصص البث المباشر","live","https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85","08"],
-  ["groups","الجروبات الدراسية","تواصل داخل مجموعتك الدراسية","users","https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=85","09"],
-  ["ai","المساعد الذكي","مساعدة في فهم مسائل الرياضيات","spark","https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85","10"]
+  ["live","المحاضرات المباشرة","حصص البث والمحاضرات","live","https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85","08"],
+  ["groups","الجروبات الدراسية","تواصل مع مجموعتك الدراسية","users","https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=85","09"]
  ];
- return <div className="platform-page emad-home-v3">
-  <section className="emad-v3-hero">
-   <div className="emad-v3-hero-copy">
-    <span className="emad-v3-overline"><i/> EMAD EL SANAFIRY · MATHEMATICS ACADEMY</span>
-    <div className="emad-v3-welcome">مساحتك التعليمية الخاصة</div>
-    <h1>أهلاً بيك يا {name}<br/><em>خلّي الرياضيات نقطة قوتك.</em></h1>
-    <p>شرح منظم، تدريب عملي، ومتابعة لرحلتك الدراسية — كل ده في تجربة واحدة مصممة لطلاب مستر عماد السنافيري.</p>
-    <div className="emad-v3-meta">
-     <span><Icon name="book" size={15}/>{grade||"الصف الدراسي غير محدد"}</span>
-     <span className={subscription?"active":""}><Icon name="shield" size={15}/>{subscription?"اشتراكك نشط":"الاشتراك غير مفعل"}</span>
+ return <div className="platform-page home-v4">
+  <section className="home-v4-hero">
+   <div className="home-v4-hero-copy">
+    <div className="home-v4-kicker"><span/> أكاديمية مستر عماد السنافيري <i>·</i> MATHEMATICS</div>
+    <div className="home-v4-welcome">مساحتك التعليمية بدأت من هنا</div>
+    <h1>أهلاً بيك يا {name}<br/><em>الرياضيات محتاجة فهم… مش حفظ.</em></h1>
+    <p>اتعلم على خطوات واضحة، تدرب بذكاء، وتابع مستواك في مكان واحد. كل أدوات رحلتك الدراسية منظمة قدامك.</p>
+    <div className="home-v4-pills">
+     <span><Icon name="book" size={15}/>{grade||"صفك الدراسي"}</span>
+     <span className={subscription?"is-active":""}><Icon name="ticket" size={15}/>{subscription?"اشتراك نشط":"الاشتراك غير مفعل"}</span>
     </div>
-    <div className="emad-v3-actions">
-     <button className="emad-v3-primary" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ رحلتك التعليمية":"فعّل اشتراكك الآن"}<Icon name="arrow" size={17}/></button>
-     <button className="emad-v3-secondary" onClick={()=>go("schedule")}><Icon name="calendar" size={16}/> جدول الحصص</button>
+    <div className="home-v4-hero-actions">
+     <button className="home-v4-primary" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ التعلم الآن":"فعّل اشتراكك"} <Icon name="arrow" size={17}/></button>
+     <button className="home-v4-outline" onClick={()=>go("schedule")}><Icon name="calendar" size={17}/> جدول الحصص</button>
     </div>
+    <div className="home-v4-proof"><span>شرح منظم</span><i/><span>تدريب عملي</span><i/><span>متابعة مستمرة</span></div>
    </div>
-   <div className="emad-v3-teacher">
-    <div className="emad-v3-teacher-frame"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/><div><b>مستر عماد السنافيري</b><span>رحلتك في الرياضيات تبدأ من هنا</span></div></div>
-    <span className="emad-v3-math-stamp">∑ <small>MATHEMATICS</small></span>
-    <span className="emad-v3-floating-equation">f(x) = ax² + bx + c</span>
+   <div className="home-v4-portrait-wrap">
+    <div className="home-v4-portrait-glow"/>
+    <div className="home-v4-portrait"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/><div className="home-v4-portrait-caption"><b>مستر عماد السنافيري</b><span>معاك خطوة بخطوة في الرياضيات</span></div></div>
+    <div className="home-v4-equation home-v4-equation-a">∫ f(x) dx</div>
+    <div className="home-v4-equation home-v4-equation-b">a² + b² = c²</div>
    </div>
-   <div className="emad-v3-hero-foot"><span>فهم أعمق</span><i/><span>تدريب أقوى</span><i/><span>نتيجة أفضل</span></div>
+   <div className="home-v4-hero-index"><b>01</b><span>LEARN WITH CONFIDENCE</span></div>
   </section>
-  <section className="emad-v3-studentbar">
-   <div className="emad-v3-student">
-    {profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<span className="emad-v3-avatar"><Icon name="user" size={22}/></span>}
-    <div><small>لوحة الطالب</small><b>{profile?.full_name||"حساب الطالب"} {profile?.is_verified&&<span className="platform-verified"><Icon name="crown" size={11}/></span>}</b><em>رقم الطالب: {profile?.student_number||"—"}</em></div>
+  <section className="home-v4-student-strip">
+   <div className="home-v4-student-id">
+    {profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<span className="home-v4-student-placeholder"><Icon name="user" size={20}/></span>}
+    <div><small>أهلاً بعودتك</small><b>{profile?.full_name||"حساب الطالب"}</b><span>رقم الطالب: {profile?.student_number||"—"}</span></div>
    </div>
-   <div className="emad-v3-student-fact"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
-   <div className="emad-v3-student-fact"><small>حالة الاشتراك</small><b className={subscription?"active":"inactive"}>{subscription?"نشط":"غير مفعل"}</b></div>
-   <button onClick={()=>go("profile")}>عرض الملف الشخصي <Icon name="arrow" size={15}/></button>
+   <div className="home-v4-student-detail"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
+   <div className="home-v4-student-detail"><small>حالة الاشتراك</small><b className={subscription?"good":"warn"}>{subscription?"نشط":"غير مفعل"}</b></div>
+   <button onClick={()=>go("profile")}>ملفي الشخصي <Icon name="arrow" size={15}/></button>
   </section>
-  <section className="emad-v3-section">
-   <div className="emad-v3-section-head"><div><span>YOUR LEARNING WORLD</span><h2>كل أقسام المنصة في مكان واحد</h2><p>كل خدمة تفتح في صفحة مستقلة بتجربتها ومحتواها.</p></div><b>01 <i/> 10</b></div>
-   <div className="emad-v3-module-grid">
-    {modules.map(([id,title,desc,ico,image,num])=><button key={id} className="emad-v3-module" style={{"--module-photo":"url("+image+")"}} onClick={()=>go(id)}>
-     <span className="emad-v3-module-number">{num}</span><span className="emad-v3-module-icon"><Icon name={ico} size={21}/></span>
-     <span className="emad-v3-module-copy"><b>{title}</b><small>{desc}</small></span><span className="emad-v3-module-go"><Icon name="arrow" size={16}/></span>
+  <section className="home-v4-section">
+   <div className="home-v4-section-head"><div><span>YOUR LEARNING SPACE</span><h2>كل اللي تحتاجه في مكان واحد</h2><p>اختار القسم اللي عايز تبدأ منه، وكل خدمة ليها صفحة مستقلة.</p></div><button onClick={()=>go("courses")}>استكشف المحتوى <Icon name="arrow" size={15}/></button></div>
+   <div className="home-v4-module-grid">
+    {modules.map(([id,title,desc,ico,image,num])=><button key={id} className="home-v4-module" style={{"--home-card-image":'url("'+image+'")'}} onClick={()=>go(id)}>
+     <span className="home-v4-module-no">{num}</span><span className="home-v4-module-icon"><Icon name={ico} size={20}/></span>
+     <span className="home-v4-module-copy"><b>{title}</b><small>{desc}</small></span><span className="home-v4-module-arrow"><Icon name="arrow" size={15}/></span>
     </button>)}
    </div>
   </section>
-  <section className="emad-v3-feature-grid">
-   <button className="emad-v3-feature support" onClick={()=>go("messages")}><span>STUDENT CARE</span><b>إحنا معاك خطوة بخطوة</b><small>تواصل مع الدعم الفني لو احتجت أي مساعدة.</small><i>مركز الدعم <Icon name="arrow" size={15}/></i></button>
-   <button className="emad-v3-feature smart" onClick={()=>go("ai")}><span>SMART MATH ASSISTANT</span><b>المسألة الصعبة ليها حل</b><small>افتح مساحة المساعد الذكي لفهم خطوات الحل.</small><i>اكتشف المساعد <Icon name="arrow" size={15}/></i></button>
+  <section className="home-v4-ai-row">
+   <div className="home-v4-ai-copy"><span className="home-v4-ai-label"><Icon name="spark" size={15}/> SMART MATH ASSISTANT</span><h2>واقف قدام مسألة؟<br/><em>خلّي الفكرة توضح.</em></h2><p>مساحة مخصصة لمساعدتك على فهم خطوات الحل والتعامل مع أفكار الرياضيات بطريقة منظمة.</p><button onClick={()=>go("ai")}>اكتشف المساعد الذكي <Icon name="arrow" size={16}/></button></div>
+   <div className="home-v4-ai-art" role="img" aria-label="خلفية تقنية للذكاء الاصطناعي والرياضيات"><div className="home-v4-ai-orbit"/><div className="home-v4-ai-symbol">∑</div><span>AI × MATH</span></div>
   </section>
-  <section className="emad-v3-bottom-grid">
-   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={19}/></span><b>الإشعارات</b><small>كل جديد في حسابك</small>{unread>0&&<em>{unread>99?"99+":unread}</em>}</button>
-   <button onClick={()=>go("subscriptions")}><span><Icon name="ticket" size={19}/></span><b>الاشتراكات</b><small>إدارة اشتراكك</small></button>
-   <button onClick={()=>go("settings")}><span><Icon name="settings" size={19}/></span><b>الإعدادات</b><small>تفضيلات الحساب</small></button>
+  <section className="home-v4-bottom-grid">
+   <button onClick={()=>go("messages")}><span><Icon name="support" size={19}/></span><b>الدعم الفني</b><small>إحنا معاك لو احتجت مساعدة</small><Icon name="arrow" size={15}/></button>
+   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={19}/></span><b>الإشعارات</b><small>تابع آخر أخبار حسابك</small>{unread>0&&<em>{unread>99?"99+":unread}</em>}<Icon name="arrow" size={15}/></button>
+   <button onClick={()=>go("subscriptions")}><span><Icon name="ticket" size={19}/></span><b>الاشتراكات</b><small>إدارة اشتراكك الدراسي</small><Icon name="arrow" size={15}/></button>
   </section>
  </div>;
 }
