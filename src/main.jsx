@@ -117,7 +117,7 @@ const pageArtwork={
 };
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
- const name=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
+ const name=profile?.full_name?.trim()?.split(/\s+/)[0]||"طالبنا";
  const modules=[
   ["courses","المحتوى التعليمي","الكورسات والوحدات الدراسية","book","https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=900&q=85","01"],
   ["lessons","المحاضرات والدروس","شرح المنهج خطوة بخطوة","play","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85","02"],
