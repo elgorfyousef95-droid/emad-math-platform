@@ -1712,3 +1712,13 @@ body.admin-scroll-mode{width:100%!important}
 
 .owner-lesson-thumb,.teacher-lesson-thumb{width:48px;height:38px;flex:none;object-fit:cover;border:1px solid #d7b46b55;border-radius:8px;background:#142b43}
 .teacher-lesson-thumb{width:38px;height:34px;border-color:#8ac5b655}
+
+
+.owner-login-shell{min-height:100dvh;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 20% 15%,#243c57 0,transparent 32%),linear-gradient(145deg,#071321,#101e31)}
+.owner-login-card{width:min(460px,100%);padding:30px;border:1px solid #d7b46b55;border-radius:20px;background:linear-gradient(145deg,#142a42,#091727);box-shadow:0 28px 90px #0009}
+.owner-login-card>span{color:#e4c47d;font:800 9px Arial,sans-serif;letter-spacing:1.4px}
+.owner-login-card h1{margin:13px 0 5px;font-size:27px}
+.owner-login-card>p{color:#aebfd0;font-size:11px;line-height:1.8}
+.owner-login-card form{display:grid;gap:13px;margin:20px 0}
+.owner-login-card label{display:grid;gap:7px;color:#c4d0de;font-size:10px}
+.owner-login-card input{width:100%;padding:13px;border:1px solid #d7b46b55;border-radius:10px;background:#071626;color:#fff}
