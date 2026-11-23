@@ -32,7 +32,8 @@ async function sessionFor(portal) {
 }
 
 export async function uploadEmadChatAttachment(portal, conversationId, file) {
-  if (!file || !ALLOWED.has(file.type)) throw new Error("unsupported_attachment");
+  const mime = String(file?.type || "").split(";")[0].trim().toLowerCase();
+  if (!file || !ALLOWED.has(mime)) throw new Error("unsupported_attachment");
   if (file.size > MAX_ATTACHMENT_SIZE) throw new Error("attachment_too_large");
   const session = await sessionFor(portal);
   const safeName = String(file.name || "attachment").replace(/[^\p{L}\p{N}._-]/gu, "_").slice(-90);
@@ -42,14 +43,14 @@ export async function uploadEmadChatAttachment(portal, conversationId, file) {
     headers: {
       apikey: SUPABASE_PUBLIC_KEY,
       Authorization: `Bearer ${session.access_token}`,
-      "Content-Type": file.type,
+      "Content-Type": mime,
       "x-upsert": "false"
     },
     body: file
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || "attachment_upload_failed");
-  return { path, name: file.name || safeName, mime: file.type, size: file.size };
+  return { path, name: file.name || safeName, mime, size: file.size };
 }
 
 export async function getEmadChatAttachmentUrl(portal, path) {
