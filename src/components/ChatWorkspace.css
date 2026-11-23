@@ -18,3 +18,21 @@
 @media(max-width:520px){.emad-chat-page{padding:10px}.emad-chat-hero{align-items:flex-start;flex-wrap:wrap}.emad-chat-status{margin-right:auto}.emad-chat-layout{gap:9px}.emad-chat-thread-head{padding:11px}.emad-chat-thread-actions{flex-direction:column;align-items:flex-end}.emad-chat-message{max-width:96%}.emad-chat-message-list{padding:12px}.emad-chat-composer{padding:9px}.emad-chat-profile-card dl{grid-template-columns:1fr}.emad-chat-profile-card dl div{display:flex;justify-content:space-between;align-items:center}.emad-chat-profile-card dd{margin:0}}
 
 .emad-chat-roster-member{position:relative;display:inline-flex;flex:0 0 26px}.emad-chat-roster-member>button:first-child{width:26px;height:26px;overflow:hidden;border:1px solid #ffffff25;border-radius:50%;padding:0;background:#2b3f5e;color:#f2d18a;font-size:10px}.emad-chat-roster-member .emad-chat-remove-member{position:absolute;top:-5px;left:-5px;width:14px;height:14px;border:0;border-radius:50%;padding:0;background:#a84949;color:white;font-size:11px;line-height:12px}.emad-chat-delete-message{border:0;background:transparent;color:#df8d8d;font-size:8px;margin-right:7px;padding:0}
+
+/* Pro messaging polish + audio notes */
+.emad-chat-page{padding:clamp(10px,2vw,24px)}
+.emad-chat-layout{grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:12px}
+.emad-chat-sidebar,.emad-chat-thread{border-color:#ffffff20;box-shadow:0 18px 55px #02081240}
+.emad-chat-conversation{min-height:76px;transition:background .18s ease}
+.emad-chat-conv-avatar{border-radius:50%;box-shadow:0 0 0 2px #ffffff0a}
+.emad-chat-message-list{background-color:#0b1728;background-image:radial-gradient(#ffffff08 .7px,transparent .7px);background-size:18px 18px}
+.emad-chat-bubble{box-shadow:0 5px 18px #0002}
+.emad-chat-audio{display:grid;gap:7px;min-width:min(280px,55vw);padding:4px}
+.emad-chat-audio span{font-size:10px;color:#e8c77f}
+.emad-chat-audio audio{width:100%;height:38px;max-width:310px}
+.emad-chat-record{border:1px solid #d99a9a66;border-radius:9px;background:#6c343b33;color:#ffd1d1;padding:8px 11px;font-size:10px}
+.emad-chat-record.recording{background:#a52e3d;color:#fff;animation:emadRecordPulse 1.25s infinite}
+@keyframes emadRecordPulse{50%{box-shadow:0 0 0 6px #d14b4b22}}
+.emad-chat-compose-actions>button:focus-visible,.emad-chat-attach:focus-within{outline:2px solid #efd18b;outline-offset:2px}
+@media(max-width:850px){.emad-chat-layout{grid-template-columns:1fr}.emad-chat-sidebar{max-height:300px}.emad-chat-thread{min-height:600px}}
+@media(max-width:520px){.emad-chat-audio{min-width:min(230px,65vw)}.emad-chat-audio audio{max-width:100%}.emad-chat-record{padding:9px 10px}}
