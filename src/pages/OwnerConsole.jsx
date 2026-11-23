@@ -243,10 +243,17 @@ export default function OwnerConsole() {
     setUploading("lesson-video"); setUploadProgress(0); setError(""); setNotice("");
     try {
       const path = await uploadPortalVideo(file, "owner", (percent) => setUploadProgress(percent));
-      const previewUrl = await getLectureVideoUrl(path, "owner");
       setLessonForm((old) => ({ ...old, video_url: path }));
-      setLessonVideoPreviewUrl(previewUrl);
-      setNotice("تم رفع الفيديو الخاص. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
+      setLessonVideoPreviewUrl("");
+      setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");
+      try {
+        const previewUrl = await getLectureVideoUrl(path, "owner");
+        setLessonVideoPreviewUrl(previewUrl);
+        setNotice("تم رفع الفيديو بنجاح. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
+      } catch (previewError) {
+        console.error("owner_video_preview", previewError);
+        setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");
+      }
     } catch (e) {
       setError(e.message === "video_too_large" ? "حجم الفيديو أكبر من 1 جيجابايت." : e.message === "unsupported_video_type" ? "الصيغ المسموحة MP4 وWEBM وMOV." : "تعذر رفع الفيديو. تحقق من الاتصال وصلاحيات التخزين.");
     } finally { setUploading(""); }
