@@ -25,7 +25,6 @@ const stepTitles = ["البيانات الشخصية", "البيانات الد�
 function errorText(code) {
   const messages = {
     missing_supabase_configuration: "إعدادات الاتصال بقاعدة البيانات غير مكتملة.",
-    invalid_signup_data: "راجع البيانات المطلوبة، وتأكد من الصورة ورقمَي الهاتف وكلمة المرور.",
     invalid_full_name: "اكتب الاسم بالكامل بشكل صحيح.",
     invalid_phone: "اكتب رقم هاتف مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015.",
     invalid_grade: "اختر الصف الدراسي من القائمة.",
