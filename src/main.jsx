@@ -7,6 +7,7 @@ import AuthScreen from "./pages/AuthScreen.jsx";
 import StudentExperience from "./pages/StudentExperience.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
 import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode } from "./lib/auth.js";
+import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession } from "./lib/portalAuth.js";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
 const navByGrade={
@@ -43,14 +44,60 @@ function Icon({name,size=19}){
  };
  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.spark}</svg>;
 }
+function PortalAccess({portal,onSuccess}){
+ const [mode,setMode]=useState("login"),[password,setPassword]=useState(""),[ownerPassword,setOwnerPassword]=useState(""),[teacherPassword,setTeacherPassword]=useState(""),[teacherName,setTeacherName]=useState("مستر عماد السنافيري"),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ const isOwner=portal==="owner";
+ const title=isOwner?"بوابة المالك":"بوابة مستر عماد";
+ const explain=isOwner?"دخول خاص بصاحب المنصة، مستقل عن حسابات الطلاب.":"مساحة المدرس المستقلة لإدارة المحتوى التعليمي.";
+ const login=async()=>{
+  if(password.length<12)return setError("كلمة المرور لازم تكون 12 حرفًا على الأقل.");
+  setBusy(true);setError("");
+  try{await portalLogin(portal,password);await onSuccess();}
+  catch(e){setError(e.message==="invalid_login"?"كلمة المرور غير صحيحة.":e.message==="portal_profile_not_ready"?"حساب البوابة غير مكتمل الإعداد.":"تعذر تسجيل الدخول. حاول مرة أخرى.");}
+  finally{setBusy(false);}
+ };
+ const setup=async()=>{
+  if(ownerPassword.length<12||teacherPassword.length<12)return setError("كل كلمة مرور لازم تكون 12 حرفًا على الأقل.");
+  if(ownerPassword===teacherPassword)return setError("استخدم كلمتي مرور مختلفتين للبوابتين.");
+  setBusy(true);setError("");
+  try{
+   await setupPortalAccounts(ownerPassword,teacherPassword,teacherName);
+   await portalLogin("owner",ownerPassword);
+   await onSuccess();
+  }catch(e){
+   const messages={owner_student_session_required:"سجّل دخولك أولًا في منصة الطلاب بحساب المالك 2700002، ثم ارجع إلى هذه الصفحة.",owner_only:"إعداد البوابتين متاح لحساب المالك فقط.",invalid_owner_session:"جلسة حساب المالك انتهت. سجّل الدخول مجددًا إلى منصة الطلاب.",portal_account_create_failed:"حسابات البوابات موجودة بالفعل أو تعذر إنشاؤها. جرّب تسجيل الدخول."};
+   setError(messages[e.message]||"تعذر إعداد البوابتين. راجع جلسة المالك وحاول مرة أخرى.");
+  }finally{setBusy(false);}
+ };
+ return <main className="portal-access-shell" dir="rtl"><section className="portal-access-card">
+  <span className="portal-access-kicker">EMAD EL SANAFIRY · SECURE PORTAL</span>
+  <div className="portal-access-mark">{isOwner?"OWNER":"TEACHER"}</div>
+  <h1>{title}</h1><p>{explain}</p>
+  {mode==="login"?<>
+   <label>كلمة المرور</label><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="اكتب كلمة المرور" autoComplete="current-password" onKeyDown={e=>e.key==="Enter"&&login()}/>
+   <button className="portal-access-submit" disabled={busy} onClick={login}>{busy?"جارٍ التحقق...":"تسجيل الدخول"}</button>
+   {isOwner&&<button className="portal-access-switch" onClick={()=>{setMode("setup");setError("");}}>إعداد حسابات البوابتين لأول مرة</button>}
+  </>:<>
+   <div className="portal-setup-note">إعداد أول مرة آمن: لازم تكون مسجل دخول بالفعل في منصة الطلاب بحساب المالك. اختر كلمتي مرور مختلفتين، ولن تظهر أي كلمة مرور في قاعدة البيانات كنص مكشوف.</div>
+   <label>كلمة مرور بوابة المالك</label><input type="password" value={ownerPassword} onChange={e=>setOwnerPassword(e.target.value)} placeholder="12 حرفًا على الأقل" autoComplete="new-password"/>
+   <label>كلمة مرور بوابة مستر عماد</label><input type="password" value={teacherPassword} onChange={e=>setTeacherPassword(e.target.value)} placeholder="كلمة مرور مختلفة" autoComplete="new-password"/>
+   <label>اسم المدرس الظاهر</label><input value={teacherName} onChange={e=>setTeacherName(e.target.value)} maxLength={100}/>
+   <button className="portal-access-submit" disabled={busy} onClick={setup}>{busy?"جارٍ إعداد الحسابات...":"إنشاء البوابتين وتأمينهما"}</button>
+   <button className="portal-access-switch" onClick={()=>{setMode("login");setError("");}}>العودة لتسجيل الدخول</button>
+  </>}
+  {error&&<div className="portal-access-error">{error}</div>}
+  <button className="portal-access-back" onClick={()=>window.location.href="/"}>العودة إلى المنصة الطلابية</button>
+ </section></main>;
+}
+
 function OwnerConsole(){
  const [profile,setProfile]=useState(null),[users,setUsers]=useState([]),[busy,setBusy]=useState(true),[error,setError]=useState(""),[filter,setFilter]=useState(""),[saving,setSaving]=useState("");
  const load=async()=>{
   setBusy(true);setError("");
   try{
-   const session=await refreshStudentSession();
+   const session=await refreshPortalSession("owner");
    if(!session?.access_token)throw new Error("not_authenticated");
-   const rows=await studentApi("profiles?select=id,full_name,student_number,grade,group_name,role,is_verified&limit=500");
+   const rows=await portalApi("owner", "profiles?select=id,full_name,student_number,grade,group_name,role,is_verified&limit=500");
    const me=(rows||[]).find(x=>x.id===session.user?.id)||null;
    setProfile(me);setUsers(rows||[]);
    if(me?.role!=="owner")setError("هذا الحساب لا يمتلك صلاحية مالك المنصة.");
@@ -62,16 +109,16 @@ function OwnerConsole(){
   if(!window.confirm("تأكيد تغيير صلاحية "+(user.full_name||user.student_number)+" إلى "+role+"؟"))return;
   setSaving(user.id);
   try{
-   await studentApi("profiles?id=eq."+encodeURIComponent(user.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({role})});
+   await portalApi("owner", "profiles?id=eq."+encodeURIComponent(user.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({role})});
    setUsers(old=>old.map(x=>x.id===user.id?{...x,role}:x));
   }catch(e){setError("لم يتم تغيير الصلاحية. تأكد من صلاحية المالك.");}
   finally{setSaving("");}
  };
  const visible=users.filter(u=>[u.full_name,u.student_number,u.grade,u.group_name,u.role].join(" ").toLowerCase().includes(filter.toLowerCase()));
  if(busy)return <main className="owner-shell"><div className="owner-loading">جارٍ تأمين وفتح لوحة المالك...</div></main>;
- if(!profile||profile.role!=="owner")return <main className="owner-shell"><section className="owner-denied"><span>EMAD · OWNER ACCESS</span><h1>لوحة المالك محمية</h1><p>{error||"لا يمكن فتح هذه الصفحة بهذا الحساب."}</p><button onClick={()=>{window.location.href="/";}}>العودة للمنصة</button></section></main>;
+ if(!profile||profile.role!=="owner")return <PortalAccess portal="owner" onSuccess={load}/>;
  return <main className="owner-shell" dir="rtl">
-  <header className="owner-header"><div><span>EMAD EL SANAFIRY · CONTROL CENTER</span><h1>لوحة المالك</h1><p>إدارة المنصة والصلاحيات من مساحة مستقلة.</p></div><div className="owner-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>العودة للمنصة</button></div></header>
+  <header className="owner-header"><div><span>EMAD EL SANAFIRY · CONTROL CENTER</span><h1>لوحة المالك</h1><p>إدارة المنصة والصلاحيات من مساحة مستقلة.</p></div><div className="owner-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("owner");window.location.reload();}}>تسجيل الخروج</button></div></header>
   {error&&<p className="owner-error">{error}</p>}
   <section className="owner-stats"><article><small>إجمالي الحسابات</small><strong>{users.length}</strong></article><article><small>الطلاب</small><strong>{users.filter(x=>x.role==="student").length}</strong></article><article><small>المدرسون</small><strong>{users.filter(x=>x.role==="teacher").length}</strong></article><article><small>الإدارة</small><strong>{users.filter(x=>["owner","admin"].includes(x.role)).length}</strong></article></section>
   <section className="owner-panel"><div className="owner-panel-heading"><div><span>ACCOUNT DIRECTORY</span><h2>الحسابات والصلاحيات</h2></div><button onClick={load}>تحديث البيانات</button></div>
@@ -92,13 +139,13 @@ function TeacherConsole(){
  const load=async()=>{
   setBusy(true);setError("");
   try{
-   const session=await refreshStudentSession();
+   const session=await refreshPortalSession("teacher");
    if(!session?.access_token)throw new Error("not_authenticated");
-   const rows=await studentApi("profiles?select=id,full_name,student_number,role&id=eq."+encodeURIComponent(session.user?.id));
+   const rows=await portalApi("teacher", "profiles?select=id,full_name,student_number,role&id=eq."+encodeURIComponent(session.user?.id));
    const me=(rows||[])[0]||null;
    setProfile(me);
    if(me?.role!=="teacher")throw new Error("not_teacher");
-   const list=await studentApi("courses?select=id,title,description,subject,grade,status,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
+   const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setCourses(list||[]);
    const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
    setSelected(first);
@@ -111,7 +158,7 @@ function TeacherConsole(){
   let active=true;
   const fetchLessons=async()=>{
    if(!selected){setLessons([]);return;}
-   try{const rows=await studentApi("lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
+   try{const rows=await portalApi("teacher", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
    catch{if(active)setError("تعذر تحميل المحاضرات لهذا الكورس.");}
   };
   fetchLessons();return()=>{active=false;};
@@ -119,7 +166,7 @@ function TeacherConsole(){
  const createCourse=async(e)=>{
   e.preventDefault();setSaving(true);setError("");setNotice("");
   try{
-   const rows=await studentApi("courses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...courseForm,teacher_id:profile.id,status:"draft"})});
+   const rows=await portalApi("teacher", "courses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...courseForm,teacher_id:profile.id,status:"draft"})});
    const created=Array.isArray(rows)?rows[0]:rows;
    if(!created?.id)throw new Error("create_failed");
    setCourses(old=>[created,...old]);setSelected(created.id);setCourseForm({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:""});setNotice("تم إنشاء الكورس كمسودة. راجعه ثم انشره.");
@@ -129,7 +176,7 @@ function TeacherConsole(){
  const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;setSaving(true);setError("");setNotice("");
   try{
-   const rows=await studentApi("lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...lessonForm,course_id:selected,sort_order:lessons.length+1,is_published:false})});
+   const rows=await portalApi("teacher", "lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...lessonForm,course_id:selected,sort_order:lessons.length+1,is_published:false})});
    const created=Array.isArray(rows)?rows[0]:rows;
    if(!created?.id)throw new Error("create_failed");
    setLessons(old=>[...old,created]);setLessonForm({title:"",description:"",content:"",video_url:""});setNotice("تم حفظ المحاضرة كمسودة.");
@@ -138,19 +185,19 @@ function TeacherConsole(){
  };
  const toggleCourse=async(course)=>{
   const status=course.status==="published"?"draft":"published";setSaving(true);setError("");setNotice("");
-  try{await studentApi("courses?id=eq."+encodeURIComponent(course.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status})});setCourses(old=>old.map(x=>x.id===course.id?{...x,status}:x));setNotice(status==="published"?"تم نشر الكورس.":"تم إرجاع الكورس إلى المسودات.");}
+  try{await portalApi("teacher", "courses?id=eq."+encodeURIComponent(course.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status})});setCourses(old=>old.map(x=>x.id===course.id?{...x,status}:x));setNotice(status==="published"?"تم نشر الكورس.":"تم إرجاع الكورس إلى المسودات.");}
   catch{setError("تعذر تحديث حالة الكورس.");}finally{setSaving(false);}
  };
  const toggleLesson=async(lesson)=>{
   const is_published=!lesson.is_published;setSaving(true);setError("");setNotice("");
-  try{await studentApi("lessons?id=eq."+encodeURIComponent(lesson.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setLessons(old=>old.map(x=>x.id===lesson.id?{...x,is_published}:x));setNotice(is_published?"تم نشر المحاضرة.":"تم إخفاء المحاضرة.");}
+  try{await portalApi("teacher", "lessons?id=eq."+encodeURIComponent(lesson.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setLessons(old=>old.map(x=>x.id===lesson.id?{...x,is_published}:x));setNotice(is_published?"تم نشر المحاضرة.":"تم إخفاء المحاضرة.");}
   catch{setError("تعذر تحديث المحاضرة.");}finally{setSaving(false);}
  };
  const current=courses.find(x=>x.id===selected);
  if(busy)return <main className="owner-shell"><div className="owner-loading">جارٍ التحقق من صلاحية المدرس...</div></main>;
- if(!profile||profile.role!=="teacher")return <main className="teacher-shell" dir="rtl"><section className="teacher-denied"><span>EMAD · TEACHER PORTAL</span><h1>بوابة المدرس محمية</h1><p>{error||"هذا الرابط مخصص لحساب المدرس المعتمد."}</p><button onClick={()=>window.location.href="/"}>العودة للمنصة</button></section></main>;
+ if(!profile||profile.role!=="teacher")return <PortalAccess portal="teacher" onSuccess={load}/>;
  return <main className="teacher-shell" dir="rtl">
-  <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>العودة للمنصة</button></div></header>
+  <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("teacher");window.location.reload();}}>تسجيل الخروج</button></div></header>
   {error&&<p className="teacher-alert error">{error}</p>}{notice&&<p className="teacher-alert success">{notice}</p>}
   <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article></section>
   <div className="teacher-layout">
