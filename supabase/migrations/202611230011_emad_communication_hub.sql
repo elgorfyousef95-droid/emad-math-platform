@@ -368,3 +368,46 @@ begin
     end if;
   end if;
 end $$;
+
+-- Return only safe profile-card fields to people who share an Emad chat space.
+create or replace function public.emad_chat_profile_cards(p_ids uuid[])
+returns table(
+  id uuid,
+  full_name text,
+  student_number bigint,
+  grade text,
+  group_name text,
+  avatar_url text,
+  is_verified boolean,
+  role text
+)
+language sql stable security definer
+set search_path = pg_catalog, public, auth, private
+as $$
+  select p.id,p.full_name,p.student_number,p.grade,p.group_name,p.avatar_url,p.is_verified,p.role
+  from public.profiles p
+  where auth.uid() is not null
+    and p.id = any(coalesce(p_ids,'{}'::uuid[]))
+    and (
+      private.emad_chat_is_owner()
+      or private.teacher_can_access_student(p.id)
+      or exists (
+        select 1
+        from public.emad_conversation_members mine
+        join public.emad_conversations c on c.id=mine.conversation_id and c.kind='grade_group'
+        join public.emad_conversation_members theirs on theirs.conversation_id=c.id
+        where mine.user_id=auth.uid() and mine.left_at is null
+          and theirs.user_id=p.id and theirs.left_at is null
+      )
+      or exists (
+        select 1
+        from public.emad_conversation_members mine
+        join public.emad_conversations c on c.id=mine.conversation_id and c.kind='support'
+        join public.emad_conversation_members theirs on theirs.conversation_id=c.id
+        where mine.user_id=auth.uid() and mine.left_at is null
+          and theirs.user_id=p.id and theirs.left_at is null
+      )
+    );
+$$;
+revoke all on function public.emad_chat_profile_cards(uuid[]) from public;
+grant execute on function public.emad_chat_profile_cards(uuid[]) to authenticated;
