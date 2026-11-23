@@ -113,14 +113,37 @@ export async function studentApi(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
+function getSessionUserId(session) {
+  if (session?.user?.id) return session.user.id;
+  try {
+    const token = String(session?.access_token || "");
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+    return typeof decoded.sub === "string" ? decoded.sub : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function loadStudentWorkspace() {
+  const session = getSavedStudentSession();
+  const userId = getSessionUserId(session);
+  if (!userId) throw new Error("session_identity_missing");
+
+  // Always bind the profile lookup to the authenticated JWT subject.
+  // Owner accounts can read all profiles under RLS, so an unfiltered limit=1
+  // could otherwise load a different student's profile.
   const [profiles, subscriptions, notifications] = await Promise.all([
-    studentApi("profiles?select=id,full_name,student_number,grade,group_name,avatar_url,is_verified,role&limit=1"),
+    studentApi("profiles?select=id,full_name,student_number,grade,group_name,avatar_url,is_verified,role&id=eq." + encodeURIComponent(userId) + "&limit=1"),
     studentApi("emad_student_subscriptions?select=id,grade,starts_at,ends_at&ends_at=gt." + encodeURIComponent(new Date().toISOString()) + "&order=ends_at.desc&limit=1"),
     studentApi("emad_notifications?select=id,notification_type,title,body,action_url,read_at,created_at&order=created_at.desc&limit=30"),
   ]);
+  const profile = profiles?.[0] || null;
+  if (!profile || profile.id !== userId) throw new Error("authenticated_profile_not_found");
   return {
-    profile: profiles?.[0] || null,
+    profile,
     subscription: subscriptions?.[0] || null,
     notifications: notifications || [],
   };
