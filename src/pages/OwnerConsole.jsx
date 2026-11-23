@@ -13,6 +13,7 @@ const TABS = [
   ["courses", "الكورسات والمحاضرات", "COURSES"],
   ["exams", "الامتحانات", "EXAMS"],
   ["homework", "الواجبات", "HOMEWORK"],
+  ["announcements", "الإعلانات", "ANNOUNCEMENTS"],
   ["subscriptions", "الاشتراكات والأكواد", "SUBSCRIPTIONS"],
   ["payments", "المدفوعات", "PAYMENTS"],
   ["messages", "مراسلات الطلاب", "MESSAGES"],
@@ -31,6 +32,7 @@ export default function OwnerConsole() {
   const [examQuestions, setExamQuestions] = useState([]);
   const [homework, setHomework] = useState([]);
   const [homeworkQuestions, setHomeworkQuestions] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [codes, setCodes] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -55,6 +57,7 @@ export default function OwnerConsole() {
   const [examQuestionForm, setExamQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [examDraftQuestions, setExamDraftQuestions] = useState([]);
   const [homeworkForm, setHomeworkForm] = useState({ title: "", description: "", grade: GRADES[2], group_name: "", due_at: "", cover_image_url: "", is_published: false });
+  const [announcementForm, setAnnouncementForm] = useState({ title: "", body: "", course_id: "", cover_image_url: "" });
   const [homeworkQuestionForm, setHomeworkQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
   const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "" });
@@ -78,6 +81,7 @@ export default function OwnerConsole() {
         ["examQuestions", "exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&order=sort_order.asc&limit=5000"],
         ["homework", "homework_assignments?select=id,title,description,grade,group_name,due_at,is_published,cover_image_url,created_by,created_at&order=created_at.desc&limit=500"],
         ["homeworkQuestions", "homework_questions?select=id,assignment_id,question_type,prompt,points,position&order=position.asc&limit=5000"],
+        ["announcements", "announcements?select=id,author_id,course_id,title,body,published_at,cover_image_url,created_at&order=created_at.desc&limit=500"],
         ["subscriptions", "emad_student_subscriptions?select=id,student_id,grade,starts_at,ends_at,created_at&order=ends_at.desc&limit=1000"],
         ["codes", "emad_subscription_codes?select=id,grade,created_at,redeemed_by,redeemed_at,expires_at,code_hint&order=created_at.desc&limit=500"],
         ["payments", "payments?select=id,student_id,course_id,provider,provider_reference,amount_egp,status,verified_at,created_at&order=created_at.desc&limit=500"],
@@ -96,6 +100,7 @@ export default function OwnerConsole() {
       setExamQuestions(data.examQuestions || []);
       setHomework(data.homework || []);
       setHomeworkQuestions(data.homeworkQuestions || []);
+      setAnnouncements(data.announcements || []);
       setSubscriptions(data.subscriptions || []);
       setCodes(data.codes || []);
       setPayments(data.payments || []);
@@ -145,6 +150,7 @@ export default function OwnerConsole() {
       if (kind === "course") setCourseForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "exam") setExamForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "homework") setHomeworkForm((old) => ({ ...old, cover_image_url: url }));
+      if (kind === "announcement") setAnnouncementForm((old) => ({ ...old, cover_image_url: url }));
       setNotice("تم رفع الصورة وحفظ رابطها في نموذج المحتوى.");
     } catch (e) {
       setError(e.message === "image_too_large" ? "حجم الصورة أكبر من 5 ميجابايت." : e.message === "unsupported_image_type" ? "الصيغ المسموحة JPG وPNG وWEBP فقط." : "تعذر رفع الصورة. تحقق من إعداد مساحة الصور.");
@@ -206,7 +212,7 @@ export default function OwnerConsole() {
     try {
       const url = await uploadPortalImage(file, "owner");
       await portalApi("owner", table + "?id=eq." + encodeURIComponent(item.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ cover_image_url: url }) });
-      const setter = table === "courses" ? setCourses : table === "exams" ? setExams : setHomework;
+      const setter = table === "courses" ? setCourses : table === "exams" ? setExams : table === "announcements" ? setAnnouncements : setHomework;
       setter((old) => old.map((x) => x.id === item.id ? { ...x, cover_image_url: url } : x));
       setNotice("تم تحديث صورة العنصر.");
     } catch { setError("تعذر تحديث الصورة. تحقق من مساحة التخزين وصلاحيات المالك."); }
@@ -347,6 +353,37 @@ export default function OwnerConsole() {
     finally { setSaving(""); }
   };
 
+  const createAnnouncement = async (event) => {
+    event.preventDefault();
+    if (!announcementForm.title.trim() || !announcementForm.body.trim()) return setError("اكتب عنوان الإعلان ومحتواه.");
+    if (!announcementForm.cover_image_url) return setError("ارفع صورة للإعلان قبل حفظه.");
+    setSaving("announcement"); setError(""); setNotice("");
+    try {
+      const rows = await portalApi("owner", "announcements", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
+        author_id: profile.id, course_id: announcementForm.course_id || null,
+        title: announcementForm.title.trim(), body: announcementForm.body.trim(),
+        cover_image_url: announcementForm.cover_image_url, published_at: null,
+      }) });
+      const created = Array.isArray(rows) ? rows[0] : rows;
+      if (!created?.id) throw new Error("announcement_not_created");
+      setAnnouncements(old=>[created,...old]);
+      setAnnouncementForm({title:"",body:"",course_id:"",cover_image_url:""});
+      setNotice("تم حفظ الإعلان كمسودة. يمكنك نشره بعد المراجعة.");
+    } catch (e) { setError("تعذر إنشاء الإعلان. "+(e.message||"")); }
+    finally { setSaving(""); }
+  };
+
+  const toggleAnnouncement = async (item) => {
+    setSaving(item.id); setError(""); setNotice("");
+    try {
+      const published_at = item.published_at ? null : new Date().toISOString();
+      await portalApi("owner","announcements?id=eq."+encodeURIComponent(item.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({published_at})});
+      setAnnouncements(old=>old.map(x=>x.id===item.id?{...x,published_at}:x));
+      setNotice(published_at?"تم نشر الإعلان للطلاب.":"تم إيقاف الإعلان.");
+    } catch { setError("تعذر تحديث حالة الإعلان."); }
+    finally { setSaving(""); }
+  };
+
   const generateCode = async () => {
     setSaving("code"); setGeneratedCode(""); setError(""); setNotice("");
     try {
@@ -425,7 +462,7 @@ export default function OwnerConsole() {
     {section==="overview" && <section className="owner-panel owner-overview-panel">
       <div className="owner-panel-heading"><div><span>PLATFORM OVERVIEW</span><h2>ملخص المنصة</h2></div><button onClick={load}>تحديث الأرقام</button></div>
       <div className="owner-quick-grid">
-        {TABS.filter(x=>x[0]!=="overview").map(([id,label,sub])=><button key={id} onClick={()=>setSection(id)}><small>{sub}</small><b>{label}</b><span>{({accounts:users.length,courses:courses.length,exams:exams.length,homework:homework.length,subscriptions:subscriptions.length,payments:payments.length,messages:messages.length})[id] ?? 0}</span></button>)}
+        {TABS.filter(x=>x[0]!=="overview").map(([id,label,sub])=><button key={id} onClick={()=>setSection(id)}><small>{sub}</small><b>{label}</b><span>{({accounts:users.length,courses:courses.length,exams:exams.length,homework:homework.length,announcements:announcements.length,subscriptions:subscriptions.length,payments:payments.length,messages:messages.length})[id] ?? 0}</span></button>)}
       </div>
       <div className="owner-overview-columns">
         <section><h3>آخر الكورسات</h3>{courses.slice(0,5).map(x=><button className="owner-mini-row" key={x.id} onClick={()=>{setSelectedCourse(x.id);setSection("courses");}}>{x.cover_image_url?<img src={x.cover_image_url} alt=""/>:<span className="owner-mini-placeholder">C</span>}<span><b>{x.title}</b><small>{x.grade} · {statusText(x.status)}</small></span></button>)}{!courses.length&&<p className="owner-note">لا توجد كورسات بعد.</p>}</section>
@@ -543,6 +580,26 @@ export default function OwnerConsole() {
         </article>)}</div>{!homework.length&&<p className="owner-note">لا توجد واجبات حتى الآن.</p>}</div>
       </div>
       <p className="owner-warning">الواجب الجديد يُحفظ كمسودة. أضف الأسئلة ومفتاح الإجابة من محرر الواجبات قبل نشره للطلاب؛ لن أنشر واجبًا فارغًا تلقائيًا.</p>
+    </section>}
+
+    {section==="announcements" && <section className="owner-panel">
+      <div className="owner-panel-heading"><div><span>PLATFORM ANNOUNCEMENTS</span><h2>إعلانات المنصة</h2></div><small>{announcements.length} إعلان</small></div>
+      <div className="owner-management-grid">
+        <div className="owner-form-card"><h3>إنشاء إعلان جديد</h3><form className="owner-form" onSubmit={createAnnouncement}>
+          <label>عنوان الإعلان<input required value={announcementForm.title} onChange={e=>setAnnouncementForm({...announcementForm,title:e.target.value})}/></label>
+          <label>ربط الإعلان بكورس (اختياري)<select value={announcementForm.course_id} onChange={e=>setAnnouncementForm({...announcementForm,course_id:e.target.value})}><option value="">كل الطلاب</option>{courses.map(x=><option key={x.id} value={x.id}>{x.title}</option>)}</select></label>
+          <label>محتوى الإعلان<textarea rows="5" required value={announcementForm.body} onChange={e=>setAnnouncementForm({...announcementForm,body:e.target.value})}/></label>
+          <label>صورة الإعلان<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"announcement")}/></label>
+          {announcementForm.cover_image_url&&<img className="owner-image-preview" src={announcementForm.cover_image_url} alt="معاينة الإعلان"/>}
+          <button className="owner-primary-button" disabled={saving==="announcement"||uploading==="announcement"||!announcementForm.cover_image_url}>{saving==="announcement"?"جارٍ الحفظ...":"حفظ الإعلان كمسودة"}</button>
+        </form></div>
+        <div className="owner-library-card"><h3>الإعلانات الحالية</h3><div className="owner-media-grid">{announcements.map(item=><article className="owner-media-card" key={item.id}>
+          {item.cover_image_url?<img src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="owner-media-fallback">NEWS</span>}
+          <span className="owner-media-copy"><b>{item.title}</b><small>{item.course_id?courses.find(x=>x.id===item.course_id)?.title||"كورس":"كل الطلاب"} · {item.published_at?"منشور":"مسودة"}</small></span>
+          <p className="owner-announcement-body">{item.body}</p>
+          <div className="owner-media-actions"><span className={item.published_at?"published":"draft"}>{item.published_at?"منشور":"مسودة"}</span><button disabled={saving===item.id} onClick={()=>toggleAnnouncement(item)}>{item.published_at?"إيقاف النشر":"نشر الإعلان"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"announcements",item)}/></label></div>
+        </article>)}</div>{!announcements.length&&<p className="owner-note">لا توجد إعلانات حاليًا.</p>}</div>
+      </div>
     </section>}
 
     {section==="subscriptions" && <section className="owner-panel">
