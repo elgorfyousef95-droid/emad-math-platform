@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import ChatWorkspace from "../components/ChatWorkspace.jsx";
 import {
   portalApi,
   portalLogin,
@@ -19,6 +20,7 @@ const TABS = [
   ["subscriptions", "الاشتراكات والأكواد", "SUBSCRIPTIONS"],
   ["payments", "المدفوعات", "PAYMENTS"],
   ["messages", "مراسلات الطلاب", "MESSAGES"],
+  ["communication", "مركز التواصل والجروبات", "COMMUNICATION"],
 ];
 const dateText = (value) => value ? new Date(value).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "—";
 const moneyText = (value) => Number(value || 0).toLocaleString("ar-EG") + " ج.م";
@@ -651,6 +653,8 @@ export default function OwnerConsole() {
       {!payments.length&&<p className="owner-note">لا توجد مدفوعات مسجلة حتى الآن.</p>}
       <p className="owner-warning">هذه صفحة سجل المدفوعات الموجود في قاعدة البيانات فقط. تأكيد الدفع الإلكتروني الآلي لن يكون متاحًا حتى ربط مزود دفع حقيقي والتحقق من إشعاراته الآمنة (Webhook).</p>
     </section>}
+
+    {section==="communication" && <ChatWorkspace profile={profile} mode="owner" portal="owner"/>}
 
     {section==="messages" && <section className="owner-panel owner-inbox">
       <div className="owner-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة · {pendingMessages.length} بدون رد</small></div>
