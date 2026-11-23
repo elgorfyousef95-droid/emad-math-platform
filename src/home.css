@@ -1140,3 +1140,109 @@
  .atlas-library-tiles button{min-height:145px}
 }
 @media(prefers-reduced-motion:reduce){.atlas-hero-bg,.atlas-teacher-halo,.atlas-ai-orbit{animation:none!important}.atlas-program-card:before,.atlas-deep-photo img,.atlas-library-tiles img{transition:none!important}}
+
+
+/* PLATFORM 2027 — shared post-registration experience */
+:root{
+ --emad-bg:#f3f6fa;--emad-panel:#fff;--emad-panel-2:#eef3f8;--emad-line:#dce5ee;
+ --emad-gold:#24a7a1;--emad-gold-2:#167e86;--emad-text:#172b43;--emad-muted:#708196;
+ --atlas-ink:#172b43;--atlas-teal:#22a7a1;--atlas-blue:#2e6394;
+}
+.platform-shell{background:#f3f6fa;color:#172b43}
+.platform-topbar{height:66px;min-height:66px;flex:0 0 66px;padding-inline:clamp(14px,3vw,44px);background:#fff;border-bottom:1px solid #e2e9f0;box-shadow:0 4px 18px #17324b0a;backdrop-filter:blur(16px)}
+.platform-logo{gap:10px;color:#172b43}
+.platform-logo-icon{width:38px;height:38px;border-radius:12px;background:linear-gradient(145deg,#2eb9b1,#26749b);color:white;box-shadow:0 6px 18px #228d9930}
+.platform-brand-copy b{color:#172b43;font-size:12px}.platform-brand-copy small{color:#8392a4;font-size:9px}
+.platform-notification-button{width:37px;height:37px;border:1px solid #e0e8ef;border-radius:11px;background:#f7fafc;color:#365b79}
+.platform-count{background:#e36c60;border-color:#fff}
+.platform-account-trigger{border:1px solid #e2e9ef;border-radius:12px;background:#f8fafc;color:#1c344d}
+.platform-account-trigger img,.platform-avatar-fallback{width:31px;height:31px;border-radius:9px}
+.platform-avatar-fallback{background:#e2f4f2;color:#168b88}
+.platform-account-copy b{display:block;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#203b55;font-size:10px}
+.platform-account-copy small{display:block;color:#8493a4;font-size:8px}
+.platform-account-chevron{color:#7d8c9d}
+.platform-quickbar{height:43px;min-height:43px;flex:0 0 43px;gap:6px;background:#f9fbfd;border-bottom:1px solid #e5ebf1;box-shadow:none}
+.platform-quickbar button{min-height:31px;padding:0 13px;border-radius:8px;color:#60758a;font-size:10px}
+.platform-quickbar button svg{color:#398f9a}
+.platform-quickbar button:hover,.platform-quickbar button.active{color:#146f78;background:#e7f5f4;border-color:#cbe8e6}
+.platform-quickbar button.active{box-shadow:inset 0 -2px #249e9a}
+.platform-navrail{height:49px;min-height:49px;flex:0 0 49px;padding-inline:clamp(12px,3vw,42px);background:#fff;border-bottom:1px solid #e5ebf1;box-shadow:0 4px 15px #1b385008}
+.platform-navigation{max-width:1450px;gap:5px}
+.platform-navigation>button,.platform-nav-more>button{min-height:35px;padding:0 11px;border-radius:8px;color:#60758a;font-size:10px}
+.platform-navigation>button svg,.platform-nav-more>button svg:first-child{color:#4b91a0}
+.platform-navigation>button:hover,.platform-nav-more>button:hover{transform:translateY(-1px);color:#176f78;background:#f0f8f8;border-color:#d9eeee}
+.platform-navigation>button.active,.platform-nav-more>button.active{color:#126e75;background:#eaf6f5;border-color:#cfe9e7;box-shadow:none}
+.platform-navigation>button.active:after{bottom:-7px;right:14px;left:14px;height:2px;background:#2aa5a0;box-shadow:none}
+.platform-navigation>button.active svg{color:#168b89}
+.platform-menu-pop{border:1px solid #e0e8ef;border-radius:12px;background:#fff;box-shadow:0 18px 45px #18344b1c}
+.platform-menu-pop button{border-radius:8px;color:#405a70;font-size:11px}
+.platform-menu-pop button:hover{background:#edf7f6;color:#147b7d}
+.platform-subbar{height:33px!important;min-height:33px!important;flex:0 0 33px!important;padding-inline:clamp(14px,3vw,44px);background:#f3f6fa;border-bottom:1px solid #e7edf2;color:#8392a2}
+.platform-subbar b{color:#34536e}.platform-grade-label{border-color:#cde7e5;color:#187c7d;background:#e8f5f4}
+.platform-viewport{background:#f3f6fa;scrollbar-color:#9cb6c4 #edf2f6}
+.platform-viewport::-webkit-scrollbar-track{background:#edf2f6}.platform-viewport::-webkit-scrollbar-thumb{background:#9cb6c4}
+.platform-page{color:#1b334a}
+.platform-page-banner{min-height:190px;padding:clamp(22px,4vw,40px);border:0;border-radius:17px;background:linear-gradient(100deg,#102b43ed,#153d59d9),var(--page-artwork) center/cover;box-shadow:0 14px 34px #17334b16}
+.platform-page-banner h1{color:#fff;font-size:clamp(23px,3vw,34px)}
+.platform-page-banner p{color:#d3e0e8}
+.platform-banner-art{color:#8fd5d0}
+.platform-panel,.platform-lock-panel,.platform-profile-detail{border:1px solid #e0e8ef;border-radius:15px;background:#fff;box-shadow:0 8px 24px #18344b08}
+.platform-panel h2,.platform-panel h3,.platform-lock-panel h2{color:#1b344d}
+.platform-panel p,.platform-lock-panel p{color:#708297}
+.platform-panel label{color:#405d74}
+.platform-panel input,.platform-panel select{border:1px solid #dce6ed;border-radius:9px;background:#f8fafc;color:#19334b}
+.platform-gold-button{border:1px solid #1b9693;border-radius:9px;background:linear-gradient(120deg,#2bb4aa,#247e9c);color:white;box-shadow:0 7px 17px #218f9630}
+.platform-gold-button:hover{filter:brightness(1.04);transform:translateY(-1px)}
+.platform-sub-status strong{color:#1c7180}
+.platform-sub-rules{color:#718397}.platform-sub-rules b{color:#188b89}
+.platform-bottom-line{background:#fff;border-top:1px solid #e3eaf0;color:#8493a3}
+.platform-mobile-menu{border:1px solid #dce8ed!important;background:#f2f8f8!important}
+.platform-mobile-menu span{background:#287e87!important}
+.platform-navigation.is-open{border:1px solid #d9e6eb!important;background:#fff!important;box-shadow:0 18px 44px #1a344a24!important}
+.platform-navigation.is-open>button{color:#496176}
+.platform-drawer-backdrop{background:#132a3d55!important;backdrop-filter:blur(2px)}
+.platform-account-pop{right:auto;left:0}
+.platform-active-pill{background:#e7f6ee;color:#20825b}.platform-inactive-pill{background:#fff1eb;color:#bb6847}
+.platform-lock-icon{background:#e9f5f5;color:#188d8b}
+.platform-empty-state{border:1px dashed #cbdbe4!important;border-radius:15px!important;background:#fff!important;color:#24435b!important;box-shadow:0 10px 28px #1b385008}
+.platform-empty-state p,.platform-empty-state span{color:#7a8da0!important}
+.profile-v2{color:#183452}
+.profile-v2-heading>div>span,.profile-v2-section-title>div>span{color:#218e91}
+.profile-v2-heading h1,.profile-v2-name h2{color:#17364f}
+.profile-v2-heading>button,.profile-v2-footer-actions button{border-color:#d6e5eb;color:#247f89;background:#fff}
+.profile-v2-cover{background:radial-gradient(circle at 80% 20%,#5dd1c6aa,transparent 28%),linear-gradient(110deg,#153c5a,#1d7183 60%,#2a9d9c)}
+.profile-v2-metric-icon{background:#e8f2fa;color:#397bc0}
+.profile-v2-metric-icon.cyan{background:#e2f7f5;color:#168d89}
+.profile-v2-metric-icon.violet{background:#f0edff;color:#7565c5}
+.profile-v2-link-grid button{border-color:#dce7ef!important;background:#fff!important;box-shadow:0 7px 20px #173b570a}
+.profile-v2-link-grid button>span{background:#e6f5f4!important;color:#188e8b!important}
+.profile-v2-link-grid button b{color:#1c3a54!important}
+.profile-v2-link-grid button small{color:#7a8da0!important}
+@media(max-width:760px){
+ .platform-topbar{height:58px!important;min-height:58px!important;flex-basis:58px!important;padding:0 10px!important}
+ .platform-quickbar{height:40px!important;min-height:40px!important;flex-basis:40px!important;justify-content:flex-start!important;overflow-x:auto!important;scrollbar-width:none!important}
+ .platform-quickbar::-webkit-scrollbar{display:none}
+ .platform-quickbar button{padding:0 10px!important;font-size:9px!important}
+ .platform-navrail{height:0!important;min-height:0!important;flex-basis:0!important}
+ .platform-subbar{display:none!important}
+ .platform-navigation{background:#fff!important}
+ .platform-page-banner{min-height:155px;padding:21px 18px;border-radius:13px}
+ .platform-page-banner h1{font-size:23px}
+ .platform-page-banner p{font-size:10px}
+ .platform-panel{padding:17px}
+ .platform-subscription-layout{grid-template-columns:1fr}
+ .profile-v2-main{gap:10px;padding-inline:13px}
+ .profile-v2-avatar{width:72px;height:72px;flex-basis:72px;border-radius:17px}
+ .profile-v2-facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .profile-v2-facts>div{border:0;padding:0}
+ .profile-v2-overview{grid-template-columns:1fr;gap:8px}
+ .profile-v2-status{align-items:flex-start}
+ .platform-bottom-line{font-size:8px;padding-inline:10px}
+}
+@media(max-width:390px){
+ .platform-brand-copy small{display:none}
+ .platform-account-trigger{padding:2px}
+ .platform-notification-button{width:33px;height:33px}
+ .platform-quickbar button{padding:0 8px!important}
+}
+@media(prefers-reduced-motion:reduce){.platform-shell *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
