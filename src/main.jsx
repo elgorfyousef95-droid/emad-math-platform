@@ -276,7 +276,9 @@ const pageArtwork={
 };
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
+ const [announcements,setAnnouncements]=useState([]);
  const firstName=profile?.full_name?.trim()?.split(/\s+/)[0]||"طالبنا";
+ useEffect(()=>{let alive=true;studentApi("announcements?select=id,title,body,cover_image_url,published_at&published_at=not.is.null&order=published_at.desc&limit=5").then(rows=>{if(alive)setAnnouncements(rows||[]);}).catch(()=>{if(alive)setAnnouncements([]);});return()=>{alive=false;};},[]);
  const active=!!subscription;
  const services=[
   {id:"courses",n:"01",title:"المسارات التعليمية",desc:"افهم المنهج من الأساس إلى مستوى الامتحان.",image:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=85",tag:"تعلم"},
@@ -305,6 +307,7 @@ function HomePage({profile,subscription,go,grade,unread}){
    </div>
    <div className="sd-hero-bottom"><span>01 / STUDENT SPACE</span><span>LEARN · PRACTICE · ACHIEVE</span></div>
   </section>
+  {announcements.length>0&&<section className="sd-announcements"><div className="sd-section-heading"><div><span className="sd-section-kicker">LATEST UPDATES</span><h2>آخر أخبار المنصة</h2></div><span>{announcements.length} إعلانات</span></div><div className="sd-announcement-grid">{announcements.map(item=><article key={item.id}>{item.cover_image_url?<img src={item.cover_image_url} alt=""/>:<span className="sd-announcement-fallback">إعلان</span>}<div><b>{item.title}</b><p>{item.body}</p><small>{new Date(item.published_at).toLocaleDateString("ar-EG")}</small></div></article>)}</div></section>}
   <section className="sd-welcome-row">
    <div><span className="sd-section-kicker">YOUR LEARNING SPACE</span><h2>ابدأ من هنا، وخلّي كل يوم يفرق.</h2><p>اختار الخطوة اللي محتاجها دلوقتي.</p></div>
    <div className="sd-profile-chip"><span className="sd-profile-avatar">{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<Icon name="user" size={20}/>}</span><div><small>رقم الطالب</small><b>{profile?.student_number||"—"}</b></div><button onClick={()=>go("profile")}>ملفي <Icon name="arrow" size={14}/></button></div>
