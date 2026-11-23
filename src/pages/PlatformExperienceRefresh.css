@@ -270,3 +270,12 @@
  .learning-detail-modal{max-height:96dvh!important;border-radius:17px!important}
  .learning-detail-image,.learning-detail-placeholder{aspect-ratio:16/9!important;max-height:230px!important}
 }
+
+.course-player-error{display:grid;gap:10px;justify-items:start;padding:12px;border:1px solid #e0ad6b55;border-radius:12px;background:#d49a2810;color:#f3d6a0}
+.course-player-error p,.course-player-error small{margin:0;color:#f3d6a0;font-size:11px;line-height:1.8}
+.course-player-error button{min-height:38px;padding:8px 13px;border:1px solid #b7d0ff;border-radius:10px;background:#8eafff22;color:#dce8ff;font-weight:800}
+@media(max-width:680px){
+ .owner-lesson-manager>article>i{justify-self:start}
+ .teacher-lesson-list article>i{justify-self:start}
+ .teacher-student-card dl{grid-template-columns:1fr 1fr}
+}
