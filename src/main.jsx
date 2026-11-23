@@ -70,6 +70,9 @@ function App(){
     <div className="platform-account-menu"><button className="platform-account-trigger" onClick={()=>{setAccountOpen(v=>!v);setMoreOpen(false);}}>{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span className="platform-avatar-fallback"><Icon name="user" size={18}/></span>}<span className="platform-account-copy"><b>{profile?.full_name||"حساب الطالب"}</b><small>{grade||"الملف الشخصي"}</small></span><span className="platform-account-chevron"><Icon name="chevron" size={13}/></span></button>{accountOpen&&<div className="platform-menu-pop platform-account-pop">{[["profile","الملف الشخصي","user"],["subscriptions","اشتراكاتي","ticket"],["settings","الإعدادات","settings"],["messages","الدعم الفني","support"]].map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}{profile?.role==="admin"&&<button onClick={()=>go("admin")}><Icon name="settings" size={17}/>إدارة المنصة</button>}<button onClick={logout}><Icon name="logout" size={17}/>تسجيل الخروج</button></div>}</div>
    </div>
   </header>
+  <nav className="platform-quickbar" aria-label="اختصارات سريعة">
+   {[["home","الرئيسية","home"],["courses","الكورسات","book"],["exams","الامتحانات","exam"],["schedule","الجدول","calendar"],["ai","المساعد الذكي","spark"]].map(([id,label,ico])=><button key={id} className={page===id?"active":""} onClick={()=>go(id)}><Icon name={ico} size={16}/><span>{label}</span></button>)}
+  </nav>
   <div className="platform-navrail">
    {mobileNav&&<button className="platform-drawer-backdrop" aria-label="إغلاق القائمة" onClick={()=>setMobileNav(false)}/>}
    <nav className={mobileNav?"platform-navigation is-open":"platform-navigation"} aria-label="القائمة الرئيسية">
