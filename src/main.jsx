@@ -45,7 +45,7 @@ function Icon({name,size=19}){
  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.spark}</svg>;
 }
 function PortalAccess({portal,onSuccess}){
- const [mode,setMode]=useState("login"),[password,setPassword]=useState(""),[ownerPassword,setOwnerPassword]=useState(""),[teacherPassword,setTeacherPassword]=useState(""),[teacherName,setTeacherName]=useState("مستر عماد السنافيري"),[busy,setBusy]=useState(false),[error,setError]=useState("");
+ const [mode,setMode]=useState("login"),[password,setPassword]=useState(""),[bootstrapToken,setBootstrapToken]=useState(""),[ownerPassword,setOwnerPassword]=useState(""),[teacherPassword,setTeacherPassword]=useState(""),[teacherName,setTeacherName]=useState("مستر عماد السنافيري"),[busy,setBusy]=useState(false),[error,setError]=useState("");
  const isOwner=portal==="owner";
  const title=isOwner?"بوابة المالك":"بوابة مستر عماد";
  const explain=isOwner?"دخول خاص بصاحب المنصة، مستقل عن حسابات الطلاب.":"مساحة المدرس المستقلة لإدارة المحتوى التعليمي.";
@@ -61,12 +61,12 @@ function PortalAccess({portal,onSuccess}){
   if(ownerPassword===teacherPassword)return setError("استخدم كلمتي مرور مختلفتين للبوابتين.");
   setBusy(true);setError("");
   try{
-   await setupPortalAccounts(ownerPassword,teacherPassword,teacherName);
+   await setupPortalAccounts(bootstrapToken,ownerPassword,teacherPassword,teacherName);
    await portalLogin("owner",ownerPassword);
    await onSuccess();
   }catch(e){
-   const messages={owner_student_session_required:"سجّل دخولك أولًا في منصة الطلاب بحساب المالك 2700002، ثم ارجع إلى هذه الصفحة.",owner_only:"إعداد البوابتين متاح لحساب المالك فقط.",invalid_owner_session:"جلسة حساب المالك انتهت. سجّل الدخول مجددًا إلى منصة الطلاب.",portal_account_create_failed:"حسابات البوابات موجودة بالفعل أو تعذر إنشاؤها. جرّب تسجيل الدخول."};
-   setError(messages[e.message]||"تعذر إعداد البوابتين. راجع جلسة المالك وحاول مرة أخرى.");
+   const messages={bootstrap_invalid:"رمز الإعداد غير صحيح أو انتهت صلاحيته أو تم استخدامه من قبل.",invalid_portal_setup_data:"تأكد أن كلمتي المرور مختلفتان وكل واحدة 12 حرفًا على الأقل.",portal_user_lookup_failed:"تعذر التحقق من حسابات البوابات. حاول مرة أخرى.",portal_account_create_failed:"تعذر إنشاء حساب إحدى البوابتين. أعد المحاولة باستخدام نفس بيانات الإعداد.",portal_account_update_failed:"تعذر تحديث كلمة مرور إحدى البوابات.",portal_profile_create_failed:"تم إنشاء حساب الدخول لكن تعذر تجهيز ملف البوابة.",bootstrap_consume_failed:"تعذر تأكيد اكتمال الإعداد. تواصل مع الدعم."};
+   setError(messages[e.message]||"تعذر إعداد البوابتين. راجع رمز الإعداد والبيانات وحاول مرة أخرى.");
   }finally{setBusy(false);}
  };
  return <main className="portal-access-shell" dir="rtl"><section className="portal-access-card">
@@ -78,7 +78,8 @@ function PortalAccess({portal,onSuccess}){
    <button className="portal-access-submit" disabled={busy} onClick={login}>{busy?"جارٍ التحقق...":"تسجيل الدخول"}</button>
    {isOwner&&<button className="portal-access-switch" onClick={()=>{setMode("setup");setError("");}}>إعداد حسابات البوابتين لأول مرة</button>}
   </>:<>
-   <div className="portal-setup-note">إعداد أول مرة آمن: لازم تكون مسجل دخول بالفعل في منصة الطلاب بحساب المالك. اختر كلمتي مرور مختلفتين، ولن تظهر أي كلمة مرور في قاعدة البيانات كنص مكشوف.</div>
+   <div className="portal-setup-note">إعداد مستقل لأول مرة: لا يحتاج إلى حساب طالب أو جلسة طالب. أدخل رمز الإعداد الخاص، ثم عيّن كلمة مرور مستقلة لكل بوابة.</div>
+   <label>رمز إعداد البوابتين</label><input type="password" value={bootstrapToken} onChange={e=>setBootstrapToken(e.target.value)} placeholder="أدخل رمز الإعداد" autoComplete="off"/>
    <label>كلمة مرور بوابة المالك</label><input type="password" value={ownerPassword} onChange={e=>setOwnerPassword(e.target.value)} placeholder="12 حرفًا على الأقل" autoComplete="new-password"/>
    <label>كلمة مرور بوابة مستر عماد</label><input type="password" value={teacherPassword} onChange={e=>setTeacherPassword(e.target.value)} placeholder="كلمة مرور مختلفة" autoComplete="new-password"/>
    <label>اسم المدرس الظاهر</label><input value={teacherName} onChange={e=>setTeacherName(e.target.value)} maxLength={100}/>
@@ -300,7 +301,7 @@ function App(){
  if(window.location.pathname.replace(/\/$/,"")==="/owner")return <OwnerConsole/>;
  if(window.location.pathname.replace(/\/$/,"")==="/teacher")return <TeacherConsole/>;
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
- if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch{clearStudentSession();go("login");}}}/></div>;
+ if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch(error){clearStudentSession();go("login");throw error;}}}/></div>;
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;

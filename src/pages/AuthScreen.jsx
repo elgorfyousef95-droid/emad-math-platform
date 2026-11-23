@@ -25,7 +25,6 @@ const stepTitles = ["البيانات الشخصية", "البيانات الد�
 function errorText(code) {
   const messages = {
     missing_supabase_configuration: "إعدادات الاتصال بقاعدة البيانات غير مكتملة.",
-    invalid_signup_data: "راجع البيانات المطلوبة، وتأكد من الصورة ورقمَي الهاتف وكلمة المرور.",
     invalid_full_name: "اكتب الاسم بالكامل بشكل صحيح.",
     invalid_phone: "اكتب رقم هاتف مصري صحيح يبدأ بـ 010 أو 011 أو 012 أو 015.",
     invalid_grade: "اختر الصف الدراسي من القائمة.",
@@ -39,7 +38,10 @@ function errorText(code) {
     profile_save_failed: "الحساب اتجهز لكن حفظ البيانات لم يكتمل. تواصل مع خدمة العملاء.",
     account_created_login_again: "الحساب اتعمل، لكن تسجيل الدخول التلقائي لم يكتمل. احتفظ بالرقم وكلمة المرور وسجّل دخولك.",
     invalid_login: "رقم الطالب أو كلمة المرور غير صحيحة.",
-    server_configuration_error: "إعدادات الخادم غير مكتملة. أبلغ إدارة المنصة."
+    server_configuration_error: "إعدادات الخادم غير مكتملة. أبلغ إدارة المنصة.",
+    authenticated_profile_not_found: "تم التحقق من كلمة المرور لكن ملف الطالب غير مكتمل. تواصل مع إدارة المنصة.",
+    session_identity_missing: "تعذر تحديد هوية الحساب بعد الدخول. حاول مرة أخرى.",
+    invalid_signup_data: "راجع البيانات المطلوبة، وتأكد من الصورة ورقمَي الهاتف وكلمة المرور."
   };
   return messages[code] || "حصل خطأ غير متوقع. حاول مرة أخرى بعد قليل.";
 }
@@ -236,14 +238,19 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     try {
       const result = await createStudentAccount(payload);
       setShowPassword(false);
-      // New student accounts must sign in explicitly after registration.
-      setCreatedAccount({
-        studentNumber: String(result.student_number),
-        password,
-        avatarUrl: result.avatar_url || avatarPreview,
-        needsLogin: true
-      });
-      notify({ type: "success", title: "تم إنشاء الحساب", message: "احتفظ برقم الطالب وكلمة المرور قبل الانتقال." });
+      if (result.session?.access_token && result.session?.refresh_token) {
+        saveStudentSession(result.session);
+        notify({ type: "success", title: "تم إنشاء الحساب", message: "رقم الطالب: " + result.student_number + " — تم تسجيل دخولك بنجاح." });
+        await onSuccess?.();
+      } else {
+        setCreatedAccount({
+          studentNumber: String(result.student_number),
+          password,
+          avatarUrl: result.avatar_url || avatarPreview,
+          needsLogin: true
+        });
+        notify({ type: "success", title: "تم إنشاء الحساب", message: "احتفظ برقم الطالب وكلمة المرور وسجّل دخولك." });
+      }
     } catch (error) {
       showNotice(errorText(error.message));
     } finally {
@@ -261,7 +268,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
       const result = await loginStudent(studentId.trim(), password);
       saveStudentSession(result.session);
       notify({ type: "success", title: "أهلًا بعودتك", message: "تم تسجيل الدخول بنجاح." });
-      onSuccess?.();
+      await onSuccess?.();
     } catch (error) {
       showNotice(errorText(error.message));
     } finally {
