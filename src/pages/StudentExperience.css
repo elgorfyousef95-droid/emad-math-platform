@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+.student-experience{--se-ink:#142b40;--se-muted:#718497;--se-teal:#087f83;--se-teal-soft:#e8f5f3;--se-line:#e1e9ef;min-height:100dvh;background:#f3f6f9;color:var(--se-ink);font-family:'Cairo',Tahoma,sans-serif;display:flex;direction:rtl}
+.student-experience *{box-sizing:border-box}
+.se-sidebar{width:278px;flex:0 0 278px;height:100dvh;position:sticky;top:0;background:#102c43;color:#e8f1f6;display:flex;flex-direction:column;padding:22px 16px 16px;overflow-y:auto;z-index:50;box-shadow:8px 0 28px #18344b0a}
+.se-brand{display:flex;align-items:center;gap:12px;padding:0 7px 22px;border-bottom:1px solid #ffffff16}
+.se-brand-mark{width:45px;height:45px;border-radius:15px;background:linear-gradient(145deg,#42c8b5,#197b91);display:grid;place-items:center;color:white;font-size:25px;font-weight:900;box-shadow:0 9px 22px #20a89d30}
+.se-brand b,.se-brand small,.se-sidebar-student b,.se-sidebar-student small{display:block}
+.se-brand b{font-size:14px;color:white;font-weight:900}.se-brand small{font-size:10px;color:#9bb0bf;margin-top:2px}
+.se-close-drawer{display:none;margin-right:auto;background:none;border:0;color:white;font-size:25px}
+.se-sidebar-student{margin:18px 0 22px;padding:12px;background:#ffffff0d;border:1px solid #ffffff12;border-radius:15px;display:flex;align-items:center;gap:10px;position:relative}
+.se-avatar{width:39px;height:39px;border-radius:13px;background:#d7eeeb;color:#087f83;display:grid;place-items:center;font-size:17px;font-weight:900;overflow:hidden;flex:0 0 auto}
+.se-avatar img{width:100%;height:100%;object-fit:cover}
+.se-avatar.small{width:36px;height:36px;border-radius:12px}
+.se-sidebar-student b{font-size:11px;color:#fff;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.se-sidebar-student small{font-size:9px;color:#9db2c0;margin-top:3px}
+.se-online-dot{width:8px;height:8px;background:#4bd0a2;border-radius:50%;margin-right:auto;box-shadow:0 0 0 4px #4bd0a21c}
+.se-nav-caption{font-size:9px;font-weight:800;color:#7994a8;letter-spacing:.5px;padding:0 11px 8px;margin-top:8px}
+.se-nav{display:grid;gap:4px;margin-bottom:14px}
+.se-nav-item{width:100%;min-height:43px;display:flex;align-items:center;gap:12px;padding:0 12px;border:1px solid transparent;border-radius:11px;background:transparent;color:#b9cbd7;text-align:right;font:700 11px 'Cairo',sans-serif;cursor:pointer;transition:.2s}
+.se-nav-item:hover{background:#ffffff0d;color:#fff}.se-nav-item.active{background:linear-gradient(100deg,#1d777f55,#ffffff10);border-color:#55c6b52e;color:#fff;box-shadow:inset -3px 0 #49c8b7}
+.se-nav-glyph{width:24px;height:24px;display:grid;place-items:center;border-radius:8px;background:#ffffff0d;color:#7ed7ca;font-size:16px}
+.se-nav-item.active .se-nav-glyph{background:#2b9990;color:white}.se-nav-item i{font-style:normal;margin-right:auto;border-radius:20px;background:#d56b67;color:white;padding:1px 6px;font-size:9px}
+.se-sidebar-foot{margin-top:auto;display:flex;align-items:center;gap:9px;padding:13px 10px;border-radius:14px;background:#ffffff0c;border:1px solid #ffffff13}
+.se-help-icon{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:#d8f1eb;color:#137e7b;font-weight:900}
+.se-sidebar-foot b,.se-sidebar-foot small{display:block}.se-sidebar-foot b{font-size:10px}.se-sidebar-foot small{font-size:9px;color:#91aabb}
+.se-sidebar-foot button{margin-right:auto;border:0;background:transparent;color:#8edbd0;font-size:17px}
+.se-main{min-width:0;flex:1;display:flex;flex-direction:column;min-height:100dvh}
+.se-topbar{height:78px;min-height:78px;background:#fff;border-bottom:1px solid var(--se-line);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,3vw,44px);gap:16px;position:sticky;top:0;z-index:35}
+.se-top-start,.se-top-actions{display:flex;align-items:center;gap:15px}
+.se-breadcrumb small,.se-breadcrumb b{display:block}.se-breadcrumb small{font-size:9px;color:#91a0ad}.se-breadcrumb b{font-size:16px;color:#19364d;margin-top:2px}
+.se-grade-chip{border:1px solid #cde8e3;background:#eff8f6;color:#137d7e;padding:8px 14px;border-radius:10px;font-size:10px;font-weight:800}
+.se-notify{width:40px;height:40px;border-radius:12px;border:1px solid var(--se-line);background:#f8fafc;color:#1d7180;font-size:20px;position:relative}
+.se-notify i{position:absolute;top:-5px;right:-5px;background:#d75e63;color:#fff;border:2px solid white;border-radius:20px;padding:1px 5px;font:9px 'Cairo'}
+.se-account-wrap{position:relative}.se-account{display:flex;align-items:center;gap:9px;border:0;background:transparent;text-align:right;color:#29465d;cursor:pointer}.se-account b,.se-account small{display:block}.se-account b{font-size:10px}.se-account small{font-size:9px;color:#8798a7;margin-top:2px}
+.se-account-menu{position:absolute;left:0;top:52px;width:180px;padding:7px;background:white;border:1px solid var(--se-line);border-radius:13px;box-shadow:0 15px 38px #102b4322;display:grid;z-index:60}
+.se-account-menu button{border:0;background:transparent;text-align:right;padding:11px;border-radius:8px;color:#38566c;font:700 11px 'Cairo'}.se-account-menu button:hover{background:#eef7f5}
+.se-menu-toggle{display:none;border:1px solid var(--se-line);background:white;border-radius:10px;width:40px;height:40px;color:#1a6475;font-size:19px}
+.se-content{width:100%;max-width:1600px;margin:0 auto;padding:30px clamp(16px,3vw,48px) 45px;flex:1;min-width:0}
+.se-footer{display:flex;justify-content:space-between;gap:10px;padding:18px clamp(18px,3vw,48px);border-top:1px solid var(--se-line);background:white;color:#8b9aa7;font-size:9px}
+.se-backdrop{display:none}
+.student-experience .platform-page{padding:0!important;width:100%!important;max-width:none!important;color:#1b354b}
+.student-experience .platform-page-banner{border-radius:20px!important;margin-bottom:24px}
+.student-experience .platform-panel,.student-experience .platform-empty-state{border-radius:17px!important}
+.student-experience .platform-content-grid article{border-radius:15px!important}
+@media(max-width:1050px){.se-sidebar{width:248px;flex-basis:248px}.se-content{padding:24px 20px 36px}}
+@media(max-width:760px){
+ .student-experience{display:block}.se-sidebar{position:fixed;top:0;right:0;width:min(320px,88vw);height:100dvh;transform:translateX(110%);transition:transform .25s ease;box-shadow:-20px 0 55px #0b263744}.se-sidebar.open{transform:translateX(0)}
+ .se-close-drawer{display:block}.se-backdrop{display:block;position:fixed;inset:0;background:#081d2c88;border:0;z-index:45}
+ .se-topbar{height:68px;min-height:68px;padding:0 13px}.se-menu-toggle{display:block}.se-top-start,.se-top-actions{gap:9px}.se-grade-chip{display:none}.se-account>span:nth-child(2){display:none}
+ .se-breadcrumb b{font-size:13px}.se-content{padding:18px 13px 30px}.se-footer{padding:14px;font-size:8px}
+}
+@media(prefers-reduced-motion:reduce){.se-sidebar,.se-nav-item{transition:none}}
