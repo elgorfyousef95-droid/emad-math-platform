@@ -117,73 +117,58 @@ const pageArtwork={
 };
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
- const name=profile?.full_name?.trim()?.split(/\s+/)[0]||"طالبنا";
- const modules=[
-  ["courses","المحتوى التعليمي","الكورسات والوحدات الدراسية","book","https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=900&q=85","01"],
-  ["lessons","المحاضرات والدروس","شرح المنهج خطوة بخطوة","play","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85","02"],
-  ["exams","مركز الامتحانات","اختبر فهمك وتابع تقييماتك","exam","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=85","03"],
-  ["homework","الواجبات والتدريبات","تدريبات ومهامك الدراسية","task","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=900&q=85","04"],
-  ["files","المكتبة التعليمية","المذكرات والملفات الدراسية","file","https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=900&q=85","05"],
-  ["results","النتائج وتحليل المستوى","راجع نتائجك عند نشرها","chart","https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85","06"],
-  ["schedule","الجدول الدراسي","مواعيد الحصص والمحاضرات","calendar","https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=900&q=85","07"],
-  ["live","المحاضرات المباشرة","حصص البث والمحاضرات","live","https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85","08"],
-  ["groups","الجروبات الدراسية","تواصل مع مجموعتك الدراسية","users","https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=85","09"]
+ const firstName=profile?.full_name?.trim()?.split(/\\s+/)[0]||"يا بطل";
+ const services=[
+  ["courses","الكورسات","مسارك الدراسي منظم في وحدات","book","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85"],
+  ["lessons","المحاضرات","شرح المنهج بطريقة واضحة","play","https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=900&q=85"],
+  ["exams","الامتحانات","تدرب واختبر مستواك","exam","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=85"],
+  ["homework","الواجبات","تابع تدريباتك المطلوبة","task","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=900&q=85"],
+  ["files","المكتبة","مذكرات وملفات المراجعة","file","https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=900&q=85"],
+  ["results","نتائجك","تابع تقييماتك ودرجاتك","chart","https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85"]
  ];
- return <div className="platform-page home-v4">
-  <section className="home-v4-hero">
-   <div className="home-v4-hero-copy">
-    <div className="home-v4-kicker"><span/> أكاديمية مستر عماد السنافيري <i>·</i> MATHEMATICS</div>
-    <div className="home-v4-welcome">مساحتك التعليمية بدأت من هنا</div>
-    <h1>أهلاً بيك يا {name}<br/><em>الرياضيات محتاجة فهم… مش حفظ.</em></h1>
-    <p>اتعلم على خطوات واضحة، تدرب بذكاء، وتابع مستواك في مكان واحد. كل أدوات رحلتك الدراسية منظمة قدامك.</p>
-    <div className="home-v4-pills">
-     <span><Icon name="book" size={15}/>{grade||"صفك الدراسي"}</span>
-     <span className={subscription?"is-active":""}><Icon name="ticket" size={15}/>{subscription?"اشتراك نشط":"الاشتراك غير مفعل"}</span>
-    </div>
-    <div className="home-v4-hero-actions">
-     <button className="home-v4-primary" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ التعلم الآن":"فعّل اشتراكك"} <Icon name="arrow" size={17}/></button>
-     <button className="home-v4-outline" onClick={()=>go("schedule")}><Icon name="calendar" size={17}/> جدول الحصص</button>
-    </div>
-    <div className="home-v4-proof"><span>شرح منظم</span><i/><span>تدريب عملي</span><i/><span>متابعة مستمرة</span></div>
+ return <div className="platform-page home-next">
+  <section className="hn-hero">
+   <div className="hn-hero-text">
+    <div className="hn-overline"><span/> منصة مستر عماد السنافيري <i/> MATHEMATICS</div>
+    <div className="hn-greeting">أهلاً بيك، {firstName}</div>
+    <h1>افهم الرياضيات.<br/><strong>واوصل للي بتطمح له.</strong></h1>
+    <p>منصة واحدة تجمع شرحك وتدريباتك وامتحاناتك ومتابعة مستواك — بخطوات واضحة وتجربة سهلة على كل أجهزتك.</p>
+    <div className="hn-hero-tags"><span><Icon name="book" size={15}/>{grade||"الصف الدراسي"}</span><span className={subscription?"hn-active":""}><Icon name="shield" size={15}/>{subscription?"اشتراكك نشط":"فعّل اشتراكك"}</span></div>
+    <div className="hn-hero-buttons"><button className="hn-cta" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ رحلتك الدراسية":"فعّل اشتراكك الآن"} <Icon name="arrow" size={17}/></button><button className="hn-secondary" onClick={()=>go("schedule")}><Icon name="calendar" size={17}/> جدول الحصص</button></div>
    </div>
-   <div className="home-v4-portrait-wrap">
-    <div className="home-v4-portrait-glow"/>
-    <div className="home-v4-portrait"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/><div className="home-v4-portrait-caption"><b>مستر عماد السنافيري</b><span>معاك خطوة بخطوة في الرياضيات</span></div></div>
-    <div className="home-v4-equation home-v4-equation-a">∫ f(x) dx</div>
-    <div className="home-v4-equation home-v4-equation-b">a² + b² = c²</div>
+   <div className="hn-hero-visual">
+    <div className="hn-visual-backdrop"/>
+    <div className="hn-teacher-photo"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/></div>
+    <div className="hn-teacher-label"><b>مستر عماد السنافيري</b><small>معاك في كل خطوة</small></div>
+    <div className="hn-floating hn-float-one">∑ <small>MATHEMATICS</small></div>
+    <div className="hn-floating hn-float-two">f(x) = ax² + bx + c</div>
    </div>
-   <div className="home-v4-hero-index"><b>01</b><span>LEARN WITH CONFIDENCE</span></div>
+   <div className="hn-hero-bottom"><span>تعلم بفهم</span><i/><span>تدرب بثقة</span><i/><span>حقق تقدمك</span></div>
   </section>
-  <section className="home-v4-student-strip">
-   <div className="home-v4-student-id">
-    {profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<span className="home-v4-student-placeholder"><Icon name="user" size={20}/></span>}
-    <div><small>أهلاً بعودتك</small><b>{profile?.full_name||"حساب الطالب"}</b><span>رقم الطالب: {profile?.student_number||"—"}</span></div>
-   </div>
-   <div className="home-v4-student-detail"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
-   <div className="home-v4-student-detail"><small>حالة الاشتراك</small><b className={subscription?"good":"warn"}>{subscription?"نشط":"غير مفعل"}</b></div>
-   <button onClick={()=>go("profile")}>ملفي الشخصي <Icon name="arrow" size={15}/></button>
+  <section className="hn-welcome-strip">
+   <div className="hn-welcome-user">{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span><Icon name="user" size={20}/></span>}<div><small>لوحة الطالب</small><b>{profile?.full_name||"حساب الطالب"}</b><em>رقم الطالب: {profile?.student_number||"—"}</em></div></div>
+   <div className="hn-welcome-info"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
+   <div className="hn-welcome-info"><small>الاشتراك</small><b className={subscription?"hn-status-on":"hn-status-off"}>{subscription?"نشط":"غير مفعل"}</b></div>
+   <button onClick={()=>go("profile")}>الملف الشخصي <Icon name="arrow" size={15}/></button>
   </section>
-  <section className="home-v4-section">
-   <div className="home-v4-section-head"><div><span>YOUR LEARNING SPACE</span><h2>كل اللي تحتاجه في مكان واحد</h2><p>اختار القسم اللي عايز تبدأ منه، وكل خدمة ليها صفحة مستقلة.</p></div><button onClick={()=>go("courses")}>استكشف المحتوى <Icon name="arrow" size={15}/></button></div>
-   <div className="home-v4-module-grid">
-    {modules.map(([id,title,desc,ico,image,num])=><button key={id} className="home-v4-module" style={{"--home-card-image":'url("'+image+'")'}} onClick={()=>go(id)}>
-     <span className="home-v4-module-no">{num}</span><span className="home-v4-module-icon"><Icon name={ico} size={20}/></span>
-     <span className="home-v4-module-copy"><b>{title}</b><small>{desc}</small></span><span className="home-v4-module-arrow"><Icon name="arrow" size={15}/></span>
-    </button>)}
-   </div>
+  <section className="hn-services">
+   <div className="hn-section-heading"><div><span>YOUR LEARNING TOOLS</span><h2>كل أدوات دراستك في مكان واحد</h2><p>اختار الخدمة اللي محتاجها، وهتلاقي كل قسم في صفحة مستقلة.</p></div><button onClick={()=>go("courses")}>عرض كل الخدمات <Icon name="arrow" size={15}/></button></div>
+   <div className="hn-service-grid">{services.map(([id,title,desc,icon,img],i)=><button className="hn-service-card" key={id} onClick={()=>go(id)} style={{"--hn-image":'url("'+img+'")'}}><span className="hn-service-number">0{i+1}</span><span className="hn-service-icon"><Icon name={icon} size={20}/></span><span className="hn-service-copy"><b>{title}</b><small>{desc}</small></span><span className="hn-service-go"><Icon name="arrow" size={15}/></span></button>)}</div>
   </section>
-  <section className="home-v4-ai-row">
-   <div className="home-v4-ai-copy"><span className="home-v4-ai-label"><Icon name="spark" size={15}/> SMART MATH ASSISTANT</span><h2>واقف قدام مسألة؟<br/><em>خلّي الفكرة توضح.</em></h2><p>مساحة مخصصة لمساعدتك على فهم خطوات الحل والتعامل مع أفكار الرياضيات بطريقة منظمة.</p><button onClick={()=>go("ai")}>اكتشف المساعد الذكي <Icon name="arrow" size={16}/></button></div>
-   <div className="home-v4-ai-art" role="img" aria-label="خلفية تقنية للذكاء الاصطناعي والرياضيات"><div className="home-v4-ai-orbit"/><div className="home-v4-ai-symbol">∑</div><span>AI × MATH</span></div>
+  <section className="hn-ai">
+   <div className="hn-ai-image" aria-hidden="true"/>
+   <div className="hn-ai-content"><span><Icon name="spark" size={15}/> SMART LEARNING</span><h2>محتاج تفهم فكرة صعبة؟<br/><b>المساعد الذكي معاك.</b></h2><p>اسأل عن المسائل والمفاهيم الرياضية، وابدأ توصل للحل خطوة بخطوة.</p><button onClick={()=>go("ai")}>افتح المساعد الذكي <Icon name="arrow" size={16}/></button></div>
+   <div className="hn-ai-mark">∑</div>
   </section>
-  <section className="home-v4-bottom-grid">
-   <button onClick={()=>go("messages")}><span><Icon name="support" size={19}/></span><b>الدعم الفني</b><small>إحنا معاك لو احتجت مساعدة</small><Icon name="arrow" size={15}/></button>
-   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={19}/></span><b>الإشعارات</b><small>تابع آخر أخبار حسابك</small>{unread>0&&<em>{unread>99?"99+":unread}</em>}<Icon name="arrow" size={15}/></button>
-   <button onClick={()=>go("subscriptions")}><span><Icon name="ticket" size={19}/></span><b>الاشتراكات</b><small>إدارة اشتراكك الدراسي</small><Icon name="arrow" size={15}/></button>
+  <section className="hn-shortcuts">
+   <button onClick={()=>go("schedule")}><span><Icon name="calendar" size={20}/></span><b>جدول الحصص</b><small>مواعيدك الدراسية</small></button>
+   <button onClick={()=>go("live")}><span><Icon name="live" size={20}/></span><b>البث المباشر</b><small>محاضراتك أونلاين</small></button>
+   <button onClick={()=>go("groups")}><span><Icon name="users" size={20}/></span><b>الجروبات</b><small>مجموعتك الدراسية</small></button>
+   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={20}/></span><b>الإشعارات{unread>0?" ("+unread+")":""}</b><small>آخر التحديثات</small></button>
+   <button onClick={()=>go("messages")}><span><Icon name="support" size={20}/></span><b>الدعم الفني</b><small>مساعدة ومتابعة</small></button>
   </section>
  </div>;
 }
-
 function LockedPage({go,grade}){return <div className="platform-page"><PageBanner eyebrow="MEMBERSHIP REQUIRED" title="المحتوى التعليمي متاح للمشتركين" description="فعّل اشتراكك الشهري بكود مخصص لصفك الدراسي لفتح المحاضرات والامتحانات وباقي الخدمات." art="lock"/><section className="platform-lock-panel"><span className="platform-lock-icon"><Icon name="lock" size={30}/></span><h2>فعّل اشتراكك للمتابعة</h2><p>الاشتراك مرتبط بحسابك وبـ {grade||"صفك الدراسي"}، ولا يمكن فتح المحتوى قبل تفعيل كود صالح.</p><button className="platform-gold-button" onClick={()=>go("subscriptions")}>الانتقال للاشتراكات<Icon name="arrow"/></button></section></div>}
 function SubscriptionsPage({subscription,onActivated}){
  const [code,setCode]=useState(""),[busy,setBusy]=useState(false);
