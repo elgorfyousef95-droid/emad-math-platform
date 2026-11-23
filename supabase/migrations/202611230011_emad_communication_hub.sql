@@ -461,3 +461,26 @@ with check (
       and private.emad_chat_can_access_conversation(msg.conversation_id)
   )
 );
+
+-- Welcome every newly created platform profile with an in-app account notification.
+create or replace function private.emad_welcome_new_profile()
+returns trigger language plpgsql security definer
+set search_path = pg_catalog, public, auth, private
+as $$
+begin
+  insert into public.emad_notifications(recipient_id,notification_type,title,body,action_url,metadata)
+  values(
+    new.id,
+    'account',
+    'أهلًا بك في أكاديمية مستر عماد',
+    'حسابك أصبح جاهزًا. ابدأ من صفحتك الرئيسية واكتشف الكورسات والمحاضرات والجروبات المخصصة لصفك.',
+    '/home',
+    jsonb_build_object('kind','welcome','profile_id',new.id)
+  );
+  return new;
+end;
+$$;
+drop trigger if exists emad_welcome_new_profile on public.profiles;
+create trigger emad_welcome_new_profile
+after insert on public.profiles
+for each row execute function private.emad_welcome_new_profile();
