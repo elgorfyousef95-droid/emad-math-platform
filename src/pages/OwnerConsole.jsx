@@ -491,7 +491,17 @@ export default function OwnerConsole() {
           <label>صورة الامتحان<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"exam")}/></label>
           {uploading==="exam"&&<small className="owner-upload-state">جارٍ رفع الصورة...</small>}
           {examForm.cover_image_url&&<img className="owner-image-preview" src={examForm.cover_image_url} alt="معاينة صورة الامتحان"/>}
-          <button className="owner-primary-button" disabled={saving==="exam"||uploading==="exam"||!courses.length}>{saving==="exam"?"جارٍ الحفظ...":"إنشاء الامتحان كمسودة"}</button>
+          <div className="owner-question-builder"><h4>بناء أسئلة الامتحان</h4>
+            <label>نوع السؤال<select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select></label>
+            <label>نص السؤال<textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})}/></label>
+            {examQuestionForm.question_type==="single_choice"&&<label>الاختيارات (كل اختيار في سطر)<textarea rows="3" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})}/></label>}
+            {["single_choice","true_false"].includes(examQuestionForm.question_type)&&<label>الإجابة الصحيحة<input value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder="اكتب الاختيار كما هو أو صحيح / خطأ"/></label>}
+            <label>الدرجة<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label>
+            <button type="button" className="owner-secondary-button" onClick={addExamQuestion}>إضافة السؤال</button>
+            {examDraftQuestions.map((q,i)=><div className="owner-draft-question" key={q.id}><span>{i+1}. {q.prompt}</span><small>{q.points} درجة</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></div>)}
+            <small>عدد الأسئلة المضافة: {examDraftQuestions.length}</small>
+          </div>
+          <button className="owner-primary-button" disabled={saving==="exam"||uploading==="exam"||!courses.length||!examDraftQuestions.length}>{saving==="exam"?"جارٍ الحفظ...":"حفظ الامتحان وأسئلته كمسودة"}</button>
         </form></div>
         <div className="owner-library-card"><h3>الامتحانات الحالية</h3><div className="owner-media-grid">{exams.map(exam=><article className="owner-media-card" key={exam.id}>
           {exam.cover_image_url?<img src={exam.cover_image_url} alt={"صورة "+exam.title}/>:<span className="owner-media-fallback">EXAM</span>}
@@ -514,7 +524,17 @@ export default function OwnerConsole() {
           <label>صورة الواجب<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"homework")}/></label>
           {uploading==="homework"&&<small className="owner-upload-state">جارٍ رفع الصورة...</small>}
           {homeworkForm.cover_image_url&&<img className="owner-image-preview" src={homeworkForm.cover_image_url} alt="معاينة صورة الواجب"/>}
-          <button className="owner-primary-button" disabled={saving==="homework"||uploading==="homework"}>{saving==="homework"?"جارٍ الحفظ...":"حفظ الواجب كمسودة"}</button>
+          <div className="owner-question-builder"><h4>بناء أسئلة الواجب</h4>
+            <label>نوع السؤال<select value={homeworkQuestionForm.question_type} onChange={e=>setHomeworkQuestionForm({...homeworkQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select></label>
+            <label>نص السؤال<textarea rows="3" value={homeworkQuestionForm.prompt} onChange={e=>setHomeworkQuestionForm({...homeworkQuestionForm,prompt:e.target.value})}/></label>
+            {homeworkQuestionForm.question_type==="single_choice"&&<label>الاختيارات (كل اختيار في سطر)<textarea rows="3" value={homeworkQuestionForm.choices} onChange={e=>setHomeworkQuestionForm({...homeworkQuestionForm,choices:e.target.value})}/></label>}
+            {["single_choice","true_false"].includes(homeworkQuestionForm.question_type)&&<label>الإجابة الصحيحة<input value={homeworkQuestionForm.correct_answer} onChange={e=>setHomeworkQuestionForm({...homeworkQuestionForm,correct_answer:e.target.value})} placeholder="اكتب الاختيار كما هو أو صحيح / خطأ"/></label>}
+            <label>الدرجة<input type="number" min="0.5" step="0.5" value={homeworkQuestionForm.points} onChange={e=>setHomeworkQuestionForm({...homeworkQuestionForm,points:e.target.value})}/></label>
+            <button type="button" className="owner-secondary-button" onClick={addHomeworkQuestion}>إضافة السؤال</button>
+            {homeworkDraftQuestions.map((q,i)=><div className="owner-draft-question" key={q.id}><span>{i+1}. {q.prompt}</span><small>{q.points} درجة</small><button type="button" onClick={()=>setHomeworkDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></div>)}
+            <small>عدد الأسئلة المضافة: {homeworkDraftQuestions.length}</small>
+          </div>
+          <button className="owner-primary-button" disabled={saving==="homework"||uploading==="homework"||!homeworkDraftQuestions.length}>{saving==="homework"?"جارٍ الحفظ...":"حفظ الواجب وأسئلته كمسودة"}</button>
         </form></div>
         <div className="owner-library-card"><h3>الواجبات الحالية</h3><div className="owner-media-grid">{homework.map(item=><article className="owner-media-card" key={item.id}>
           {item.cover_image_url?<img src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="owner-media-fallback">TASK</span>}
