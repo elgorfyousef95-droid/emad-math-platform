@@ -12,6 +12,7 @@ import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logo
 import OwnerConsole from "./pages/OwnerConsole.jsx";
 import ExamRunner from "./components/ExamRunner.jsx";
 import FloatingTools from "./components/FloatingTools.jsx";
+import YousefAI from "./pages/YousefAI.jsx";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
 const navByGrade={
@@ -497,6 +498,7 @@ function HomeworkPage({profile}){
 function SectionPage({page,go,profile}){
  if(page==="messages")return <SupportCenter profile={profile}/>;
  if(page==="results")return <StudentResults/>;
+ if(page==="ai")return <YousefAI profile={profile}/>;
  const data={homework:["الواجبات والتدريبات","تابع التكليفات والتدريبات المطلوبة منك.","task"],files:["المذكرات والملفات","مكتبة المذكرات والملخصات وأوراق العمل.","file"],schedule:["جدول الحصص","مواعيد المحاضرات والامتحانات في جدول منظم.","calendar"],live:["المحاضرات المباشرة","تابع مواعيد البث المباشر والمحاضرات التفاعلية.","live"],ai:["المساعد الذكي","مساعد رياضيات مخصص لصفك الدراسي.","spark"],groups:["الجروبات الدراسية","مساحات تواصل منظمة لطلاب نفس الصف والمجموعة، مع إشراف وإعلانات ومناقشات تعليمية.","users"],admin:["إدارة المنصة","إدارة المحتوى والطلاب والاشتراكات والصلاحيات.","settings"]}[page]||["القسم","","book"];
  const unavailable={homework:"لا يوجد حتى الآن جدول واجبات مرتبط بحسابك في قاعدة البيانات.",files:"مكتبة الملفات لم يتم تجهيز جدولها ورفع ملفاتها بعد.",schedule:"جدول الحصص يحتاج إلى ربط مواعيد الحصص الفعلية من الإدارة.",live:"لا توجد خدمة بث مباشر مفعّلة ومتصلة بالمنصة حتى الآن.",ai:"المساعد الذكي يحتاج إلى ربط خدمة الذكاء الاصطناعي ومصادر المنهج.",groups:"خدمة الجروبات الدراسية لم يتم تجهيزها بعد."};
  return <div className="platform-page"><PageBanner eyebrow="STUDENT SERVICES" title={data[0]} description={data[1]} art={data[2]}/><div className="platform-empty-state"><Icon name={data[2]} size={36}/><b>مساحة {data[0]}</b><span>{unavailable[page]||"هذا القسم قيد التجهيز."}</span></div></div>;
