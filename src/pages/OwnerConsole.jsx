@@ -75,7 +75,7 @@ export default function OwnerConsole() {
   const [announcementForm, setAnnouncementForm] = useState({ title: "", body: "", course_id: "", cover_image_url: "" });
   const [homeworkQuestionForm, setHomeworkQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
-  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
+  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "", duration_seconds: 0 });
   const [lessonVideoPreviewUrl, setLessonVideoPreviewUrl] = useState("");
   const [editingLessonId, setEditingLessonId] = useState("");
 
@@ -93,7 +93,7 @@ export default function OwnerConsole() {
         ["profiles", "profiles?select=id,full_name,student_number,grade,group_name,role,is_verified,phone,parent_name,parent_phone,governorate,city,created_at&order=created_at.desc&limit=1000"],
         ["messages", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=500"],
         ["courses", "courses?select=id,teacher_id,title,description,subject,price_egp,status,grade,cover_image_url,created_at&order=created_at.desc&limit=500"],
-        ["lessons", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,cover_image_url,created_at&order=created_at.desc&limit=1000"],
+        ["lessons", "lessons?select=id,course_id,title,description,content,video_url,duration_seconds,duration_minutes,sort_order,is_published,cover_image_url,created_at&order=created_at.desc&limit=1000"],
         ["exams", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,cover_image_url,created_at&order=created_at.desc&limit=500"],
         ["examQuestions", "exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&order=sort_order.asc&limit=5000"],
         ["homework", "homework_assignments?select=id,title,description,grade,group_name,due_at,is_published,cover_image_url,created_by,created_at&order=created_at.desc&limit=500"],
@@ -205,6 +205,8 @@ export default function OwnerConsole() {
         description: lessonForm.description.trim(),
         content: lessonForm.content.trim(),
         video_url: lessonForm.video_url.trim() || null,
+        duration_seconds: Number(lessonForm.duration_seconds) || null,
+        duration_minutes: Number(lessonForm.duration_seconds) > 0 ? Math.ceil(Number(lessonForm.duration_seconds) / 60) : null,
         sort_order: editingLessonId ? (lessons.find(x => x.id === editingLessonId)?.sort_order || 1) : lessons.filter(x => x.course_id === selectedCourse).length + 1,
         cover_image_url: lessonForm.cover_image_url || null,
       };
@@ -220,7 +222,7 @@ export default function OwnerConsole() {
         setLessons(old => [...old, created]);
         setNotice("تمت إضافة المحاضرة كمسودة.");
       }
-      setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
+      setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "", duration_seconds: 0 });
       setLessonVideoPreviewUrl("");
       setEditingLessonId("");
     } catch (e) { setError("تعذر حفظ المحاضرة. " + (e.message || "")); }
@@ -229,7 +231,7 @@ export default function OwnerConsole() {
 
   const editLesson = async (lesson) => {
     setEditingLessonId(lesson.id);
-    setLessonForm({ title: lesson.title || "", description: lesson.description || "", content: lesson.content || "", video_url: lesson.video_url || "", cover_image_url: lesson.cover_image_url || "" });
+    setLessonForm({ title: lesson.title || "", description: lesson.description || "", content: lesson.content || "", video_url: lesson.video_url || "", cover_image_url: lesson.cover_image_url || "", duration_seconds: Number(lesson.duration_seconds) || 0 });
     setLessonVideoPreviewUrl("");
     if (lesson.video_url) {
       try { setLessonVideoPreviewUrl(await getLectureVideoUrl(lesson.video_url, "owner")); }
@@ -243,13 +245,15 @@ export default function OwnerConsole() {
     setUploading("lesson-video"); setUploadProgress(0); setError(""); setNotice("");
     try {
       const path = await uploadPortalVideo(file, "owner", (percent) => setUploadProgress(percent));
-      setLessonForm((old) => ({ ...old, video_url: path }));
+      setLessonForm((old) => ({ ...old, video_url: path, duration_seconds: 0 }));
       setLessonVideoPreviewUrl("");
       setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");
       try {
         const previewUrl = await getLectureVideoUrl(path, "owner");
         setLessonVideoPreviewUrl(previewUrl);
-        setNotice("تم رفع الفيديو بنجاح. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
+        const measured = await new Promise(resolve => { const probe = document.createElement("video"); probe.preload = "metadata"; probe.onloadedmetadata = () => { const seconds = Number.isFinite(probe.duration) ? Math.round(probe.duration) : 0; probe.removeAttribute("src"); probe.load(); resolve(seconds); }; probe.onerror = () => resolve(0); probe.src = previewUrl; });
+        if (measured > 0) setLessonForm(old => ({ ...old, duration_seconds: measured }));
+        setNotice(measured > 0 ? "تم رفع الفيديو واستخراج مدته تلقائيًا." : "تم رفع الفيديو، لكن تعذر قراءة مدته تلقائيًا.");
       } catch (previewError) {
         console.error("owner_video_preview", previewError);
         setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");
