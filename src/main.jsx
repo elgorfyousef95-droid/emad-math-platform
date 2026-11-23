@@ -174,7 +174,7 @@ function App(){
  const pageRef=useRef(page);
  useEffect(()=>{pageRef.current=page;},[page]);
  useEffect(()=>{const marker="emad-platform";const current={marker,page:"splash"};try{window.history.replaceState({marker,guard:true},"",window.location.href);window.history.pushState(current,"",window.location.href);}catch{}const onPopState=event=>{const state=event.state;const validPages=["splash","login","signup","home","courses","lessons","exams","homework","files","results","schedule","live","messages","ai","subscriptions","profile","settings","groups","admin","notifications"];if(state?.marker===marker&&!state.guard&&validPages.includes(state.page)){pageRef.current=state.page;setPage(state.page);setMoreOpen(false);setAccountOpen(false);setMobileNav(false);return;}try{window.history.pushState({marker,page:pageRef.current},"",window.location.href);}catch{setPage(pageRef.current);}};window.addEventListener("popstate",onPopState);return()=>window.removeEventListener("popstate",onPopState);},[]);
- const loadWorkspace=async()=>{setLoading(true);try{const w=await loadStudentWorkspace();setProfile(w.profile);setSubscription(w.subscription);setNotifications(w.notifications);}catch(e){console.error("workspace_load",e);}finally{setLoading(false);}};
+ const loadWorkspace=async()=>{setLoading(true);try{const w=await loadStudentWorkspace();setProfile(w.profile);setSubscription(w.subscription);setNotifications(w.notifications);return w;}catch(e){console.error("workspace_load",e);setProfile(null);setSubscription(null);setNotifications([]);throw e;}finally{setLoading(false);}};
  const completeSplash=async()=>{try{const session=await refreshStudentSession();if(session?.access_token){await loadWorkspace();go("home");}else{setProfile(null);setSubscription(null);setNotifications([]);go("login");}}catch{clearStudentSession();setProfile(null);setSubscription(null);setNotifications([]);go("login");}};
  useEffect(()=>{if(page==="home"&& !profile)loadWorkspace();},[page]);
  useEffect(()=>{const closeMenus=event=>{const target=event.target;if(!target.closest(".platform-navigation")&&!target.closest(".platform-mobile-menu"))setMobileNav(false);if(!target.closest(".platform-nav-more"))setMoreOpen(false);if(!target.closest(".platform-account-menu"))setAccountOpen(false);};document.addEventListener("pointerdown",closeMenus);return()=>document.removeEventListener("pointerdown",closeMenus);},[]);
@@ -186,7 +186,7 @@ function App(){
  if(window.location.pathname.replace(/\/$/,"")==="/owner")return <OwnerConsole/>;
  if(window.location.pathname.replace(/\/$/,"")==="/teacher")return <TeacherConsole/>;
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
- if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{await loadWorkspace();go("home");}}/></div>;
+ if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch{clearStudentSession();go("login");}}}/></div>;
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;
