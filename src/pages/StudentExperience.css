@@ -105,3 +105,9 @@
  .sd-quick-section{padding:17px 13px}.sd-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sd-quick-grid button{min-height:63px;padding:9px;gap:8px;font-size:9px}.sd-quick-icon{width:33px;height:33px}.sd-section-heading h2{font-size:19px}.sd-section-heading>span{display:none}
  .sd-bottom-strip{align-items:flex-start;flex-direction:column;padding:17px}.sd-bottom-strip b{font-size:12px}.sd-bottom-strip button{align-self:stretch}
 }
+
+.se-nav-glyph svg{width:18px;height:18px}
+.se-menu-toggle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.se-menu-toggle span{width:17px;height:2px;border-radius:3px;background:#1b7480}
+.se-account-chevron{color:#78909f;font-size:13px}
+.se-notify{display:grid;place-items:center}
