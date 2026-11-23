@@ -191,3 +191,78 @@
  .student-experience .profile-v2-link-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  .student-experience .profile-v2-link-grid button{font-size:9px;padding:11px}
 }
+
+/* FRESH ART DIRECTION — warm editorial mathematics academy */
+.student-experience{--se-ink:#243746;--se-muted:#7e8b91;--se-teal:#287c73;--se-teal-soft:#e7f0eb;--se-line:#e7e5de;background:#f5f3ed!important;color:#263b48!important}
+.se-sidebar{background:#fff!important;color:#344854!important;border-left:1px solid #e8e6df;box-shadow:5px 0 24px #293d4408!important}
+.se-brand{border-color:#eeece6!important}.se-brand-mark{background:#dcebe3!important;color:#326b60!important;box-shadow:none!important;border-radius:13px}
+.se-brand b,.se-sidebar-student b{color:#263f4b!important}.se-brand small,.se-sidebar-student small{color:#87958f!important}
+.se-sidebar-student{background:#f7f7f2!important;border-color:#eaeae3!important}
+.se-nav-caption{color:#9a9f96!important}.se-nav-item{color:#65747a!important}
+.se-nav-item:hover{background:#f5f5ef!important;color:#2e5c54!important}
+.se-nav-item.active{background:#eaf2eb!important;border-color:#dce9de!important;color:#285f54!important;box-shadow:inset -3px 0 #528d76!important}
+.se-nav-glyph{background:#f3f4ee!important;color:#648778!important}
+.se-nav-item.active .se-nav-glyph{background:#d5e7dc!important;color:#316d5c!important}
+.se-sidebar-foot{background:#f7f7f2!important;border-color:#eaeae3!important;color:#3a5559}
+.se-sidebar-foot small{color:#83918d!important}.se-sidebar-foot button{color:#367d70!important}
+.se-topbar{background:#fffefa!important;border-color:#e9e6dc!important}
+.se-breadcrumb b{color:#263e4b!important}.se-grade-chip{background:#edf3ed!important;border-color:#dfe9df!important;color:#477563!important}
+.se-notify{background:#fafaf6!important;color:#477b70!important;border-color:#e9e8e0!important}
+.se-content{max-width:1740px!important;padding-top:28px!important}
+.se-footer{background:#fffefa!important;border-color:#e9e6dc!important;color:#89938c!important}
+.sd-dashboard{gap:32px!important}
+.sd-hero{min-height:580px!important;border-radius:5px 34px 5px 34px!important;background:#e8eee6!important;grid-template-columns:1.08fr .92fr!important;padding:clamp(32px,4.5vw,68px)!important;box-shadow:none!important;border:1px solid #dce5da}
+.sd-hero-image{background-image:url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1800&q=85")!important;opacity:.13!important;filter:grayscale(.45)!important}
+.sd-hero-overlay{background:linear-gradient(100deg,#edf1e8f5 0%,#e7eee5e8 65%,#dbe8dfb8 100%)!important}
+.sd-kicker,.sd-section-kicker{color:#628274!important;letter-spacing:1.2px!important}
+.sd-kicker i{background:#659783!important;box-shadow:0 0 0 5px #65978320!important}
+.sd-welcome{color:#667b73!important;font-size:15px!important;margin-top:28px!important}
+.sd-hero h1{color:#263f48!important;font-size:clamp(51px,6.2vw,82px)!important;line-height:1.18!important;letter-spacing:-2.5px!important}
+.sd-hero h1 em{color:#53856f!important}
+.sd-description{color:#687b76!important;font-size:14px!important;max-width:500px!important}
+.sd-hero-actions button,.sd-bottom-strip button{background:#477b69!important;border-color:#477b69!important;color:#fff!important;box-shadow:none!important;border-radius:3px 13px 3px 13px!important}
+.sd-hero-actions .sd-outline{background:#fff9!important;border:1px solid #cbd8ce!important;color:#45685d!important}
+.sd-hero-meta{color:#62776e!important}.sd-status i{background:#bd9555!important}.sd-status.active i{background:#4b9a76!important}
+.sd-teacher{height:455px!important}
+.sd-teacher-photo{width:min(330px,78%)!important;height:410px!important;border:8px solid #f8f8f1!important;border-radius:180px 180px 9px 9px!important;box-shadow:0 18px 45px #405d4a24!important}
+.sd-teacher-photo img{object-position:center 15%!important}
+.sd-teacher-label{background:#fffefa!important;border:1px solid #e1e5dc!important;box-shadow:0 10px 28px #405d4a18!important;border-radius:3px 12px 3px 12px!important}
+.sd-teacher-label small{color:#789084!important}.sd-teacher-label b{color:#314b4c!important}
+.sd-orbit{border-color:#86a99655!important}.sd-orbit-two{border-color:#c3ad7b55!important}
+.sd-equation{background:#fffefa!important;border-color:#dce5dc!important;color:#5b8975!important;box-shadow:0 8px 20px #435c4a14!important}.sd-equation-two{color:#a17c48!important}
+.sd-hero-bottom{color:#82948a!important}
+.sd-welcome-row h2,.sd-section-heading h2{color:#293f49!important}
+.sd-welcome-row p{color:#89938c!important}
+.sd-profile-chip{background:#fffefa!important;border-color:#e8e6de!important;box-shadow:none!important}
+.sd-profile-avatar{background:#eaf1e9!important;color:#58816f!important}
+.sd-profile-chip b{color:#344b50!important}.sd-profile-chip button{color:#4c826e!important}
+.sd-service-card{height:290px!important;border-radius:4px 20px 4px 20px!important;box-shadow:none!important;background:#dce6df!important}
+.sd-service-card:hover{box-shadow:0 15px 28px #344c3b18!important}
+.sd-card-shade{background:linear-gradient(180deg,#1b35352b 0%,#1c343522 25%,#182e2ce8 100%)!important}
+.sd-card-top b{border-color:#ffffff80!important;background:#ffffff20!important}
+.sd-card-copy b{font-size:19px!important}.sd-card-copy small{font-size:11px!important}
+.sd-card-copy em{color:#b5d8bf!important}
+.sd-quick-section{background:#fffefa!important;border:1px solid #e9e6dc!important;border-radius:4px 22px 4px 22px!important;box-shadow:none!important}
+.sd-quick-grid button{background:#fafaf6!important;border-color:#edede6!important;color:#41575b!important;border-radius:3px 13px 3px 13px!important}
+.sd-quick-grid button:hover{background:#eff5ed!important;border-color:#d7e4d8!important}
+.sd-quick-icon,.sd-quick-icon.q1,.sd-quick-icon.q2,.sd-quick-icon.q3,.sd-quick-icon.q4,.sd-quick-icon.q5{background:#eaf1e9!important;color:#54816d!important;border-radius:4px 12px 4px 12px!important}
+.sd-bottom-strip{background:#e7eee6!important;border:1px solid #dce6dc!important;border-radius:4px 18px 4px 18px!important;color:#314b4c!important}
+.sd-bottom-strip span{color:#668b79!important}.sd-bottom-strip b{color:#314b4c!important}
+.sd-bottom-strip button{background:#477b69!important;color:white!important}
+@media(max-width:760px){
+ .se-content{padding:15px 12px 25px!important}
+ .sd-dashboard{gap:23px!important}
+ .sd-hero{padding:25px 18px 58px!important;border-radius:4px 22px 4px 22px!important}
+ .sd-hero-overlay{background:linear-gradient(100deg,#edf1e8f7,#e7eee5ee 75%,#dbe8dfd9)!important}
+ .sd-hero h1{font-size:49px!important;color:#263f48!important}
+ .sd-welcome{color:#667b73!important}
+ .sd-description{color:#687b76!important;font-size:12px!important}
+ .sd-teacher{height:290px!important;margin-top:24px!important}
+ .sd-teacher-photo{height:260px!important;width:205px!important;border-radius:110px 110px 8px 8px!important}
+ .sd-services{gap:9px!important}
+ .sd-service-card{height:225px!important;padding:12px!important}
+ .sd-card-copy b{font-size:14px!important}
+ .sd-card-copy small{font-size:9px!important}
+ .sd-quick-section{padding:16px 12px!important}
+ .sd-bottom-strip{padding:16px!important}
+}
