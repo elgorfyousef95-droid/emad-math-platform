@@ -547,7 +547,7 @@ export default function OwnerConsole() {
         </article>)}</div>{!exams.length&&<p className="owner-note">لا توجد امتحانات حتى الآن.</p>}</div>
       </div>
       <div className="owner-panel-subsection"><h3>محاولات ونتائج الطلاب</h3><div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>الطالب</th><th>الامتحان</th><th>تاريخ البداية</th><th>التسليم</th><th>الدرجة</th><th>التصحيح</th></tr></thead><tbody>{attempts.map(attempt=><tr key={attempt.id}><td>{studentName(attempt.student_id)}</td><td>{exams.find(x=>x.id===attempt.exam_id)?.title||"امتحان"}</td><td>{dateText(attempt.started_at)}</td><td>{attempt.submitted_at?dateText(attempt.submitted_at):"لم يسلّم"}</td><td>{attempt.score===null||attempt.score===undefined?"—":attempt.score}</td><td>{attempt.graded_at?"مصحح":"يحتاج مراجعة"}</td></tr>)}</tbody></table></div>{!attempts.length&&<p className="owner-note">لا توجد محاولات امتحانات مسجلة حتى الآن.</p>}</div>
-      <p className="owner-warning">تنبيه: إنشاء الامتحان وصورته متاحان، لكن يجب إضافة الأسئلة ومفتاح الإجابة ومراجعتها قبل النشر. محرر الأسئلة وتصحيح المحاولات ضمن مرحلة بناء الامتحانات التالية.</p>
+      <p className="owner-warning">الأسئلة الموضوعية تُصحح تلقائيًا عند التسليم. الأسئلة المقالية تظهر ضمن المحاولات التي تحتاج مراجعة يدوية؛ شاشة التصحيح التفصيلية سنضيفها في المرحلة التالية.</p>
     </section>}
 
     {section==="homework" && <section className="owner-panel">
@@ -580,7 +580,7 @@ export default function OwnerConsole() {
           <div className="owner-media-actions"><span className={item.is_published?"published":"draft"}>{statusText(item.is_published?"published":"draft")}</span><button disabled={saving===item.id} onClick={()=>toggleHomework(item)}>{item.is_published?"إيقاف النشر":"نشر"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"homework_assignments",item)}/></label></div>
         </article>)}</div>{!homework.length&&<p className="owner-note">لا توجد واجبات حتى الآن.</p>}</div>
       </div>
-      <p className="owner-warning">الواجب الجديد يُحفظ كمسودة. أضف الأسئلة ومفتاح الإجابة من محرر الواجبات قبل نشره للطلاب؛ لن أنشر واجبًا فارغًا تلقائيًا.</p>
+      <p className="owner-warning">الواجب يُحفظ مع أسئلته كمسودة. لا يمكن نشره قبل وجود سؤال واحد على الأقل؛ الأسئلة الموضوعية تُصحح تلقائيًا، والمقالية تحتاج مراجعة المدرس.</p>
     </section>}
 
     {section==="announcements" && <section className="owner-panel">
