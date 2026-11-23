@@ -119,7 +119,7 @@ function PageBanner({eyebrow,title,description,art="book"}){return <section clas
 function HomePage({profile,subscription,go,grade,unread}){
  const firstName=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
  const active=!!subscription;
- const courses=[["courses","المسارات التعليمية","شرح منظم لكل فروع المنهج","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=90","01"],["lessons","المحاضرات","حصص مسجلة تراجعها في أي وقت","https://images.unsplash.com/photo-150 teacher?auto=format&fit=crop&w=1200&q=90","02"],["exams","بنك الامتحانات","اختبر نفسك بأسئلة متنوعة","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=90","03"],["homework","التدريبات والواجبات","تدرب وثبّت فهمك خطوة بخطوة","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1200&q=90","04"]];
+ const courses=[["courses","المسارات التعليمية","شرح منظم لكل فروع المنهج","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=90","01"],["lessons","المحاضرات","حصص مسجلة تراجعها في أي وقت","https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1200&q=90","02"],["exams","بنك الامتحانات","اختبر نفسك بأسئلة متنوعة","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=90","03"],["homework","التدريبات والواجبات","تدرب وثبّت فهمك خطوة بخطوة","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1200&q=90","04"]];
  return <div className="platform-page atlas-home">
   <section className="atlas-hero">
    <div className="atlas-hero-bg"/>
