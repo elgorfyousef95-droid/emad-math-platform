@@ -552,7 +552,7 @@ export default function OwnerConsole() {
           {generatedCode&&<div className="owner-generated-code"><small>الكود الكامل — انسخه الآن</small><strong dir="ltr">{generatedCode}</strong><button onClick={()=>navigator.clipboard?.writeText(generatedCode)}>نسخ الكود</button></div>}
           <div className="owner-divider"/>
           <h3>تفعيل أو تجديد يدوي لطالب</h3><form className="owner-form" onSubmit={activateSubscription}>
-            <label>الطالب<select required value={manualStudent} onChange={e=>setManualStudent(e.target.value)}><option value="">اختر الطالب</option>{studentUsers.map(x=><option key={x.id} value={x.id}>{x.full_name} · {x.student_number||"—"}</option>)}</select></label>
+            <label>الطالب<select required value={manualStudent} onChange={e=>{setManualStudent(e.target.value);const picked=studentUsers.find(x=>x.id===e.target.value);if(picked?.grade)setManualGrade(picked.grade);}}><option value="">اختر الطالب</option>{studentUsers.map(x=><option key={x.id} value={x.id}>{x.full_name} · {x.student_number||"—"}</option>)}</select></label>
             <label>الصف<select value={manualGrade} onChange={e=>setManualGrade(e.target.value)}>{GRADES.map(x=><option key={x}>{x}</option>)}</select></label>
             <label>تاريخ الانتهاء (اختياري)<input type="datetime-local" value={manualEnd} onChange={e=>setManualEnd(e.target.value)}/></label>
             <button className="owner-primary-button" disabled={saving==="subscription"}>{saving==="subscription"?"جارٍ التفعيل...":"تفعيل / تجديد الاشتراك"}</button>
