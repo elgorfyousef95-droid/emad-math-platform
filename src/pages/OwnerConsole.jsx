@@ -48,8 +48,13 @@ export default function OwnerConsole() {
   const [manualGrade, setManualGrade] = useState(GRADES[2]);
   const [manualEnd, setManualEnd] = useState("");
   const [courseForm, setCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "", cover_image_url: "" });
+  const [editCourseForm, setEditCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "" });
   const [examForm, setExamForm] = useState({ title: "", course_id: "", duration_minutes: "60", opens_at: "", closes_at: "", cover_image_url: "" });
+  const [examQuestionForm, setExamQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
+  const [examDraftQuestions, setExamDraftQuestions] = useState([]);
   const [homeworkForm, setHomeworkForm] = useState({ title: "", description: "", grade: GRADES[2], group_name: "", due_at: "", cover_image_url: "", is_published: false });
+  const [homeworkQuestionForm, setHomeworkQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
+  const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
   const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "" });
 
   const read = async (path) => {
@@ -106,6 +111,9 @@ export default function OwnerConsole() {
   const studentUsers = useMemo(() => users.filter((x) => x.role === "student"), [users]);
   const teachers = useMemo(() => users.filter((x) => x.role === "teacher"), [users]);
   const selected = courses.find((x) => x.id === selectedCourse) || null;
+  useEffect(() => {
+    if (selected) setEditCourseForm({ title: selected.title || "", subject: selected.subject || "رياضيات", grade: selected.grade || GRADES[2], description: selected.description || "", price_egp: String(selected.price_egp ?? 0), teacher_id: selected.teacher_id || "" });
+  }, [selectedCourse, courses]);
   const visibleUsers = users.filter((u) => [u.full_name, u.student_number, u.grade, u.group_name, u.phone, u.role].join(" ").toLowerCase().includes(filter.toLowerCase()));
   const activeSubscriptions = subscriptions.filter((x) => new Date(x.ends_at) > new Date());
   const pendingMessages = messages.filter((x) => x.status !== "closed");
@@ -207,6 +215,19 @@ export default function OwnerConsole() {
       setNotice("تم حفظ تعديلات الكورس.");
     } catch { setError("تعذر تحديث الكورس."); }
     finally { setSaving(""); }
+  };
+
+  const saveCourseEdits = async (event) => {
+    event.preventDefault();
+    if (!selected) return;
+    await updateCourse(selected, {
+      title: editCourseForm.title.trim(),
+      subject: editCourseForm.subject.trim() || "رياضيات",
+      grade: editCourseForm.grade,
+      description: editCourseForm.description.trim(),
+      price_egp: Number(editCourseForm.price_egp) || 0,
+      teacher_id: editCourseForm.teacher_id || selected.teacher_id,
+    });
   };
 
   const createExam = async (event) => {
@@ -360,7 +381,7 @@ export default function OwnerConsole() {
       <div className="owner-panel-heading"><div><span>ACCOUNT DIRECTORY</span><h2>الحسابات والطلاب والصلاحيات</h2></div><small>{visibleUsers.length} من {users.length} حساب</small></div>
       <input className="owner-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث بالاسم أو رقم الطالب أو الصف أو الهاتف..."/>
       <div className="owner-table-wrap"><table className="owner-table owner-wide-table"><thead><tr><th>الاسم</th><th>رقم الحساب</th><th>الصف / المجموعة</th><th>التواصل</th><th>ولي الأمر</th><th>الصلاحية</th><th>تغيير الصلاحية</th></tr></thead><tbody>
-        {visibleUsers.map(user=><tr key={user.id}><td>{user.full_name||"—"}</td><td dir="ltr">{user.student_number||"بوابة إدارية"}</td><td>{user.grade||"—"}<small>{user.group_name||""}</small></td><td dir="ltr">{user.phone||"—"}<small>{[user.governorate,user.city].filter(Boolean).join(" / ")}</small></td><td>{user.parent_name||"—"}<small dir="ltr">{user.parent_phone||""}</small></td><td><span className={"owner-role role-"+user.role}>{({owner:"مالك",teacher:"مدرس",admin:"مدير",student:"طالب"})[user.role]||user.role}</span></td><td><select value={user.role} disabled={saving===user.id||user.id===profile.id} onChange={e=>changeRole(user,e.target.value)}><option value="student">طالب</option><option value="teacher">مدرس</option><option value="admin">مدير</option><option value="owner">مالك</option></select></td></tr>)}
+        {visibleUsers.map(user=><tr key={user.id}><td>{user.full_name||"—"}</td><td dir="ltr">{user.student_number||"بوابة إدارية"}</td><td>{user.grade||"—"}<small>{user.group_name||""}</small></td><td dir="ltr">{user.phone||"—"}<small>{[user.governorate,user.city].filter(Boolean).join(" / ")}</small></td><td>{user.parent_name||"—"}<small dir="ltr">{user.parent_phone||""}</small></td><td><span className={"owner-role role-"+user.role}>{({owner:"مالك",teacher:"مدرس",admin:"مدير",student:"طالب"})[user.role]||user.role}</span></td><td><select value={user.role} disabled={saving===user.id||user.id===profile.id||!user.student_number} onChange={e=>changeRole(user,e.target.value)}><option value="student">طالب</option><option value="teacher">مدرس</option><option value="admin">مدير</option><option value="owner">مالك</option></select></td></tr>)}
       </tbody></table></div>
       <p className="owner-note">حساب المالك الحالي محمي من تغيير دوره من داخل الجدول. تغيير الدور لا يحذف حساب الطالب أو بياناته.</p>
     </section>}
@@ -393,6 +414,7 @@ export default function OwnerConsole() {
           </article>)}</div>
           {!courses.length&&<p className="owner-note">لم تتم إضافة كورسات بعد. ابدأ من نموذج إنشاء الكورس.</p>}
           {selected&&<div className="owner-selected-detail"><h3>تفاصيل الكورس المحدد</h3>{selected.cover_image_url?<img className="owner-detail-cover" src={selected.cover_image_url} alt={selected.title}/>:null}<b>{selected.title}</b><p>{selected.description||"لا يوجد وصف."}</p><small>{selected.grade} · {selected.subject} · {moneyText(selected.price_egp)}</small><div className="owner-detail-meta"><span>المدرس: {studentName(selected.teacher_id)}</span><span>{lessons.filter(x=>x.course_id===selected.id).length} محاضرة</span></div>
+            <form className="owner-form owner-edit-course-form" onSubmit={saveCourseEdits}><h4>تعديل بيانات الكورس</h4><label>اسم الكورس<input required value={editCourseForm.title} onChange={e=>setEditCourseForm({...editCourseForm,title:e.target.value})}/></label><div className="owner-form-two"><label>الصف<select value={editCourseForm.grade} onChange={e=>setEditCourseForm({...editCourseForm,grade:e.target.value})}>{GRADES.map(x=><option key={x}>{x}</option>)}</select></label><label>المادة<input value={editCourseForm.subject} onChange={e=>setEditCourseForm({...editCourseForm,subject:e.target.value})}/></label></div><label>المدرس المسؤول<select value={editCourseForm.teacher_id} onChange={e=>setEditCourseForm({...editCourseForm,teacher_id:e.target.value})}>{teachers.map(x=><option key={x.id} value={x.id}>{x.full_name||"مدرس"}</option>)}<option value={profile.id}>المالك</option></select></label><label>السعر<input type="number" min="0" value={editCourseForm.price_egp} onChange={e=>setEditCourseForm({...editCourseForm,price_egp:e.target.value})}/></label><label>الوصف<textarea rows="3" value={editCourseForm.description} onChange={e=>setEditCourseForm({...editCourseForm,description:e.target.value})}/></label><button className="owner-primary-button" disabled={saving===selected.id}>حفظ تعديلات الكورس</button></form>
             <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
             <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
               {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}><span>{String(index+1).padStart(2,"0")}</span><div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}
