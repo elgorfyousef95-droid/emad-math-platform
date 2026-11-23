@@ -86,7 +86,9 @@ export async function portalApi(portal, path, options = {}) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || body.code || "portal_api_error");
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  const raw = await response.text();
+  return raw ? JSON.parse(raw) : null;
 }
 
 
