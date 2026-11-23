@@ -1246,3 +1246,14 @@
  .platform-quickbar button{padding:0 8px!important}
 }
 @media(prefers-reduced-motion:reduce){.platform-shell *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Connected student service pages */
+
+.platform-panel textarea{width:100%;min-height:125px;resize:vertical;padding:12px 14px;border:1px solid #dce6ed;border-radius:9px;background:#f8fafc;color:#19334b;font:inherit;font-size:13px;line-height:1.8;outline:none}
+.platform-panel textarea:focus,.platform-panel input:focus{border-color:#39a9a2;box-shadow:0 0 0 3px #39a9a21c}
+.platform-support-ticket{padding:13px 0;border-bottom:1px solid #e8eef2}
+.platform-support-ticket:last-child{border-bottom:0}
+.platform-support-ticket b{display:block;color:#23445d;font-size:13px}
+.platform-support-ticket p{margin:7px 0;color:#718397;font-size:11px;line-height:1.8}
+.platform-support-ticket span{font-size:10px;color:#168b89}
+.platform-content-grid article small{display:block;margin-top:7px;color:#168b89;font-size:11px;font-weight:800}
