@@ -240,7 +240,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
       setShowPassword(false);
       if (result.session?.access_token && result.session?.refresh_token) {
         saveStudentSession(result.session);
-        notify({ type: "success", title: "تم إنشاء الحساب", message: "تم إنشاء حسابك وتسجيل دخولك بنجاح." });
+        notify({ type: "success", title: "تم إنشاء الحساب", message: "رقم الطالب: " + result.student_number + " — تم تسجيل دخولك بنجاح." });
         await onSuccess?.();
       } else {
         setCreatedAccount({
