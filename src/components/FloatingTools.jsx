@@ -60,6 +60,7 @@ function FloatingTools() {
   const [result, setResult] = useState("");
   const [history, setHistory] = useState([]);
   const [degrees, setDegrees] = useState(true);
+  const [calcMode, setCalcMode] = useState("scientific");
   const [voiceText, setVoiceText] = useState("");
   const [reply, setReply] = useState("أهلًا! تقدر تتكلم أو تكتب سؤالك. المحادثة الذكية الكاملة تحتاج ربط محرك لغوي مناسب.");
   const [listening, setListening] = useState(false);
@@ -132,7 +133,8 @@ function FloatingTools() {
       <nav className="emad-tools-tabs"><button className={tab==="calc"?"active":""} onClick={()=>setTab("calc")}>الحاسبة العلمية</button><button className={tab==="voice"?"active":""} onClick={()=>setTab("voice")}>يوسف AI صوتيًا</button></nav>
       {tab === "calc" ? <div className="emad-calc">
         <div className="emad-calc-screen"><div className="emad-calc-expression" dir="ltr">{expression || "0"}</div><strong dir="ltr">{result || " "}</strong></div>
-        <div className="emad-calc-settings"><button onClick={()=>setDegrees(v=>!v)}>{degrees?"DEG":"RAD"}</button><span>علمية</span><button onClick={()=>setHistory(v=>{localStorage.removeItem("emad-calc-history");return [];})}>مسح السجل</button></div>
+        <div className="emad-calc-settings"><button onClick={()=>setDegrees(v=>!v)}>{degrees?"DEG":"RAD"}</button><button onClick={()=>setCalcMode(v=>v==="scientific"?"programmer":"scientific")}>{calcMode==="scientific"?"وضع علمي":"وضع مبرمج"}</button><button onClick={()=>setHistory(v=>{localStorage.removeItem("emad-calc-history");return [];})}>مسح السجل</button></div>
+        {calcMode==="programmer"&&<div className="emad-calc-history"><b>تحويل الأنظمة العددية (عدد صحيح)</b>{(()=>{try{const n=Math.trunc(calculateExpression(expression||"0",degrees));return <><button><span>DEC</span><strong dir="ltr">{n}</strong></button><button><span>BIN</span><strong dir="ltr">{(n>>>0).toString(2)}</strong></button><button><span>OCT</span><strong dir="ltr">{(n>>>0).toString(8)}</strong></button><button><span>HEX</span><strong dir="ltr">{(n>>>0).toString(16).toUpperCase()}</strong></button></>;}catch{return <small>اكتب عملية صحيحة لعرض التحويلات.</small>;}})()}</div>}
         <div className="emad-calc-keys">{KEYS.map((key,i)=><button key={key+i} className={["=","AC","⌫"].includes(key)?"emphasis":/[+\-×÷^]/.test(key)?"operator":""} onClick={()=>append(key)}>{key}</button>)}</div>
         {history.length>0&&<div className="emad-calc-history"><b>آخر العمليات</b>{history.slice(0,4).map((h,i)=><button key={h.at+i} onClick={()=>{setExpression(h.expression);setResult(h.result);}}><span dir="ltr">{h.expression}</span><strong dir="ltr">{h.result}</strong></button>)}</div>}
         <small className="emad-tools-note">يدعم الدوال المثلثية والجذور واللوغاريتمات والأسس والمضروب والذاكرة ANS.</small>
