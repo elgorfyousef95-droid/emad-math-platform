@@ -74,3 +74,28 @@ export async function getLectureVideoUrl(value, portal = "student") {
   }
   return storageUrl(base, data.signedURL || data.signedUrl || data.url);
 }
+
+export function getLectureEmbedUrl(value) {
+  const raw = String(value || "").trim();
+  if (!/^https?:\/\//i.test(raw)) return "";
+  try {
+    const url = new URL(raw);
+    const host = url.hostname.replace(/^www\./, "").toLowerCase();
+    let id = "";
+    if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] || "";
+    else if (["youtube.com", "m.youtube.com", "youtube-nocookie.com"].includes(host)) {
+      id = url.searchParams.get("v") || "";
+      if (!id) {
+        const parts = url.pathname.split("/").filter(Boolean);
+        const marker = parts.findIndex(part => ["embed", "shorts", "live"].includes(part));
+        if (marker >= 0) id = parts[marker + 1] || "";
+      }
+    }
+    if (id && /^[A-Za-z0-9_-]{6,}$/.test(id)) return "https://www.youtube-nocookie.com/embed/" + id;
+    if (["vimeo.com", "player.vimeo.com"].includes(host)) {
+      const match = url.pathname.match(/(?:video\/)?(\d{6,})/);
+      if (match) return "https://player.vimeo.com/video/" + match[1];
+    }
+  } catch {}
+  return "";
+}
