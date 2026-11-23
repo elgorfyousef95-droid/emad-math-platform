@@ -11,8 +11,13 @@ const ALLOWED = new Set([
   "application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation"
 ]);
 
-export function emadChatApi(portal, path, options = {}) {
-  return portal === "student" ? studentApi(path, options) : portalApi(portal, path, options);
+export async function emadChatApi(portal, path, options = {}) {
+  if (portal === "student") {
+    const session = await refreshStudentSession();
+    if (!session?.access_token) throw new Error("not_authenticated");
+    return studentApi(path, options);
+  }
+  return portalApi(portal, path, options);
 }
 
 async function sessionFor(portal) {
