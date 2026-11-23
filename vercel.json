@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/owner",
+      "destination": "/"
+    },
+    {
+      "source": "/owner/:path*",
+      "destination": "/"
+    },
+    {
+      "source": "/teacher",
+      "destination": "/"
+    },
+    {
+      "source": "/teacher/:path*",
+      "destination": "/"
+    }
+  ]
+}

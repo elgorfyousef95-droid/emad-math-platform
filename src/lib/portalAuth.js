@@ -1,0 +1,92 @@
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLIC_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const PORTAL_KEYS = { owner: "emad_owner_portal_session_v1", teacher: "emad_teacher_portal_session_v1" };
+
+function config() {
+  if (!SUPABASE_URL || !SUPABASE_PUBLIC_KEY) throw new Error("missing_supabase_configuration");
+  return { url: SUPABASE_URL.replace(/\/$/, ""), key: SUPABASE_PUBLIC_KEY };
+}
+function storageKey(portal) {
+  if (!PORTAL_KEYS[portal]) throw new Error("invalid_portal");
+  return PORTAL_KEYS[portal];
+}
+async function callPortalFunction(body, accessToken) {
+  const { url, key } = config();
+  const response = await fetch(`${url}/functions/v1/emad-portal-auth`, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "portal_request_failed");
+  return data;
+}
+export async function portalLogin(portal, password) {
+  const data = await callPortalFunction({ action: "login", portal, password });
+  if (!data.session?.access_token || !data.session?.refresh_token) throw new Error("portal_session_missing");
+  localStorage.setItem(storageKey(portal), JSON.stringify(data.session));
+  return data.session;
+}
+export async function setupPortalAccounts(ownerPassword, teacherPassword, teacherName) {
+  const { url, key } = config();
+  let studentSession = null;
+  try { studentSession = JSON.parse(localStorage.getItem("emad_student_auth_session_v2") || "null"); } catch {}
+  if (!studentSession?.access_token) throw new Error("owner_student_session_required");
+  return callPortalFunction({
+    action: "setup",
+    owner_password: ownerPassword,
+    teacher_password: teacherPassword,
+    teacher_name: teacherName,
+  }, studentSession.access_token);
+}
+export function getPortalSession(portal) {
+  try { return JSON.parse(localStorage.getItem(storageKey(portal)) || "null"); } catch { return null; }
+}
+export function logoutPortalSession(portal) {
+  try { localStorage.removeItem(storageKey(portal)); } catch {}
+}
+export async function refreshPortalSession(portal) {
+  const session = getPortalSession(portal);
+  if (!session?.refresh_token) return null;
+  if (session.expires_at && session.expires_at * 1000 > Date.now() + 60000) return session;
+  const { url, key } = config();
+  const response = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: { apikey: key, "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: session.refresh_token }),
+  });
+  if (!response.ok) { logoutPortalSession(portal); return null; }
+  const data = await response.json();
+  const next = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: data.expires_at || Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+    token_type: data.token_type || "bearer",
+    user: data.user || session.user || null,
+  };
+  localStorage.setItem(storageKey(portal), JSON.stringify(next));
+  return next;
+}
+export async function portalApi(portal, path, options = {}) {
+  const { url, key } = config();
+  const session = getPortalSession(portal);
+  if (!session?.access_token) throw new Error("portal_not_authenticated");
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || body.code || "portal_api_error");
+  }
+  return response.status === 204 ? null : response.json();
+}

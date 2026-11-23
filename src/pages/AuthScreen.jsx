@@ -236,12 +236,12 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     try {
       const result = await createStudentAccount(payload);
       setShowPassword(false);
-      if (result.session) saveStudentSession(result.session);
+      // New student accounts must sign in explicitly after registration.
       setCreatedAccount({
         studentNumber: String(result.student_number),
         password,
         avatarUrl: result.avatar_url || avatarPreview,
-        needsLogin: !result.session
+        needsLogin: true
       });
       notify({ type: "success", title: "تم إنشاء الحساب", message: "احتفظ برقم الطالب وكلمة المرور قبل الانتقال." });
     } catch (error) {
