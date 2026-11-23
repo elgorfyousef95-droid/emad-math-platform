@@ -31,17 +31,15 @@ export async function portalLogin(portal, password) {
   localStorage.setItem(storageKey(portal), JSON.stringify(data.session));
   return data.session;
 }
-export async function setupPortalAccounts(ownerPassword, teacherPassword, teacherName) {
-  const { url, key } = config();
-  let studentSession = null;
-  try { studentSession = JSON.parse(localStorage.getItem("emad_student_auth_session_v2") || "null"); } catch {}
-  if (!studentSession?.access_token) throw new Error("owner_student_session_required");
+export async function setupPortalAccounts(bootstrapToken, ownerPassword, teacherPassword, teacherName) {
+  if (!bootstrapToken || bootstrapToken.trim().length < 32) throw new Error("bootstrap_invalid");
   return callPortalFunction({
     action: "setup",
+    bootstrap_token: bootstrapToken.trim(),
     owner_password: ownerPassword,
     teacher_password: teacherPassword,
     teacher_name: teacherName,
-  }, studentSession.access_token);
+  });
 }
 export function getPortalSession(portal) {
   try { return JSON.parse(localStorage.getItem(storageKey(portal)) || "null"); } catch { return null; }
