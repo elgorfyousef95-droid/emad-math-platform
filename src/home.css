@@ -443,3 +443,87 @@
  .emad-v3-bottom-grid button>b{font-size:8px}.emad-v3-bottom-grid button>small{font-size:7px}
 }
 @media(max-width:380px){.emad-v3-feature-grid{grid-template-columns:1fr}.emad-v3-feature{min-height:120px}.emad-v3-section-head>b{display:none}}
+
+
+/* Refined dual-level header + dedicated navigation rail */
+.platform-topbar{
+ height:76px;min-height:76px;flex:0 0 76px;gap:18px;padding:0 clamp(18px,4vw,64px);
+ background:linear-gradient(105deg,rgba(7,15,27,.98),rgba(14,29,47,.97));
+ border-bottom:1px solid rgba(226,190,120,.13);box-shadow:0 8px 26px #0003;
+}
+.platform-logo{gap:13px;min-width:0}
+.platform-logo-icon{width:45px;height:45px;border-radius:14px}
+.platform-brand-copy b{font-size:14px;letter-spacing:-.2px}
+.platform-brand-copy small{font-size:10px;color:#9baec2}
+.platform-top-actions{gap:13px;margin-right:auto}
+.platform-notification-button{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#ffffff0d,#ffffff04);border-color:#ffffff20;color:#e9c477;transition:.2s}
+.platform-notification-button:hover{border-color:#e9c47788;background:#e9c47712}
+.platform-account-trigger{gap:10px;padding:5px 7px 5px 12px;border-radius:14px;background:#ffffff08;border-color:#ffffff1b;min-height:48px}
+.platform-account-trigger img,.platform-avatar-fallback{width:36px;height:36px;border-radius:11px}
+.platform-account-copy{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:145px}
+.platform-account-copy b{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#f4f0e8}
+.platform-account-copy small{font-size:9px;color:#93a5ba}
+.platform-account-chevron{transform:rotate(90deg)}
+.platform-navrail{
+ position:relative;z-index:25;flex:0 0 58px;height:58px;display:flex;align-items:center;justify-content:center;
+ padding:0 clamp(12px,3vw,46px);background:linear-gradient(90deg,#0c192a,#112239 48%,#0c192a);
+ border-bottom:1px solid #d9b66a28;box-shadow:0 7px 20px #0002;
+}
+.platform-navigation{width:100%;max-width:1320px;display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0}
+.platform-navigation>button,.platform-nav-more>button{
+ position:relative;min-height:40px;gap:8px;padding:0 13px;border:1px solid transparent;border-radius:11px;
+ color:#aab8c9;font-size:11px;font-weight:800;transition:background .2s,border-color .2s,color .2s,transform .2s;
+}
+.platform-navigation>button svg,.platform-nav-more>button svg:first-child{color:#b6a178;transition:color .2s}
+.platform-navigation>button:hover,.platform-nav-more>button:hover{transform:translateY(-1px);color:#fff;background:#ffffff09;border-color:#ffffff12}
+.platform-navigation>button.active,.platform-nav-more>button.active{
+ color:#f7dfad;background:linear-gradient(135deg,#d9b66a20,#d9b66a0b);border-color:#d9b66a55;
+ box-shadow:inset 0 1px #ffffff0c,0 5px 14px #0002;
+}
+.platform-navigation>button.active:after{content:"";position:absolute;bottom:-9px;right:19px;left:19px;height:2px;border-radius:3px;background:#e9c477;box-shadow:0 0 10px #e9c47799}
+.platform-navigation>button.active svg{color:#f0d08b}
+.platform-nav-more{position:relative}
+.platform-nav-more>button{display:flex}
+.platform-nav-more>button svg:last-child{opacity:.7}
+.platform-nav-more .platform-menu-pop{top:calc(100% + 12px)}
+.platform-subbar{height:39px;min-height:39px;flex:0 0 39px;padding:0 clamp(18px,4vw,64px);background:#0a1626;border-bottom-color:#ffffff10}
+.platform-drawer-backdrop{display:none}
+.platform-mobile-menu{display:none}
+@media(max-width:1120px) and (min-width:761px){
+ .platform-topbar{padding-inline:22px}
+ .platform-navigation{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+ .platform-navigation::-webkit-scrollbar{display:none}
+ .platform-navigation>button,.platform-nav-more>button{padding-inline:10px;font-size:10px}
+ .platform-navigation>button span{display:inline}
+}
+@media(max-width:760px){
+ .platform-topbar{height:66px;min-height:66px;flex-basis:66px;padding:0 12px;gap:10px}
+ .platform-mobile-menu{width:38px;height:38px;display:flex;flex:0 0 38px;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:1px solid #d9b66a45;border-radius:12px;background:linear-gradient(145deg,#d9b66a16,#ffffff05)}
+ .platform-mobile-menu span{width:16px;height:1.6px;background:#edcf91;border-radius:3px}
+ .platform-logo{gap:8px;flex:1;min-width:0}
+ .platform-logo-icon{width:36px;height:36px;flex:0 0 36px;border-radius:11px}
+ .platform-brand-copy b{font-size:10px;white-space:nowrap}
+ .platform-brand-copy small{font-size:8px;white-space:nowrap}
+ .platform-top-actions{gap:6px}
+ .platform-notification-button{width:36px;height:36px;border-radius:11px}
+ .platform-account-trigger{min-height:38px;padding:3px;border-radius:11px}
+ .platform-account-trigger img,.platform-avatar-fallback{width:30px;height:30px}
+ .platform-account-copy,.platform-account-chevron{display:none}
+ .platform-navrail{height:0;min-height:0;flex-basis:0;padding:0;border:0;box-shadow:none;background:transparent;z-index:45}
+ .platform-navigation{
+  display:none;position:absolute;top:7px;right:10px;left:10px;width:auto;max-width:none;max-height:min(72dvh,560px);
+  overflow-y:auto;overflow-x:hidden;align-items:stretch;justify-content:flex-start;flex-direction:column;gap:4px;
+  padding:10px;border:1px solid #d9b66a55;border-radius:17px;
+  background:linear-gradient(155deg,#13263d,#0a1728);box-shadow:0 22px 60px #000b;
+ }
+ .platform-navigation.is-open{display:flex}
+ .platform-navigation>button,.platform-nav-more>button{width:100%;min-height:45px;justify-content:flex-start;padding:0 13px;font-size:11px}
+ .platform-navigation>button span{display:inline}
+ .platform-navigation>button.active:after{top:10px;bottom:10px;right:-10px;left:auto;width:3px;height:auto}
+ .platform-nav-more>button{justify-content:flex-start}
+ .platform-nav-more>button svg:last-child{margin-right:auto}
+ .platform-menu-pop{position:static;min-width:0;margin:5px 0 0;box-shadow:none;background:#0a1728;border-color:#ffffff12}
+ .platform-nav-more .platform-menu-pop{position:static}
+ .platform-drawer-backdrop{display:block;position:fixed;inset:66px 0 0;z-index:-1;width:100%;height:calc(100dvh - 66px);border:0;background:#020711a8;backdrop-filter:blur(3px)}
+ .platform-subbar{height:36px;min-height:36px;flex-basis:36px;padding:0 13px}
+}
