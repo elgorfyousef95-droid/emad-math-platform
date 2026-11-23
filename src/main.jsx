@@ -63,18 +63,20 @@ function App(){
  const isLocked=needsSubscription&&!activeSubscription;
  return <div className="platform-shell" dir="rtl">
   <header className="platform-topbar">
-   <button className="platform-mobile-menu" aria-label="فتح القائمة الجانبية" aria-expanded={mobileNav} onClick={()=>setMobileNav(v=>!v)}><span/><span/><span/></button>
-   <button className="platform-logo" onClick={()=>go("home")}><span className="platform-logo-icon"><Icon name="crown" size={22}/></span><span><b>مستر عماد السنافيري</b><small>منصة الرياضيات التعليمية</small></span></button>
-   {mobileNav&&<button className="platform-drawer-backdrop" aria-label="إغلاق القائمة" onClick={()=>setMobileNav(false)}/> }
-   <nav className={mobileNav?"platform-navigation is-open":"platform-navigation"} aria-label="القائمة الرئيسية">
-    {nav.map(([id,label,ico])=><button key={id} className={page===id?"active":""} onClick={()=>go(id)}><Icon name={ico} size={17}/><span>{label}</span></button>)}
-    <div className="platform-nav-more"><button className={moreOpen?"active":""} onClick={()=>{setMoreOpen(v=>!v);setAccountOpen(false);}}><span>المزيد</span><Icon name="chevron" size={14}/></button>{moreOpen&&<div className="platform-menu-pop">{moreNav.map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}</div>}</div>
-   </nav>
+   <button className="platform-mobile-menu" aria-label="فتح القائمة الرئيسية" aria-expanded={mobileNav} onClick={()=>setMobileNav(v=>!v)}><span/><span/><span/></button>
+   <button className="platform-logo" onClick={()=>go("home")} aria-label="العودة للرئيسية"><span className="platform-logo-icon"><Icon name="crown" size={22}/></span><span className="platform-brand-copy"><b>مستر عماد السنافيري</b><small>منصة الرياضيات التعليمية</small></span></button>
    <div className="platform-top-actions">
     <button className="platform-notification-button" aria-label="الإشعارات" onClick={()=>go("notifications")}><Icon name="bell" size={19}/>{unread>0&&<span className="platform-count">{unread>99?"99+":unread}</span>}</button>
-    <div className="platform-account-menu"><button className="platform-account-trigger" onClick={()=>{setAccountOpen(v=>!v);setMoreOpen(false);}}>{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span className="platform-avatar-fallback"><Icon name="user" size={18}/></span>}<span className="platform-account-name">{profile?.full_name||"حساب الطالب"}</span><span className="platform-account-chevron"><Icon name="chevron" size={13}/></span></button>{accountOpen&&<div className="platform-menu-pop platform-account-pop">{[["profile","الملف الشخصي","user"],["subscriptions","اشتراكاتي","ticket"],["settings","الإعدادات","settings"],["messages","الدعم الفني","support"]].map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}{profile?.role==="admin"&&<button onClick={()=>go("admin")}><Icon name="settings" size={17}/>إدارة المنصة</button>}<button onClick={logout}><Icon name="logout" size={17}/>تسجيل الخروج</button></div>}</div>
+    <div className="platform-account-menu"><button className="platform-account-trigger" onClick={()=>{setAccountOpen(v=>!v);setMoreOpen(false);}}>{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span className="platform-avatar-fallback"><Icon name="user" size={18}/></span>}<span className="platform-account-copy"><b>{profile?.full_name||"حساب الطالب"}</b><small>{grade||"الملف الشخصي"}</small></span><span className="platform-account-chevron"><Icon name="chevron" size={13}/></span></button>{accountOpen&&<div className="platform-menu-pop platform-account-pop">{[["profile","الملف الشخصي","user"],["subscriptions","اشتراكاتي","ticket"],["settings","الإعدادات","settings"],["messages","الدعم الفني","support"]].map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}{profile?.role==="admin"&&<button onClick={()=>go("admin")}><Icon name="settings" size={17}/>إدارة المنصة</button>}<button onClick={logout}><Icon name="logout" size={17}/>تسجيل الخروج</button></div>}</div>
    </div>
   </header>
+  <div className="platform-navrail">
+   {mobileNav&&<button className="platform-drawer-backdrop" aria-label="إغلاق القائمة" onClick={()=>setMobileNav(false)}/>}
+   <nav className={mobileNav?"platform-navigation is-open":"platform-navigation"} aria-label="القائمة الرئيسية">
+    {nav.map(([id,label,ico])=><button key={id} className={page===id?"active":""} onClick={()=>go(id)}><Icon name={ico} size={17}/><span>{label}</span></button>)}
+    <div className="platform-nav-more"><button className={moreOpen?"active":""} onClick={()=>{setMoreOpen(v=>!v);setAccountOpen(false);}}><Icon name="spark" size={17}/><span>المزيد</span><Icon name="chevron" size={14}/></button>{moreOpen&&<div className="platform-menu-pop">{moreNav.map(([id,label,ico])=><button key={id} onClick={()=>go(id)}><Icon name={ico} size={17}/>{label}</button>)}</div>}</div>
+   </nav>
+  </div>
   <div className="platform-subbar"><div><span>مستر عماد</span><Icon name="chevron" size={13}/><b>{pageTitles[page]||"المنصة"}</b></div><span className="platform-grade-label">{grade||"الصف الدراسي غير محدد"}</span></div>
   <main className={`platform-viewport page-${page}`} key={page}>
    {page==="home"?<HomePage profile={profile} subscription={activeSubscription?subscription:null} go={go} grade={grade} unread={unread}/>:null}
