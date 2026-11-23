@@ -372,7 +372,7 @@ function LearningPage({page,grade}){
  const [items,setItems]=useState([]),[busy,setBusy]=useState(true),[selected,setSelected]=useState(null);
  const configs={
   courses:{title:"الكورسات والوحدات",desc:"المحتوى التعليمي المنشور والمخصص لصفك.",table:"courses",select:"id,title,description,subject,grade,cover_image_url,created_at",filter:"status=eq.published",art:"book"},
-  lessons:{title:"المحاضرات",desc:"المحاضرات والدروس المرتبطة بالكورسات المتاحة.",table:"lessons",select:"id,title,description,video_url,sort_order,course_id,cover_image_url,created_at",filter:"is_published=eq.true",art:"play"},
+  lessons:{title:"المحاضرات",desc:"المحاضرات والدروس المرتبطة بالكورسات المتاحة.",table:"lessons",select:"id,title,description,video_url,duration_minutes,sort_order,course_id,cover_image_url,created_at",filter:"is_published=eq.true",art:"play"},
   exams:{title:"الامتحانات",desc:"الاختبارات المنشورة لقياس مستواك.",table:"exams",select:"id,title,duration_minutes,opens_at,closes_at,course_id,cover_image_url,created_at,courses(title,subject,grade)",filter:"is_published=eq.true",art:"exam"}
  };
  const cfg=configs[page];
