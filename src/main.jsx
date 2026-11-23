@@ -94,7 +94,7 @@ function TeacherConsole(){
   try{
    const session=await refreshStudentSession();
    if(!session?.access_token)throw new Error("not_authenticated");
-   const rows=await studentApi("profiles?select=id,full_name,student_number,role& id=eq."+encodeURIComponent(session.user?.id));
+   const rows=await studentApi("profiles?select=id,full_name,student_number,role&id=eq."+encodeURIComponent(session.user?.id));
    const me=(rows||[])[0]||null;
    setProfile(me);
    if(me?.role!=="teacher")throw new Error("not_teacher");
