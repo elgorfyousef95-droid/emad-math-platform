@@ -272,8 +272,14 @@ export async function uploadPortalVideo(file, portal = "teacher", onProgress = (
 
 export async function deletePortalVideo(value, portal = "owner") {
   const raw = String(value || "").trim();
-  if (!raw || /^https?:\/\//i.test(raw)) return;
-  const path = raw.startsWith("emad-lecture-videos/") ? raw.slice("emad-lecture-videos/".length) : raw.replace(/^\/+/, "");
+  if (!raw) return;
+  const publicMarker = "/storage/v1/object/public/emad-lecture-videos/";
+  const markerIndex = raw.indexOf(publicMarker);
+  let path = markerIndex >= 0
+    ? decodeURIComponent(raw.slice(markerIndex + publicMarker.length).split("?")[0])
+    : raw.startsWith("emad-lecture-videos/")
+      ? raw.slice("emad-lecture-videos/".length)
+      : /^https?:\/\//i.test(raw) ? "" : raw.replace(/^\/+/, "");
   if (!path) return;
   const session = await refreshPortalSession(portal);
   if (!session?.access_token) throw new Error("portal_not_authenticated");
