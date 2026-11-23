@@ -279,3 +279,10 @@
  .teacher-lesson-list article>i{justify-self:start}
  .teacher-student-card dl{grid-template-columns:1fr 1fr}
 }
+
+.lecture-video-embed{
+ display:block;width:100%;aspect-ratio:16/9;min-height:220px;max-height:580px;
+ border:1px solid #9bbaff4a;border-radius:17px;background:#01050b;
+ box-shadow:0 18px 55px #0006;
+}
+@media(max-width:680px){.lecture-video-embed{min-height:190px;border-radius:13px}}
