@@ -77,6 +77,7 @@ export default function OwnerConsole() {
   const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
   const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
   const [lessonVideoPreviewUrl, setLessonVideoPreviewUrl] = useState("");
+  const [editingLessonId, setEditingLessonId] = useState("");
 
   const read = async (path) => {
     try { return await portalApi("owner", path); }
@@ -198,20 +199,43 @@ export default function OwnerConsole() {
     if (!lessonForm.cover_image_url) return setError("ارفع صورة للمحاضرة قبل حفظها.");
     setSaving("lesson"); setError(""); setNotice("");
     try {
-      const order = lessons.filter((x) => x.course_id === selectedCourse).length + 1;
-      const rows = await portalApi("owner", "lessons", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
-        course_id: selectedCourse, title: lessonForm.title.trim(), description: lessonForm.description.trim(),
-        content: lessonForm.content.trim(), video_url: lessonForm.video_url.trim() || null, sort_order: order,
-        cover_image_url: lessonForm.cover_image_url || null, is_published: false,
-      }) });
-      const created = Array.isArray(rows) ? rows[0] : rows;
-      if (!created?.id) throw new Error("lesson_not_created");
-      setLessons((old) => [...old, created]);
+      const payload = {
+        course_id: selectedCourse,
+        title: lessonForm.title.trim(),
+        description: lessonForm.description.trim(),
+        content: lessonForm.content.trim(),
+        video_url: lessonForm.video_url.trim() || null,
+        sort_order: editingLessonId ? (lessons.find(x => x.id === editingLessonId)?.sort_order || 1) : lessons.filter(x => x.course_id === selectedCourse).length + 1,
+        cover_image_url: lessonForm.cover_image_url || null,
+      };
+      if (editingLessonId) {
+        const rows = await portalApi("owner", "lessons?id=eq." + encodeURIComponent(editingLessonId), { method: "PATCH", headers: { Prefer: "return=representation" }, body: JSON.stringify(payload) });
+        const updated = Array.isArray(rows) ? rows[0] : rows;
+        setLessons(old => old.map(x => x.id === editingLessonId ? { ...x, ...payload, ...(updated || {}) } : x));
+        setNotice("تم حفظ تعديلات المحاضرة.");
+      } else {
+        const rows = await portalApi("owner", "lessons", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({ ...payload, is_published: false }) });
+        const created = Array.isArray(rows) ? rows[0] : rows;
+        if (!created?.id) throw new Error("lesson_not_created");
+        setLessons(old => [...old, created]);
+        setNotice("تمت إضافة المحاضرة كمسودة.");
+      }
       setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
       setLessonVideoPreviewUrl("");
-      setNotice("تمت إضافة المحاضرة كمسودة.");
-    } catch (e) { setError("تعذر إضافة المحاضرة. " + (e.message || "")); }
+      setEditingLessonId("");
+    } catch (e) { setError("تعذر حفظ المحاضرة. " + (e.message || "")); }
     finally { setSaving(""); }
+  };
+
+  const editLesson = async (lesson) => {
+    setEditingLessonId(lesson.id);
+    setLessonForm({ title: lesson.title || "", description: lesson.description || "", content: lesson.content || "", video_url: lesson.video_url || "", cover_image_url: lesson.cover_image_url || "" });
+    setLessonVideoPreviewUrl("");
+    if (lesson.video_url) {
+      try { setLessonVideoPreviewUrl(await getLectureVideoUrl(lesson.video_url, "owner")); }
+      catch { setNotice("تم فتح بيانات المحاضرة، لكن تعذر تجهيز معاينة الفيديو."); }
+    }
+    setNotice("أنت تعدّل المحاضرة المحددة. احفظ التعديلات عند الانتهاء.");
   };
 
   const uploadLessonVideo = async (file) => {
@@ -566,8 +590,8 @@ export default function OwnerConsole() {
             <form className="owner-form owner-edit-course-form" onSubmit={saveCourseEdits}><h4>تعديل بيانات الكورس</h4><label>اسم الكورس<input required value={editCourseForm.title} onChange={e=>setEditCourseForm({...editCourseForm,title:e.target.value})}/></label><div className="owner-form-two"><label>الصف<select value={editCourseForm.grade} onChange={e=>setEditCourseForm({...editCourseForm,grade:e.target.value})}>{GRADES.map(x=><option key={x}>{x}</option>)}</select></label><label>المادة<input value={editCourseForm.subject} onChange={e=>setEditCourseForm({...editCourseForm,subject:e.target.value})}/></label></div><label>المدرس المسؤول<select value={editCourseForm.teacher_id} onChange={e=>setEditCourseForm({...editCourseForm,teacher_id:e.target.value})}>{teachers.map(x=><option key={x.id} value={x.id}>{x.full_name||"مدرس"}</option>)}<option value={profile.id}>المالك</option></select></label><label>السعر<input type="number" min="0" value={editCourseForm.price_egp} onChange={e=>setEditCourseForm({...editCourseForm,price_egp:e.target.value})}/></label><label>الوصف<textarea rows="3" value={editCourseForm.description} onChange={e=>setEditCourseForm({...editCourseForm,description:e.target.value})}/></label><button className="owner-primary-button" disabled={saving===selected.id}>حفظ تعديلات الكورس</button></form>
             <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
             <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
-              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="owner-lesson-actions"><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="owner-danger-button" disabled={saving===lesson.id} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}
-              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 1 جيجابايت، رفع متقطع قابل للاستكمال {uploading==="lesson-video"?" · جارٍ الرفع "+uploadProgress+"%":""}</small></label>{uploading==="lesson-video"&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>يمكن إعادة اختيار الملف نفسه لاستكمال الرفع إذا انقطع الاتصال.</small></div>}{lessonForm.video_url&&<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
+              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="owner-lesson-actions"><button disabled={saving===lesson.id} onClick={()=>editLesson(lesson)}>تعديل</button><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="owner-danger-button" disabled={saving===lesson.id} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}
+              <form className="owner-form" onSubmit={createLesson}><h4>{editingLessonId?"تعديل المحاضرة":"إضافة محاضرة جديدة"}</h4><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 1 جيجابايت، رفع متقطع قابل للاستكمال {uploading==="lesson-video"?" · جارٍ الرفع "+uploadProgress+"%":""}</small></label>{uploading==="lesson-video"&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>يمكن إعادة اختيار الملف نفسه لاستكمال الرفع إذا انقطع الاتصال.</small></div>}{lessonForm.video_url&&<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":editingLessonId?"حفظ التعديلات":"إضافة المحاضرة كمسودة"}</button>{editingLessonId&&<button type="button" className="owner-secondary-button" onClick={()=>{setEditingLessonId("");setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:""});setLessonVideoPreviewUrl("");}}>إلغاء التعديل</button>}</form>
             </div></div>}
         </div>
       </div>
