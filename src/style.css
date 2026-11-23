@@ -1551,3 +1551,13 @@ button{ -webkit-tap-highlight-color:transparent}
 .teacher-message-card>button{padding:10px 15px;border:1px solid #d8b66c66;border-radius:9px;background:#d8b66c18;color:#f1d69b;font:800 10px 'Cairo';cursor:pointer}
 .teacher-message-card>button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:760px){.teacher-student-grid{grid-template-columns:1fr}.teacher-tabs{display:grid;grid-template-columns:1fr}.teacher-tabs button{justify-content:space-between}}
+
+
+.owner-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+.owner-tabs button{display:flex;align-items:center;gap:10px;padding:12px 18px;border:1px solid #ffffff20;border-radius:12px;background:#101e30;color:#cbd5e1;font:800 11px 'Cairo';cursor:pointer}
+.owner-tabs button.active{border-color:#d8b66c88;background:linear-gradient(120deg,#d8b66c20,#152b40);color:#f4d89c}
+.owner-tabs button b{display:grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:20px;background:#ffffff14;font:800 10px Arial}
+.owner-inbox{margin-top:18px}
+.owner-table{min-width:880px}
+.owner-table td small{display:block;margin-top:4px;color:#9eb0c5;font-size:9px}
+@media(max-width:650px){.owner-tabs{display:grid;grid-template-columns:1fr}.owner-tabs button{justify-content:space-between}}
