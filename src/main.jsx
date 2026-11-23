@@ -84,6 +84,91 @@ function OwnerConsole(){
  </main>;
 }
 
+
+function TeacherConsole(){
+ const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
+ const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:""});
+ const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:""});
+ const load=async()=>{
+  setBusy(true);setError("");
+  try{
+   const session=await refreshStudentSession();
+   if(!session?.access_token)throw new Error("not_authenticated");
+   const rows=await studentApi("profiles?select=id,full_name,student_number,role& id=eq."+encodeURIComponent(session.user?.id));
+   const me=(rows||[])[0]||null;
+   setProfile(me);
+   if(me?.role!=="teacher")throw new Error("not_teacher");
+   const list=await studentApi("courses?select=id,title,description,subject,grade,status,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
+   setCourses(list||[]);
+   const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
+   setSelected(first);
+  }catch(e){
+   setError(e.message==="not_authenticated"?"سجّل الدخول بحساب المدرس من المنصة أولًا.":e.message==="not_teacher"?"هذا الرابط مخصص لحساب المدرس المعتمد فقط.":"تعذر تحميل بيانات لوحة المدرس. راجع صلاحية الحساب واتصال المنصة.");
+  }finally{setBusy(false);}
+ };
+ useEffect(()=>{load();},[]);
+ useEffect(()=>{
+  let active=true;
+  const fetchLessons=async()=>{
+   if(!selected){setLessons([]);return;}
+   try{const rows=await studentApi("lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
+   catch{if(active)setError("تعذر تحميل المحاضرات لهذا الكورس.");}
+  };
+  fetchLessons();return()=>{active=false;};
+ },[selected]);
+ const createCourse=async(e)=>{
+  e.preventDefault();setSaving(true);setError("");setNotice("");
+  try{
+   const rows=await studentApi("courses",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...courseForm,teacher_id:profile.id,status:"draft"})});
+   const created=Array.isArray(rows)?rows[0]:rows;
+   if(!created?.id)throw new Error("create_failed");
+   setCourses(old=>[created,...old]);setSelected(created.id);setCourseForm({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:""});setNotice("تم إنشاء الكورس كمسودة. راجعه ثم انشره.");
+  }catch{setError("لم يتم إنشاء الكورس. تأكد من البيانات وصلاحيات المدرس.");}
+  finally{setSaving(false);}
+ };
+ const createLesson=async(e)=>{
+  e.preventDefault();if(!selected)return;setSaving(true);setError("");setNotice("");
+  try{
+   const rows=await studentApi("lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...lessonForm,course_id:selected,sort_order:lessons.length+1,is_published:false})});
+   const created=Array.isArray(rows)?rows[0]:rows;
+   if(!created?.id)throw new Error("create_failed");
+   setLessons(old=>[...old,created]);setLessonForm({title:"",description:"",content:"",video_url:""});setNotice("تم حفظ المحاضرة كمسودة.");
+  }catch{setError("لم يتم حفظ المحاضرة. تحقق من صلاحية الكورس والبيانات.");}
+  finally{setSaving(false);}
+ };
+ const toggleCourse=async(course)=>{
+  const status=course.status==="published"?"draft":"published";setSaving(true);setError("");setNotice("");
+  try{await studentApi("courses?id=eq."+encodeURIComponent(course.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status})});setCourses(old=>old.map(x=>x.id===course.id?{...x,status}:x));setNotice(status==="published"?"تم نشر الكورس.":"تم إرجاع الكورس إلى المسودات.");}
+  catch{setError("تعذر تحديث حالة الكورس.");}finally{setSaving(false);}
+ };
+ const toggleLesson=async(lesson)=>{
+  const is_published=!lesson.is_published;setSaving(true);setError("");setNotice("");
+  try{await studentApi("lessons?id=eq."+encodeURIComponent(lesson.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setLessons(old=>old.map(x=>x.id===lesson.id?{...x,is_published}:x));setNotice(is_published?"تم نشر المحاضرة.":"تم إخفاء المحاضرة.");}
+  catch{setError("تعذر تحديث المحاضرة.");}finally{setSaving(false);}
+ };
+ const current=courses.find(x=>x.id===selected);
+ if(busy)return <main className="owner-shell"><div className="owner-loading">جارٍ التحقق من صلاحية المدرس...</div></main>;
+ if(!profile||profile.role!=="teacher")return <main className="teacher-shell" dir="rtl"><section className="teacher-denied"><span>EMAD · TEACHER PORTAL</span><h1>بوابة المدرس محمية</h1><p>{error||"هذا الرابط مخصص لحساب المدرس المعتمد."}</p><button onClick={()=>window.location.href="/"}>العودة للمنصة</button></section></main>;
+ return <main className="teacher-shell" dir="rtl">
+  <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>العودة للمنصة</button></div></header>
+  {error&&<p className="teacher-alert error">{error}</p>}{notice&&<p className="teacher-alert success">{notice}</p>}
+  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article></section>
+  <div className="teacher-layout">
+   <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>COURSE LIBRARY</span><h2>كورساتي</h2></div><small>{courses.length} كورس</small></div>
+    {courses.length?<div className="teacher-course-list">{courses.map(course=><button key={course.id} className={selected===course.id?"teacher-course active":"teacher-course"} onClick={()=>setSelected(course.id)}><span><b>{course.title}</b><small>{course.grade||"صف غير محدد"} · {course.subject||"رياضيات"}</small></span><i className={course.status==="published"?"published":"draft"}>{course.status==="published"?"منشور":"مسودة"}</i></button>)}</div>:<div className="teacher-empty">لم تنشئ كورسات بعد. ابدأ بإنشاء أول كورس.</div>}
+    <form className="teacher-form" onSubmit={createCourse}><h3>إنشاء كورس جديد</h3><input required value={courseForm.title} onChange={e=>setCourseForm({...courseForm,title:e.target.value})} placeholder="اسم الكورس"/><div className="teacher-form-grid"><select value={courseForm.grade} onChange={e=>setCourseForm({...courseForm,grade:e.target.value})}><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select><input value={courseForm.subject} onChange={e=>setCourseForm({...courseForm,subject:e.target.value})} placeholder="المادة"/></div><textarea value={courseForm.description} onChange={e=>setCourseForm({...courseForm,description:e.target.value})} placeholder="وصف الكورس"/><button disabled={saving}>إنشاء كمسودة</button></form>
+   </section>
+   <section className="teacher-panel teacher-lessons-panel"><div className="teacher-panel-heading"><div><span>LECTURE MANAGEMENT</span><h2>{current?current.title:"اختر كورسًا"}</h2></div>{current?<i className={current.status==="published"?"published":"draft"}>{current.status==="published"?"منشور":"مسودة"}</i>:null}</div>
+    {current?<><div className="teacher-course-actions"><p>{current.description||"أضف وصفًا للكورس من إدارة المحتوى لاحقًا."}</p><button disabled={saving} onClick={()=>toggleCourse(current)}>{current.status==="published"?"إيقاف النشر":"نشر الكورس"}</button></div>
+     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}><span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span><div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
+     <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="رابط الفيديو (اختياري)"/><textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><button disabled={saving}>حفظ المحاضرة كمسودة</button></form>
+    </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
+   </section>
+  </div>
+  <p className="teacher-footnote">صلاحيات هذه البوابة محدودة بحساب المدرس وكورسات المدرس نفسه. لا تتيح إدارة حساب المالك أو إعدادات المنصة العليا.</p>
+ </main>;
+}
+
 function App(){
  const [page,setPage]=useState("splash"),[profile,setProfile]=useState(null),[subscription,setSubscription]=useState(null),[notifications,setNotifications]=useState([]),[moreOpen,setMoreOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[mobileNav,setMobileNav]=useState(false),[loading,setLoading]=useState(false);
  const pageRef=useRef(page);
@@ -99,6 +184,7 @@ function App(){
  const go=next=>{const validPages=["splash","login","signup","home","courses","lessons","exams","homework","files","results","schedule","live","messages","ai","subscriptions","profile","settings","groups","admin","notifications"];if(!validPages.includes(next)||next===pageRef.current)return;try{const state={marker:"emad-platform",page:next};if(["splash","login","signup"].includes(pageRef.current))window.history.replaceState(state,"",window.location.href);else window.history.pushState(state,"",window.location.href);}catch{}pageRef.current=next;setPage(next);setMoreOpen(false);setAccountOpen(false);setMobileNav(false);};
  const logout=()=>{clearStudentSession();setProfile(null);setSubscription(null);setNotifications([]);go("login");};
  if(window.location.pathname.replace(/\/$/,"")==="/owner")return <OwnerConsole/>;
+ if(window.location.pathname.replace(/\/$/,"")==="/teacher")return <TeacherConsole/>;
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
  if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{await loadWorkspace();go("home");}}/></div>;
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
