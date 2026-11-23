@@ -96,7 +96,7 @@ const pageArtwork={
  book:"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1500&q=85",
  play:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=85",
  exam:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
- task:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
+ task:"https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1500&q=85",
  file:"https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1500&q=85",
  chart:"https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1500&q=85",
  calendar:"https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1500&q=85",
@@ -107,77 +107,77 @@ const pageArtwork={
  settings:"https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1500&q=85",
  lock:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
  ticket:"https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1500&q=85",
- user:"https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1500&q=85",
+ user:"https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1500&q=85",
  bell:"https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1500&q=85"
 };
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
- const name=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
+ const name=profile?.full_name?.trim()?.split(/\s+/)[0]||"طالبنا";
  const modules=[
-  ["courses","المحتوى التعليمي","الكورسات والوحدات الدراسية","book"],
-  ["lessons","المحاضرات والدروس","شرح المنهج خطوة بخطوة","play"],
-  ["exams","مركز الامتحانات","اختبر فهمك وتابع تقييماتك","exam"],
-  ["homework","الواجبات والتدريبات","تدريباتك ومهامك الدراسية","task"],
-  ["files","المكتبة التعليمية","المذكرات والملفات الدراسية","file"],
-  ["results","درجاتي ونتائجي","راجع نتائجك عند نشرها","chart"],
-  ["schedule","الجدول الدراسي","مواعيد الحصص والمحاضرات","calendar"],
-  ["live","المحاضرات المباشرة","ادخل إلى حصص البث المباشر","live"],
-  ["groups","الجروبات الدراسية","تواصل داخل مجموعتك الدراسية","users"],
-  ["ai","المساعد الذكي","مساعدة في فهم مسائل الرياضيات","spark"]
+  ["courses","المحتوى التعليمي","الكورسات والوحدات الدراسية","book","https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=900&q=85","01"],
+  ["lessons","المحاضرات والدروس","شرح المنهج خطوة بخطوة","play","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85","02"],
+  ["exams","مركز الامتحانات","اختبر فهمك وتابع تقييماتك","exam","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=85","03"],
+  ["homework","الواجبات والتدريبات","تدريباتك ومهامك الدراسية","task","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=900&q=85","04"],
+  ["files","المكتبة التعليمية","المذكرات والملفات الدراسية","file","https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=900&q=85","05"],
+  ["results","درجاتي ونتائجي","راجع نتائجك عند نشرها","chart","https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85","06"],
+  ["schedule","الجدول الدراسي","مواعيد الحصص والمحاضرات","calendar","https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=900&q=85","07"],
+  ["live","المحاضرات المباشرة","ادخل إلى حصص البث المباشر","live","https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85","08"],
+  ["groups","الجروبات الدراسية","تواصل داخل مجموعتك الدراسية","users","https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=85","09"],
+  ["ai","المساعد الذكي","مساعدة في فهم مسائل الرياضيات","spark","https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=85","10"]
  ];
- return <div className="platform-page emad-home-v2">
-  <section className="emad-welcome-hero">
-   <div className="emad-welcome-copy">
-    <span className="platform-eyebrow">EMAD EL SANAFIRY · MATH LEARNING</span>
-    <div className="emad-hero-kicker"><span className="emad-kicker-dot"/> بوابتك التعليمية المتكاملة</div>
-    <h1>أهلاً بيك يا {name}<br/><em>هنا تبدأ خطوة جديدة نحو التفوق.</em></h1>
-    <p>كل ما تحتاجه في رحلتك مع الرياضيات، منظم في مكان واحد ومخصص لصفك الدراسي.</p>
-    <div className="emad-welcome-tags">
-     <span><Icon name="book" size={15}/>{grade||"لم يتم تحديد الصف"}</span>
-     <span className={subscription?"is-active":""}><Icon name="shield" size={15}/>{subscription?"اشتراكك مفعل":"الاشتراك غير مفعل"}</span>
+ return <div className="platform-page emad-home-v3">
+  <section className="emad-v3-hero">
+   <div className="emad-v3-hero-copy">
+    <span className="emad-v3-overline"><i/> EMAD EL SANAFIRY · MATHEMATICS ACADEMY</span>
+    <div className="emad-v3-welcome">مساحتك التعليمية الخاصة</div>
+    <h1>أهلاً بيك يا {name}<br/><em>خلّي الرياضيات نقطة قوتك.</em></h1>
+    <p>شرح منظم، تدريب عملي، ومتابعة لرحلتك الدراسية — كل ده في تجربة واحدة مصممة لطلاب مستر عماد السنافيري.</p>
+    <div className="emad-v3-meta">
+     <span><Icon name="book" size={15}/>{grade||"الصف الدراسي غير محدد"}</span>
+     <span className={subscription?"active":""}><Icon name="shield" size={15}/>{subscription?"اشتراكك نشط":"الاشتراك غير مفعل"}</span>
     </div>
-    <div className="emad-hero-actions">
-     <button className="platform-gold-button" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ المذاكرة الآن":"تفعيل الاشتراك"}<Icon name="arrow" size={17}/></button>
-     <button className="emad-outline-button" onClick={()=>go("schedule")}>عرض الجدول<Icon name="calendar" size={16}/></button>
+    <div className="emad-v3-actions">
+     <button className="emad-v3-primary" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ رحلتك التعليمية":"فعّل اشتراكك الآن"}<Icon name="arrow" size={17}/></button>
+     <button className="emad-v3-secondary" onClick={()=>go("schedule")}><Icon name="calendar" size={16}/> جدول الحصص</button>
     </div>
    </div>
-   <div className="emad-hero-visual" aria-hidden="true">
-    <div className="emad-teacher-photo-frame"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/><span>مستر عماد السنافيري</span></div>
-    <div className="emad-orbit orbit-one"/><div className="emad-orbit orbit-two"/>
-    <div className="emad-math-core"><span>∑</span><b>f(x)</b><i>π</i><small>∫</small></div>
-    <div className="emad-float-note note-top">x² + y²</div><div className="emad-float-note note-bottom">MATH / 2026</div>
+   <div className="emad-v3-teacher">
+    <div className="emad-v3-teacher-frame"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/><div><b>مستر عماد السنافيري</b><span>رحلتك في الرياضيات تبدأ من هنا</span></div></div>
+    <span className="emad-v3-math-stamp">∑ <small>MATHEMATICS</small></span>
+    <span className="emad-v3-floating-equation">f(x) = ax² + bx + c</span>
    </div>
-   <div className="emad-hero-bottom"><span>تعلم بفهم</span><span/><span>تدرّب بثقة</span><span/><span>تقدّم باستمرار</span></div>
+   <div className="emad-v3-hero-foot"><span>فهم أعمق</span><i/><span>تدريب أقوى</span><i/><span>نتيجة أفضل</span></div>
   </section>
-
-  <section className="emad-student-overview">
-   <div className="emad-student-identity">
-    {profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<div className="platform-profile-placeholder"><Icon name="user" size={23}/></div>}
-    <div><small>مساحتك الشخصية</small><b>{profile?.full_name||"حساب الطالب"} {profile?.is_verified&&<span className="platform-verified" title="حساب موثق"><Icon name="crown" size={12}/></span>}</b><span>رقم الطالب: {profile?.student_number||"—"}</span></div>
+  <section className="emad-v3-studentbar">
+   <div className="emad-v3-student">
+    {profile?.avatar_url?<img src={profile.avatar_url} alt="صورة الطالب"/>:<span className="emad-v3-avatar"><Icon name="user" size={22}/></span>}
+    <div><small>لوحة الطالب</small><b>{profile?.full_name||"حساب الطالب"} {profile?.is_verified&&<span className="platform-verified"><Icon name="crown" size={11}/></span>}</b><em>رقم الطالب: {profile?.student_number||"—"}</em></div>
    </div>
-   <div className="emad-overview-divider"/>
-   <div className="emad-overview-item"><span className="emad-overview-icon"><Icon name="graduation-cap" size={18}/></span><div><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div></div>
-   <div className="emad-overview-item"><span className="emad-overview-icon"><Icon name="ticket" size={18}/></span><div><small>حالة الاشتراك</small><b className={subscription?"emad-status-active":"emad-status-off"}>{subscription?"نشط":"غير مفعل"}</b></div></div>
-   <button className="emad-profile-link" onClick={()=>go("profile")}>ملفي الشخصي<Icon name="arrow" size={15}/></button>
+   <div className="emad-v3-student-fact"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
+   <div className="emad-v3-student-fact"><small>حالة الاشتراك</small><b className={subscription?"active":"inactive"}>{subscription?"نشط":"غير مفعل"}</b></div>
+   <button onClick={()=>go("profile")}>عرض الملف الشخصي <Icon name="arrow" size={15}/></button>
   </section>
-
-  <section className="emad-home-section">
-   <div className="emad-section-heading"><div><span>YOUR LEARNING SPACE</span><h2>كل أدواتك الدراسية</h2><p>اختار القسم اللي عايز تبدأ منه.</p></div><div className="emad-heading-mark">01 <i/> 03</div></div>
-   <div className="emad-module-grid">{modules.map(([id,title,desc,ico],i)=><button key={id} className="emad-module-card" onClick={()=>go(id)}><span className={"emad-module-icon module-"+i}><Icon name={ico} size={22}/></span><span className="emad-module-text"><b>{title}</b><small>{desc}</small></span><span className="emad-module-arrow"><Icon name="arrow" size={15}/></span></button>)}</div>
+  <section className="emad-v3-section">
+   <div className="emad-v3-section-head"><div><span>YOUR LEARNING WORLD</span><h2>كل أقسام المنصة في مكان واحد</h2><p>كل خدمة تفتح في صفحة مستقلة بتجربتها ومحتواها.</p></div><b>01 <i/> 10</b></div>
+   <div className="emad-v3-module-grid">
+    {modules.map(([id,title,desc,ico,image,num])=><button key={id} className="emad-v3-module" style={{"--module-photo":"url("+image+")"}} onClick={()=>go(id)}>
+     <span className="emad-v3-module-number">{num}</span><span className="emad-v3-module-icon"><Icon name={ico} size={21}/></span>
+     <span className="emad-v3-module-copy"><b>{title}</b><small>{desc}</small></span><span className="emad-v3-module-go"><Icon name="arrow" size={16}/></span>
+    </button>)}
+   </div>
   </section>
-
-  <section className="emad-home-feature-row">
-   <button className="emad-feature-card emad-feature-support" onClick={()=>go("messages")}><span className="emad-feature-label">STUDENT SUPPORT</span><span className="emad-feature-symbol"><Icon name="support" size={27}/></span><b>محتاج مساعدة؟</b><small>تواصل مع مركز الدعم الفني وتابع طلباتك.</small><span className="emad-feature-link">افتح مركز الدعم <Icon name="arrow" size={15}/></span></button>
-   <button className="emad-feature-card emad-feature-ai" onClick={()=>go("ai")}><span className="emad-feature-label">SMART MATH ASSISTANT</span><span className="emad-feature-symbol"><Icon name="spark" size={27}/></span><b>اسأل المساعد الذكي</b><small>ابدأ بسؤال أو مسألة تحتاج إلى شرح.</small><span className="emad-feature-link">اكتشف المساعد <Icon name="arrow" size={15}/></span></button>
+  <section className="emad-v3-feature-grid">
+   <button className="emad-v3-feature support" onClick={()=>go("messages")}><span>STUDENT CARE</span><b>إحنا معاك خطوة بخطوة</b><small>تواصل مع الدعم الفني لو احتجت أي مساعدة.</small><i>مركز الدعم <Icon name="arrow" size={15}/></i></button>
+   <button className="emad-v3-feature smart" onClick={()=>go("ai")}><span>SMART MATH ASSISTANT</span><b>المسألة الصعبة ليها حل</b><small>افتح مساحة المساعد الذكي لفهم خطوات الحل.</small><i>اكتشف المساعد <Icon name="arrow" size={15}/></i></button>
   </section>
-
-  <section className="emad-home-bottom-links">
-   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={18}/></span><b>مركز الإشعارات</b><small>تابع آخر التنبيهات</small>{unread>0&&<i>{unread>99?"99+":unread}</i>}</button>
-   <button onClick={()=>go("subscriptions")}><span><Icon name="ticket" size={18}/></span><b>اشتراكاتي</b><small>إدارة وتفعيل الاشتراك</small></button>
-   <button onClick={()=>go("settings")}><span><Icon name="settings" size={18}/></span><b>إعدادات الحساب</b><small>تحكم في تفضيلاتك</small></button>
+  <section className="emad-v3-bottom-grid">
+   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={19}/></span><b>الإشعارات</b><small>كل جديد في حسابك</small>{unread>0&&<em>{unread>99?"99+":unread}</em>}</button>
+   <button onClick={()=>go("subscriptions")}><span><Icon name="ticket" size={19}/></span><b>الاشتراكات</b><small>إدارة اشتراكك</small></button>
+   <button onClick={()=>go("settings")}><span><Icon name="settings" size={19}/></span><b>الإعدادات</b><small>تفضيلات الحساب</small></button>
   </section>
  </div>;
 }
+
 function LockedPage({go,grade}){return <div className="platform-page"><PageBanner eyebrow="MEMBERSHIP REQUIRED" title="المحتوى التعليمي متاح للمشتركين" description="فعّل اشتراكك الشهري بكود مخصص لصفك الدراسي لفتح المحاضرات والامتحانات وباقي الخدمات." art="lock"/><section className="platform-lock-panel"><span className="platform-lock-icon"><Icon name="lock" size={30}/></span><h2>فعّل اشتراكك للمتابعة</h2><p>الاشتراك مرتبط بحسابك وبـ {grade||"صفك الدراسي"}، ولا يمكن فتح المحتوى قبل تفعيل كود صالح.</p><button className="platform-gold-button" onClick={()=>go("subscriptions")}>الانتقال للاشتراكات<Icon name="arrow"/></button></section></div>}
 function SubscriptionsPage({subscription,onActivated}){
  const [code,setCode]=useState(""),[busy,setBusy]=useState(false);
