@@ -117,55 +117,67 @@ const pageArtwork={
 };
 function PageBanner({eyebrow,title,description,art="book"}){return <section className="platform-page-banner" style={{"--page-artwork":`url("${pageArtwork[art]||pageArtwork.book}")`}}><div><span className="platform-eyebrow">{eyebrow}</span><h1>{title}</h1><p>{description}</p></div><div className="platform-banner-art"><Icon name={art} size={76}/></div></section>}
 function HomePage({profile,subscription,go,grade,unread}){
- const firstName=profile?.full_name?.trim()?.split(/\\s+/)[0]||"يا بطل";
- const services=[
-  ["courses","الكورسات","مسارك الدراسي منظم في وحدات","book","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=85"],
-  ["lessons","المحاضرات","شرح المنهج بطريقة واضحة","play","https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=900&q=85"],
-  ["exams","الامتحانات","تدرب واختبر مستواك","exam","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=900&q=85"],
-  ["homework","الواجبات","تابع تدريباتك المطلوبة","task","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=900&q=85"],
-  ["files","المكتبة","مذكرات وملفات المراجعة","file","https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=900&q=85"],
-  ["results","نتائجك","تابع تقييماتك ودرجاتك","chart","https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=85"]
- ];
- return <div className="platform-page home-next">
-  <section className="hn-hero">
-   <div className="hn-hero-text">
-    <div className="hn-overline"><span/> منصة مستر عماد السنافيري <i/> MATHEMATICS</div>
-    <div className="hn-greeting">أهلاً بيك، {firstName}</div>
-    <h1>افهم الرياضيات.<br/><strong>واوصل للي بتطمح له.</strong></h1>
-    <p>منصة واحدة تجمع شرحك وتدريباتك وامتحاناتك ومتابعة مستواك — بخطوات واضحة وتجربة سهلة على كل أجهزتك.</p>
-    <div className="hn-hero-tags"><span><Icon name="book" size={15}/>{grade||"الصف الدراسي"}</span><span className={subscription?"hn-active":""}><Icon name="shield" size={15}/>{subscription?"اشتراكك نشط":"فعّل اشتراكك"}</span></div>
-    <div className="hn-hero-buttons"><button className="hn-cta" onClick={()=>go(subscription?"courses":"subscriptions")}>{subscription?"ابدأ رحلتك الدراسية":"فعّل اشتراكك الآن"} <Icon name="arrow" size={17}/></button><button className="hn-secondary" onClick={()=>go("schedule")}><Icon name="calendar" size={17}/> جدول الحصص</button></div>
+ const firstName=profile?.full_name?.trim()?.split(/\\s+/)[0]||"طالبنا";
+ const active=!!subscription;
+ const courses=[["courses","المسارات التعليمية","شرح منظم لكل فروع المنهج","https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=90","01"],["lessons","المحاضرات","حصص مسجلة تراجعها في أي وقت","https://images.unsplash.com/photo-150 teacher?auto=format&fit=crop&w=1200&q=90","02"],["exams","بنك الامتحانات","اختبر نفسك بأسئلة متنوعة","https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=90","03"],["homework","التدريبات والواجبات","تدرب وثبّت فهمك خطوة بخطوة","https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1200&q=90","04"]];
+ return <div className="platform-page atlas-home">
+  <section className="atlas-hero">
+   <div className="atlas-hero-bg"/>
+   <div className="atlas-hero-shade"/>
+   <div className="atlas-hero-copy">
+    <div className="atlas-eyebrow"><span/> EMAD EL SANAFIRY <i/> MATHEMATICS ACADEMY</div>
+    <div className="atlas-welcome">أهلاً يا {firstName}، مستعد لخطوة جديدة؟</div>
+    <h1>الرياضيات مش صعبة،<br/><em>لما تتعلمها صح.</em></h1>
+    <p>مساحة تعليمية متكاملة تساعدك تفهم الفكرة، تتدرب عليها، وتقيس مستواك — من أول درس لحد يوم الامتحان.</p>
+    <div className="atlas-hero-actions"><button className="atlas-button-primary" onClick={()=>go(active?"courses":"subscriptions")}>{active?"ابدأ التعلم الآن":"ابدأ رحلتك واشترك"} <Icon name="arrow" size={17}/></button><button className="atlas-button-ghost" onClick={()=>go("schedule")}><Icon name="calendar" size={17}/> جدول الحصص</button></div>
+    <div className="atlas-hero-meta"><span><Icon name="graduation-cap" size={15}/>{grade||"حدد صفك الدراسي"}</span><span><i className={active?"is-active":""}/>{active?"اشتراك فعال":"الاشتراك غير مفعل"}</span></div>
    </div>
-   <div className="hn-hero-visual">
-    <div className="hn-visual-backdrop"/>
-    <div className="hn-teacher-photo"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/></div>
-    <div className="hn-teacher-label"><b>مستر عماد السنافيري</b><small>معاك في كل خطوة</small></div>
-    <div className="hn-floating hn-float-one">∑ <small>MATHEMATICS</small></div>
-    <div className="hn-floating hn-float-two">f(x) = ax² + bx + c</div>
+   <div className="atlas-hero-teacher">
+    <div className="atlas-teacher-halo"/>
+    <div className="atlas-teacher-frame"><img src="/IMG-20261121-WA0004.jpg" alt="مستر عماد السنافيري"/></div>
+    <div className="atlas-teacher-sign"><small>YOUR TEACHER</small><b>مستر عماد السنافيري</b><span>خبرة تعليمية · شرح · تدريب · متابعة</span></div>
+    <div className="atlas-math-float atlas-math-a">∑</div><div className="atlas-math-float atlas-math-b">f(x) = x² + 3x</div>
    </div>
-   <div className="hn-hero-bottom"><span>تعلم بفهم</span><i/><span>تدرب بثقة</span><i/><span>حقق تقدمك</span></div>
+   <div className="atlas-hero-scroll"><span/> اكتشف المنصة</div>
+   <div className="atlas-hero-index">01 <i/> 06</div>
   </section>
-  <section className="hn-welcome-strip">
-   <div className="hn-welcome-user">{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span><Icon name="user" size={20}/></span>}<div><small>لوحة الطالب</small><b>{profile?.full_name||"حساب الطالب"}</b><em>رقم الطالب: {profile?.student_number||"—"}</em></div></div>
-   <div className="hn-welcome-info"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
-   <div className="hn-welcome-info"><small>الاشتراك</small><b className={subscription?"hn-status-on":"hn-status-off"}>{subscription?"نشط":"غير مفعل"}</b></div>
-   <button onClick={()=>go("profile")}>الملف الشخصي <Icon name="arrow" size={15}/></button>
+  <section className="atlas-student-bar">
+   <div className="atlas-student-id">{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:<span><Icon name="user" size={21}/></span>}<div><small>مساحتك الشخصية</small><b>{profile?.full_name||"حساب الطالب"}</b><em>رقم الطالب {profile?.student_number||"—"}</em></div></div>
+   <div className="atlas-student-fact"><small>الصف الدراسي</small><b>{grade||"غير محدد"}</b></div>
+   <div className="atlas-student-fact"><small>حالة الاشتراك</small><b className={active?"good":"waiting"}>{active?"فعال":"غير مفعل"}</b></div>
+   <button onClick={()=>go("profile")}>ملفي الدراسي <Icon name="arrow" size={15}/></button>
   </section>
-  <section className="hn-services">
-   <div className="hn-section-heading"><div><span>YOUR LEARNING TOOLS</span><h2>كل أدوات دراستك في مكان واحد</h2><p>اختار الخدمة اللي محتاجها، وهتلاقي كل قسم في صفحة مستقلة.</p></div><button onClick={()=>go("courses")}>عرض كل الخدمات <Icon name="arrow" size={15}/></button></div>
-   <div className="hn-service-grid">{services.map(([id,title,desc,icon,img],i)=><button className="hn-service-card" key={id} onClick={()=>go(id)} style={{"--hn-image":'url("'+img+'")'}}><span className="hn-service-number">0{i+1}</span><span className="hn-service-icon"><Icon name={icon} size={20}/></span><span className="hn-service-copy"><b>{title}</b><small>{desc}</small></span><span className="hn-service-go"><Icon name="arrow" size={15}/></span></button>)}</div>
+  <section className="atlas-intro">
+   <div><span className="atlas-kicker">A BETTER WAY TO LEARN</span><h2>مش مجرد فيديوهات..<br/><em>دي رحلة تعليم كاملة.</em></h2></div>
+   <p>كل اللي تحتاجه في مكان واحد، بتجربة واضحة وسهلة. ابدأ من الدرس، انتقل للتدريب، وبعدها تابع تقدمك ونتائجك.</p>
   </section>
-  <section className="hn-ai">
-   <div className="hn-ai-image" aria-hidden="true"/>
-   <div className="hn-ai-content"><span><Icon name="spark" size={15}/> SMART LEARNING</span><h2>محتاج تفهم فكرة صعبة؟<br/><b>المساعد الذكي معاك.</b></h2><p>اسأل عن المسائل والمفاهيم الرياضية، وابدأ توصل للحل خطوة بخطوة.</p><button onClick={()=>go("ai")}>افتح المساعد الذكي <Icon name="arrow" size={16}/></button></div>
-   <div className="hn-ai-mark">∑</div>
+  <section className="atlas-programs">
+   <div className="atlas-section-head"><div><span>LEARNING EXPERIENCE</span><h2>اختار خطوتك الجاية</h2></div><button onClick={()=>go("courses")}>كل الخدمات <Icon name="arrow" size={15}/></button></div>
+   <div className="atlas-program-grid">{courses.map(([id,title,desc,img,num])=><button key={id} className="atlas-program-card" onClick={()=>go(id)} style={{"--atlas-photo":'url("'+img+'")'}}><span className="atlas-program-no">{num}</span><div className="atlas-program-content"><b>{title}</b><small>{desc}</small><i><Icon name="arrow" size={16}/></i></div></button>)}</div>
   </section>
-  <section className="hn-shortcuts">
-   <button onClick={()=>go("schedule")}><span><Icon name="calendar" size={20}/></span><b>جدول الحصص</b><small>مواعيدك الدراسية</small></button>
-   <button onClick={()=>go("live")}><span><Icon name="live" size={20}/></span><b>البث المباشر</b><small>محاضراتك أونلاين</small></button>
-   <button onClick={()=>go("groups")}><span><Icon name="users" size={20}/></span><b>الجروبات</b><small>مجموعتك الدراسية</small></button>
-   <button onClick={()=>go("notifications")}><span><Icon name="bell" size={20}/></span><b>الإشعارات{unread>0?" ("+unread+")":""}</b><small>آخر التحديثات</small></button>
-   <button onClick={()=>go("messages")}><span><Icon name="support" size={20}/></span><b>الدعم الفني</b><small>مساعدة ومتابعة</small></button>
+  <section className="atlas-deep-section">
+   <div className="atlas-deep-photo"><img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1400&q=90" alt="معادلات رياضية على خلفية علمية"/><span>MATHEMATICS<br/>IS A LANGUAGE</span></div>
+   <div className="atlas-deep-copy"><span className="atlas-kicker">UNDERSTAND THE WHY</span><h2>مش هدفنا تحفظ القانون..<br/><em>هدفنا تفهم هو جه منين.</em></h2><p>شرح يبدأ معاك من الفكرة الأساسية، يربط أجزاء الدرس ببعض، وبعدها يوصلك للتطبيق وحل المسائل بثقة.</p><button onClick={()=>go("lessons")}>اكتشف المحاضرات <Icon name="arrow" size={16}/></button></div>
+  </section>
+  <section className="atlas-ai-section">
+   <div className="atlas-ai-art"><div className="atlas-ai-orbit orbit-one"/><div className="atlas-ai-orbit orbit-two"/><div className="atlas-ai-core">AI</div><span className="atlas-ai-formula">∫ f(x) dx</span><span className="atlas-ai-formula second">∑ n²</span></div>
+   <div className="atlas-ai-copy"><span className="atlas-kicker">YOUR PERSONAL STUDY PARTNER</span><h2>سؤالك مش لازم يستنى..<br/><em>اسأل المساعد الذكي.</em></h2><p>مساعدك في فهم المفاهيم الرياضية ومراجعة خطوات الحل. اسأل، ناقش، واتعلم بطريقة تفاعلية.</p><button onClick={()=>go("ai")}>جرّب المساعد الذكي <Icon name="arrow" size={16}/></button></div>
+  </section>
+  <section className="atlas-library">
+   <div className="atlas-library-copy"><span className="atlas-kicker">YOUR STUDY LIBRARY</span><h2>كل أدوات المذاكرة<br/>في مكتبتك التعليمية.</h2><p>مذكرات وملفات، واجبات، اختبارات، نتائج، وجدولك الدراسي — كل قسم مستقل وسهل الوصول.</p><button onClick={()=>go("files")}>افتح المكتبة <Icon name="arrow" size={16}/></button></div>
+   <div className="atlas-library-tiles">
+    <button onClick={()=>go("files")}><img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=600&q=85" alt="مكتبة كتب"/><b>المذكرات والملفات</b></button>
+    <button onClick={()=>go("exams")}><img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=600&q=85" alt="الدراسة والاختبارات"/><b>الامتحانات</b></button>
+    <button onClick={()=>go("results")}><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=600&q=85" alt="تحليل النتائج"/><b>النتائج والتقدم</b></button>
+   </div>
+  </section>
+  <section className="atlas-community">
+   <div className="atlas-community-image"/>
+   <div className="atlas-community-copy"><span className="atlas-kicker">LEARN TOGETHER</span><h2>مشوارك الدراسي<br/>أقوى لما تكون وسط مجموعتك.</h2><p>تابع جدولك، ادخل جروب صفك، احضر البث المباشر، وخليك على تواصل مع الدعم.</p><div><button onClick={()=>go("groups")}>الجروبات الدراسية</button><button onClick={()=>go("live")}>البث المباشر</button></div></div>
+  </section>
+  <section className="atlas-final-cta"><span>YOUR NEXT STEP STARTS HERE</span><h2>كل خطوة بتفرق.<br/><em>ابدأ من النهارده.</em></h2><button onClick={()=>go(active?"courses":"subscriptions")}>{active?"ابدأ التعلم":"فعّل اشتراكك"} <Icon name="arrow" size={17}/></button></section>
+  <section className="atlas-quick-links">
+   <button onClick={()=>go("schedule")}><Icon name="calendar" size={19}/> الجدول</button><button onClick={()=>go("notifications")}><Icon name="bell" size={19}/> الإشعارات {unread>0&&<b>{unread}</b>}</button><button onClick={()=>go("messages")}><Icon name="support" size={19}/> الدعم الفني</button><button onClick={()=>go("profile")}><Icon name="user" size={19}/> الملف الشخصي</button><button onClick={()=>go("settings")}><Icon name="settings" size={19}/> الإعدادات</button>
   </section>
  </div>;
 }
