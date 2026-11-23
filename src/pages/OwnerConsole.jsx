@@ -28,7 +28,9 @@ export default function OwnerConsole() {
   const [courses, setCourses] = useState([]);
   const [lessons, setLessons] = useState([]);
   const [exams, setExams] = useState([]);
+  const [examQuestions, setExamQuestions] = useState([]);
   const [homework, setHomework] = useState([]);
+  const [homeworkQuestions, setHomeworkQuestions] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [codes, setCodes] = useState([]);
   const [payments, setPayments] = useState([]);
@@ -73,7 +75,9 @@ export default function OwnerConsole() {
         ["courses", "courses?select=id,teacher_id,title,description,subject,price_egp,status,grade,cover_image_url,created_at&order=created_at.desc&limit=500"],
         ["lessons", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,cover_image_url,created_at&order=created_at.desc&limit=1000"],
         ["exams", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,cover_image_url,created_at&order=created_at.desc&limit=500"],
+        ["examQuestions", "exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&order=sort_order.asc&limit=5000"],
         ["homework", "homework_assignments?select=id,title,description,grade,group_name,due_at,is_published,cover_image_url,created_by,created_at&order=created_at.desc&limit=500"],
+        ["homeworkQuestions", "homework_questions?select=id,assignment_id,question_type,prompt,points,position&order=position.asc&limit=5000"],
         ["subscriptions", "emad_student_subscriptions?select=id,student_id,grade,starts_at,ends_at,created_at&order=ends_at.desc&limit=1000"],
         ["codes", "emad_subscription_codes?select=id,grade,created_at,redeemed_by,redeemed_at,expires_at,code_hint&order=created_at.desc&limit=500"],
         ["payments", "payments?select=id,student_id,course_id,provider,provider_reference,amount_egp,status,verified_at,created_at&order=created_at.desc&limit=500"],
@@ -89,7 +93,9 @@ export default function OwnerConsole() {
       setCourses(data.courses || []);
       setLessons(data.lessons || []);
       setExams(data.exams || []);
+      setExamQuestions(data.examQuestions || []);
       setHomework(data.homework || []);
+      setHomeworkQuestions(data.homeworkQuestions || []);
       setSubscriptions(data.subscriptions || []);
       setCodes(data.codes || []);
       setPayments(data.payments || []);
@@ -230,25 +236,62 @@ export default function OwnerConsole() {
     });
   };
 
+  const addExamQuestion = () => {
+    const q = examQuestionForm;
+    const choices = q.question_type === "single_choice" ? q.choices.split("\n").map(x=>x.trim()).filter(Boolean) : q.question_type === "true_false" ? ["صحيح","خطأ"] : [];
+    if (q.prompt.trim().length < 4) return setError("اكتب نص السؤال بشكل واضح.");
+    if (q.question_type === "single_choice" && choices.length < 2) return setError("أضف اختيارين على الأقل للسؤال.");
+    if (["single_choice","true_false"].includes(q.question_type) && !q.correct_answer.trim()) return setError("حدد الإجابة الصحيحة.");
+    setExamDraftQuestions(old=>[...old,{...q,id:crypto.randomUUID(),choices,points:Number(q.points)||1}]);
+    setExamQuestionForm({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
+    setError("");
+  };
+
+  const addHomeworkQuestion = () => {
+    const q = homeworkQuestionForm;
+    const choices = q.question_type === "single_choice" ? q.choices.split("\n").map(x=>x.trim()).filter(Boolean) : q.question_type === "true_false" ? ["صحيح","خطأ"] : [];
+    if (q.prompt.trim().length < 4) return setError("اكتب نص السؤال بشكل واضح.");
+    if (q.question_type === "single_choice" && choices.length < 2) return setError("أضف اختيارين على الأقل للسؤال.");
+    if (["single_choice","true_false"].includes(q.question_type) && !q.correct_answer.trim()) return setError("حدد الإجابة الصحيحة.");
+    setHomeworkDraftQuestions(old=>[...old,{...q,id:crypto.randomUUID(),choices,points:Number(q.points)||1}]);
+    setHomeworkQuestionForm({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
+    setError("");
+  };
+
   const createExam = async (event) => {
     event.preventDefault();
     if (!examForm.title.trim() || !examForm.course_id) return;
     if (!examForm.cover_image_url) return setError("ارفع صورة للامتحان قبل إنشائه.");
+    if (!examDraftQuestions.length) return setError("أضف سؤالًا واحدًا على الأقل قبل إنشاء الامتحان.");
     setSaving("exam"); setError(""); setNotice("");
     try {
       const body = { title: examForm.title.trim(), course_id: examForm.course_id, duration_minutes: Number(examForm.duration_minutes) || 60, is_published: false, opens_at: examForm.opens_at ? new Date(examForm.opens_at).toISOString() : null, closes_at: examForm.closes_at ? new Date(examForm.closes_at).toISOString() : null, cover_image_url: examForm.cover_image_url || null };
       const rows = await portalApi("owner", "exams", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify(body) });
       const created = Array.isArray(rows) ? rows[0] : rows;
       if (!created?.id) throw new Error("exam_not_created");
+      const savedQuestions = [];
+      for (let i=0;i<examDraftQuestions.length;i++) {
+        const q=examDraftQuestions[i];
+        const inserted=await portalApi("owner","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:created.id,question_type:q.question_type,prompt:q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
+        const saved=Array.isArray(inserted)?inserted[0]:inserted;
+        if(!saved?.id)throw new Error("exam_question_not_created");
+        savedQuestions.push(saved);
+        if(["single_choice","true_false"].includes(q.question_type)) {
+          await portalApi("owner","exam_answer_keys",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({question_id:saved.id,correct_answer:q.correct_answer})});
+        }
+      }
       setExams((old) => [created, ...old]);
+      setExamQuestions(old=>[...old,...savedQuestions]);
       setExamForm({ title: "", course_id: "", duration_minutes: "60", opens_at: "", closes_at: "", cover_image_url: "" });
-      setNotice("تم إنشاء الامتحان كمسودة. أضف أسئلته قبل نشره للطلاب.");
+      setExamDraftQuestions([]);
+      setNotice("تم إنشاء الامتحان وحفظ "+savedQuestions.length+" سؤال. راجعه ثم انشره.");
     } catch (e) { setError("تعذر إنشاء الامتحان. " + (e.message || "")); }
     finally { setSaving(""); }
   };
 
   const toggleExam = async (exam) => {
-    if (!window.confirm(exam.is_published ? "إيقاف نشر الامتحان؟" : "نشر الامتحان للطلاب؟ تأكد أولًا من إضافة الأسئلة.")) return;
+    if (!exam.is_published && examQuestions.filter(q=>q.exam_id===exam.id).length===0) return setError("لا يمكن نشر امتحان بدون أسئلة.");
+    if (!window.confirm(exam.is_published ? "إيقاف نشر الامتحان؟" : "نشر الامتحان للطلاب؟")) return;
     setSaving(exam.id); setError(""); setNotice("");
     try {
       const next = !exam.is_published;
@@ -263,6 +306,7 @@ export default function OwnerConsole() {
     event.preventDefault();
     if (!homeworkForm.title.trim()) return;
     if (!homeworkForm.cover_image_url) return setError("ارفع صورة للواجب قبل إنشائه.");
+    if (!homeworkDraftQuestions.length) return setError("أضف سؤالًا واحدًا على الأقل قبل إنشاء الواجب.");
     setSaving("homework"); setError(""); setNotice("");
     try {
       const rows = await portalApi("owner", "homework_assignments", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
@@ -272,15 +316,27 @@ export default function OwnerConsole() {
       }) });
       const created = Array.isArray(rows) ? rows[0] : rows;
       if (!created?.id) throw new Error("homework_not_created");
+      const savedQuestions=[];
+      for(let i=0;i<homeworkDraftQuestions.length;i++){
+        const q=homeworkDraftQuestions[i];
+        const inserted=await portalApi("owner","homework_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({assignment_id:created.id,position:i+1,question_type:q.question_type,prompt:q.prompt,choices:q.choices,points:q.points})});
+        const saved=Array.isArray(inserted)?inserted[0]:inserted;
+        if(!saved?.id)throw new Error("homework_question_not_created");
+        savedQuestions.push(saved);
+        if(["single_choice","true_false"].includes(q.question_type))await portalApi("owner","homework_answer_keys",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({question_id:saved.id,correct_answer:q.correct_answer})});
+      }
       setHomework((old) => [created, ...old]);
+      setHomeworkQuestions(old=>[...old,...savedQuestions]);
       setHomeworkForm({ title: "", description: "", grade: GRADES[2], group_name: "", due_at: "", cover_image_url: "", is_published: false });
-      setNotice("تم إنشاء الواجب كمسودة. أضف الأسئلة قبل نشره.");
+      setHomeworkDraftQuestions([]);
+      setNotice("تم إنشاء الواجب وحفظ "+savedQuestions.length+" سؤال كمسودة.");
     } catch (e) { setError("تعذر إنشاء الواجب. " + (e.message || "")); }
     finally { setSaving(""); }
   };
 
   const toggleHomework = async (item) => {
-    if (!window.confirm(item.is_published ? "إيقاف نشر الواجب؟" : "نشر الواجب؟ تأكد من إضافة الأسئلة أولًا.")) return;
+    if (!item.is_published && homeworkQuestions.filter(q=>q.assignment_id===item.id).length===0) return setError("لا يمكن نشر واجب بدون أسئلة.");
+    if (!window.confirm(item.is_published ? "إيقاف نشر الواجب؟" : "نشر الواجب؟")) return;
     setSaving(item.id); setError(""); setNotice("");
     try {
       const next = !item.is_published;
