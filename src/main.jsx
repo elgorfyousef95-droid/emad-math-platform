@@ -7,7 +7,8 @@ import AuthScreen from "./pages/AuthScreen.jsx";
 import StudentExperience from "./pages/StudentExperience.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
 import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode } from "./lib/auth.js";
-import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession } from "./lib/portalAuth.js";
+import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage } from "./lib/portalAuth.js";
+import OwnerConsole from "./pages/OwnerConsole.jsx";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
 const navByGrade={
@@ -90,76 +91,6 @@ function PortalAccess({portal,onSuccess}){
   <button className="portal-access-back" onClick={()=>window.location.href="/"}>العودة إلى المنصة الطلابية</button>
  </section></main>;
 }
-
-function OwnerConsole(){
- const [profile,setProfile]=useState(null),[users,setUsers]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("accounts"),[replyDrafts,setReplyDrafts]=useState({}),[busy,setBusy]=useState(true),[error,setError]=useState(""),[filter,setFilter]=useState(""),[saving,setSaving]=useState("");
- const load=async()=>{
-  setBusy(true);setError("");
-  try{
-   const session=await refreshPortalSession("owner");
-   if(!session?.access_token)throw new Error("not_authenticated");
-   const [rows,messageRows]=await Promise.all([
-    portalApi("owner", "profiles?select=id,full_name,student_number,grade,group_name,role,is_verified,phone,parent_name,parent_phone,governorate,city,created_at&limit=500"),
-    portalApi("owner", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=500")
-   ]);
-   setMessages(messageRows||[]);
-   const me=(rows||[]).find(x=>x.id===session.user?.id)||null;
-   setProfile(me);setUsers(rows||[]);
-   if(me?.role!=="owner")setError("هذا الحساب لا يمتلك صلاحية مالك المنصة.");
-  }catch(e){setError(e.message==="not_authenticated"?"سجّل الدخول بحساب المالك أولًا.":"تعذر تحميل لوحة المالك. تحقق من تسجيل الدخول والصلاحيات.");}
-  finally{setBusy(false);}
- };
- useEffect(()=>{load();},[]);
- const changeRole=async(user,role)=>{
-  if(!window.confirm("تأكيد تغيير صلاحية "+(user.full_name||user.student_number)+" إلى "+role+"؟"))return;
-  setSaving(user.id);
-  try{
-   await portalApi("owner", "profiles?id=eq."+encodeURIComponent(user.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({role})});
-   setUsers(old=>old.map(x=>x.id===user.id?{...x,role}:x));
-  }catch(e){setError("لم يتم تغيير الصلاحية. تأكد من صلاحية المالك.");}
-  finally{setSaving("");}
- };
- const visible=users.filter(u=>[u.full_name,u.student_number,u.grade,u.group_name,u.role].join(" ").toLowerCase().includes(filter.toLowerCase()));
- const replyToMessage=async(message)=>{
-  const reply=(replyDrafts[message.id]||"").trim();if(!reply)return;
-  setSaving(message.id);setError("");
-  try{
-   await portalApi("owner", "support_messages?id=eq."+encodeURIComponent(message.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_reply:reply,replied_by:profile.id,replied_at:new Date().toISOString(),status:"closed"})});
-   setMessages(old=>old.map(x=>x.id===message.id?{...x,admin_reply:reply,replied_by:profile.id,replied_at:new Date().toISOString(),status:"closed"}:x));
-   setReplyDrafts(old=>({...old,[message.id]:""}));
-  }catch{setError("تعذر حفظ الرد على الرسالة.");}
-  finally{setSaving("");}
- };
- if(busy)return <main className="owner-shell"><div className="owner-loading">جارٍ تأمين وفتح لوحة المالك...</div></main>;
- if(!profile||profile.role!=="owner")return <PortalAccess portal="owner" onSuccess={load}/>;
- return <main className="owner-shell" dir="rtl">
-  <header className="owner-header"><div><span>EMAD EL SANAFIRY · CONTROL CENTER</span><h1>لوحة المالك</h1><p>إدارة المنصة والصلاحيات من مساحة مستقلة.</p></div><div className="owner-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("owner");window.location.reload();}}>تسجيل الخروج</button></div></header>
-  {error&&<p className="owner-error">{error}</p>}
-  <section className="owner-stats"><article><small>إجمالي الحسابات</small><strong>{users.length}</strong></article><article><small>الطلاب</small><strong>{users.filter(x=>x.role==="student").length}</strong></article><article><small>المدرسون</small><strong>{users.filter(x=>x.role==="teacher").length}</strong></article><article><small>الإدارة</small><strong>{users.filter(x=>["owner","admin"].includes(x.role)).length}</strong></article></section>
-  <nav className="owner-tabs">
-   <button className={section==="accounts"?"active":""} onClick={()=>setSection("accounts")}>الحسابات والطلاب <b>{users.length}</b></button>
-   <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}>مراسلات الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
-  </nav>
-  {section==="accounts"&&<section className="owner-panel"><div className="owner-panel-heading"><div><span>ACCOUNT DIRECTORY</span><h2>الحسابات والصلاحيات</h2></div><button onClick={load}>تحديث البيانات</button></div>
-   <input className="owner-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث بالاسم أو رقم الطالب أو الصف..."/>
-   <div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>الاسم</th><th>رقم الحساب</th><th>الصف / المجموعة</th><th>التواصل</th><th>ولي الأمر</th><th>الصلاحية</th><th>تغيير الدور</th></tr></thead><tbody>
-    {visible.map(user=><tr key={user.id}><td>{user.full_name||"—"}</td><td dir="ltr">{user.student_number||"—"}</td><td>{user.grade||"—"}<small>{user.group_name||""}</small></td><td dir="ltr">{user.phone||"—"}<small>{[user.governorate,user.city].filter(Boolean).join(" / ")}</small></td><td>{user.parent_name||"—"}<small dir="ltr">{user.parent_phone||""}</small></td><td><span className={"owner-role role-"+user.role}>{user.role}</span></td><td><select value={user.role} disabled={saving===user.id||user.id===profile.id||!user.student_number} onChange={e=>changeRole(user,e.target.value)}><option value="student">طالب</option><option value="teacher">مدرس</option><option value="admin">مدير</option><option value="owner">مالك</option></select></td></tr>)}
-   </tbody></table></div>
-   <p className="owner-note">لا يمكن تغيير دور حساب المالك الحالي من هذه القائمة. احتفظ بدور المالك لحسابك فقط، وامنح المستر دور «مدرس» بعد تحديد حسابه الصحيح.</p>
-  </section>}
-  {section==="messages"&&<section className="owner-panel owner-inbox" dir="rtl">
-   <div className="owner-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة</small></div>
-   <div className="teacher-message-list">{messages.map(message=>{const student=users.find(x=>x.id===message.user_id);return <article className="teacher-message-card" key={message.id}>
-    <div className="teacher-message-head"><div><b>{message.subject||"رسالة طالب"}</b><small>{student?.full_name||"طالب"} · {student?.student_number||"—"} · {new Date(message.created_at).toLocaleString("ar-EG")}</small></div><span className={message.status==="closed"?"closed":"open"}>{message.status==="closed"?"تم الرد":"بانتظار الرد"}</span></div>
-    <p>{message.message}</p>
-    {message.admin_reply&&<div className="teacher-existing-reply"><b>آخر رد</b><p>{message.admin_reply}</p></div>}
-    <textarea value={replyDrafts[message.id]||""} onChange={e=>setReplyDrafts(old=>({...old,[message.id]:e.target.value}))} placeholder="اكتب ردك للطالب..."/>
-    <button disabled={saving===message.id||!(replyDrafts[message.id]||"").trim()} onClick={()=>replyToMessage(message)}>إرسال الرد وإغلاق الرسالة</button>
-   </article>;})}{!messages.length&&<div className="teacher-empty large">لا توجد مراسلات حاليًا.</div>}</div>
-  </section>}
- </main>;
-}
-
 
 function TeacherConsole(){
  const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("courses"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
