@@ -1495,3 +1495,22 @@ button{ -webkit-tap-highlight-color:transparent}
 .teacher-denied{min-height:75vh;max-width:560px;margin:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;border:1px solid #8ac5b655;border-radius:22px;background:#102d39}.teacher-denied h1{font-size:28px}.teacher-denied p{color:#a9bfc0;font-size:12px;line-height:1.9}
 @media(max-width:900px){.teacher-layout{grid-template-columns:1fr}.teacher-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.teacher-shell{padding:11px}.teacher-header{align-items:flex-start;flex-direction:column;padding:20px;border-radius:16px}.teacher-header-actions{width:100%;justify-content:space-between}.teacher-stats{gap:8px}.teacher-stats article{padding:13px}.teacher-stats strong{font-size:24px}.teacher-panel{padding:15px}.teacher-panel-heading h2{font-size:17px}.teacher-course-actions{align-items:flex-start;flex-direction:column}.teacher-course-actions button{width:100%}.teacher-lesson-list article{grid-template-columns:30px minmax(0,1fr) auto;gap:7px}.teacher-lesson-list article>button{grid-column:2/4;justify-self:start}.teacher-form-grid{grid-template-columns:1fr}.teacher-header-actions b{font-size:11px}}
+
+
+/* Password-only, isolated administration portals */
+.portal-access-shell{min-height:100dvh;display:grid;place-items:center;padding:22px;background:radial-gradient(ellipse at 15% 10%,#17344c 0,transparent 36%),radial-gradient(ellipse at 90% 90%,#29233a 0,transparent 35%),#07111f;color:#f5f2eb;font-family:'Cairo',sans-serif}
+.portal-access-card{width:min(100%,480px);padding:clamp(24px,5vw,42px);border:1px solid #d7b66c55;border-radius:23px;background:linear-gradient(150deg,#12263d,#091625);box-shadow:0 28px 90px #0009;display:flex;flex-direction:column}
+.portal-access-kicker{color:#dfbd79;font-size:9px;font-weight:900;letter-spacing:1.7px;text-align:center}
+.portal-access-mark{align-self:center;margin:22px 0 12px;padding:9px 18px;border:1px solid #d7b66c66;border-radius:30px;background:#d7b66c12;color:#e9cb8a;font:800 10px Arial,sans-serif;letter-spacing:2px}
+.portal-access-card h1{margin:5px 0 6px;text-align:center;font-size:27px;font-weight:900}
+.portal-access-card>p{text-align:center;margin:0 0 20px;color:#aebed0;font-size:11px;line-height:2}
+.portal-access-card label{display:block;margin:13px 0 7px;color:#d6dfeb;font-size:11px;font-weight:800}
+.portal-access-card input{width:100%;height:48px;padding:0 13px;border:1px solid #ffffff25;border-radius:10px;background:#07111f;color:#fff;outline:none;font:12px 'Cairo'}
+.portal-access-card input:focus{border-color:#e4c27b;box-shadow:0 0 0 3px #e4c27b18}
+.portal-access-submit{height:49px;margin-top:19px;border:1px solid #e5c47c;border-radius:10px;background:linear-gradient(110deg,#f0d493,#c9974d);color:#152238;font:900 12px 'Cairo';cursor:pointer}
+.portal-access-submit:disabled{opacity:.6;cursor:wait}
+.portal-access-switch{margin-top:13px;padding:10px;border:0;background:none;color:#e9c77f;font:700 11px 'Cairo';cursor:pointer}
+.portal-access-back{align-self:center;margin-top:20px;padding:9px 12px;border:1px solid #ffffff1c;border-radius:9px;background:#ffffff08;color:#9eb0c5;font:10px 'Cairo';cursor:pointer}
+.portal-access-error{margin-top:13px;padding:12px;border:1px solid #b85b5b66;border-radius:10px;background:#62292944;color:#ffd0d0;font-size:10px;line-height:1.9}
+.portal-setup-note{margin:3px 0 8px;padding:12px;border:1px solid #d8b66c44;border-radius:10px;background:#d8b66c0c;color:#c9d3df;font-size:10px;line-height:2}
+@media(max-width:520px){.portal-access-shell{padding:13px}.portal-access-card{padding:25px 19px;border-radius:18px}.portal-access-card h1{font-size:23px}}
