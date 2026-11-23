@@ -50,6 +50,7 @@ export default function OwnerConsole() {
   const [courseForm, setCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "", cover_image_url: "" });
   const [examForm, setExamForm] = useState({ title: "", course_id: "", duration_minutes: "60", opens_at: "", closes_at: "", cover_image_url: "" });
   const [homeworkForm, setHomeworkForm] = useState({ title: "", description: "", grade: GRADES[2], group_name: "", due_at: "", cover_image_url: "", is_published: false });
+  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "" });
 
   const read = async (path) => {
     try { return await portalApi("owner", path); }
@@ -139,6 +140,7 @@ export default function OwnerConsole() {
   const saveCourse = async (event) => {
     event.preventDefault();
     if (!courseForm.title.trim()) return;
+    if (!courseForm.cover_image_url) return setError("ارفع صورة غلاف للكورس قبل إنشائه.");
     const teacherId = courseForm.teacher_id || teachers[0]?.id || profile.id;
     setSaving("course"); setError(""); setNotice("");
     try {
@@ -151,6 +153,50 @@ export default function OwnerConsole() {
       setNotice("تم إنشاء الكورس كمسودة. راجع الصورة والتفاصيل قبل النشر.");
     } catch (e) { setError("لم يتم إنشاء الكورس. " + (e.message || "")); }
     finally { setSaving(""); }
+  };
+
+  const createLesson = async (event) => {
+    event.preventDefault();
+    if (!selectedCourse || !lessonForm.title.trim()) return;
+    setSaving("lesson"); setError(""); setNotice("");
+    try {
+      const order = lessons.filter((x) => x.course_id === selectedCourse).length + 1;
+      const rows = await portalApi("owner", "lessons", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
+        course_id: selectedCourse, title: lessonForm.title.trim(), description: lessonForm.description.trim(),
+        content: lessonForm.content.trim(), video_url: lessonForm.video_url.trim() || null, sort_order: order,
+        is_published: false,
+      }) });
+      const created = Array.isArray(rows) ? rows[0] : rows;
+      if (!created?.id) throw new Error("lesson_not_created");
+      setLessons((old) => [...old, created]);
+      setLessonForm({ title: "", description: "", content: "", video_url: "" });
+      setNotice("تمت إضافة المحاضرة كمسودة.");
+    } catch (e) { setError("تعذر إضافة المحاضرة. " + (e.message || "")); }
+    finally { setSaving(""); }
+  };
+
+  const toggleLesson = async (lesson) => {
+    setSaving(lesson.id); setError(""); setNotice("");
+    try {
+      const next = !lesson.is_published;
+      await portalApi("owner", "lessons?id=eq." + encodeURIComponent(lesson.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ is_published: next }) });
+      setLessons((old) => old.map((x) => x.id === lesson.id ? { ...x, is_published: next } : x));
+      setNotice(next ? "تم نشر المحاضرة." : "تم إخفاء المحاضرة.");
+    } catch { setError("تعذر تحديث حالة المحاضرة."); }
+    finally { setSaving(""); }
+  };
+
+  const updateMediaImage = async (file, table, item) => {
+    if (!file || !item?.id) return;
+    setUploading(item.id); setError(""); setNotice("");
+    try {
+      const url = await uploadPortalImage(file, "owner");
+      await portalApi("owner", table + "?id=eq." + encodeURIComponent(item.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ cover_image_url: url }) });
+      const setter = table === "courses" ? setCourses : table === "exams" ? setExams : setHomework;
+      setter((old) => old.map((x) => x.id === item.id ? { ...x, cover_image_url: url } : x));
+      setNotice("تم تحديث صورة العنصر.");
+    } catch { setError("تعذر تحديث الصورة. تحقق من مساحة التخزين وصلاحيات المالك."); }
+    finally { setUploading(""); }
   };
 
   const updateCourse = async (course, patch) => {
@@ -166,6 +212,7 @@ export default function OwnerConsole() {
   const createExam = async (event) => {
     event.preventDefault();
     if (!examForm.title.trim() || !examForm.course_id) return;
+    if (!examForm.cover_image_url) return setError("ارفع صورة للامتحان قبل إنشائه.");
     setSaving("exam"); setError(""); setNotice("");
     try {
       const body = { title: examForm.title.trim(), course_id: examForm.course_id, duration_minutes: Number(examForm.duration_minutes) || 60, is_published: false, opens_at: examForm.opens_at ? new Date(examForm.opens_at).toISOString() : null, closes_at: examForm.closes_at ? new Date(examForm.closes_at).toISOString() : null, cover_image_url: examForm.cover_image_url || null };
@@ -194,6 +241,7 @@ export default function OwnerConsole() {
   const createHomework = async (event) => {
     event.preventDefault();
     if (!homeworkForm.title.trim()) return;
+    if (!homeworkForm.cover_image_url) return setError("ارفع صورة للواجب قبل إنشائه.");
     setSaving("homework"); setError(""); setNotice("");
     try {
       const rows = await portalApi("owner", "homework_assignments", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
@@ -344,7 +392,12 @@ export default function OwnerConsole() {
             <div className="owner-media-actions"><span className={course.status==="published"?"published":"draft"}>{statusText(course.status)}</span><button disabled={saving===course.id} onClick={()=>updateCourse(course,{status:course.status==="published"?"draft":"published"})}>{course.status==="published"?"إيقاف النشر":"نشر"}</button></div>
           </article>)}</div>
           {!courses.length&&<p className="owner-note">لم تتم إضافة كورسات بعد. ابدأ من نموذج إنشاء الكورس.</p>}
-          {selected&&<div className="owner-selected-detail"><h3>تفاصيل الكورس المحدد</h3>{selected.cover_image_url?<img className="owner-detail-cover" src={selected.cover_image_url} alt={selected.title}/>:null}<b>{selected.title}</b><p>{selected.description||"لا يوجد وصف."}</p><small>{selected.grade} · {selected.subject} · {moneyText(selected.price_egp)}</small><div className="owner-detail-meta"><span>المدرس: {studentName(selected.teacher_id)}</span><span>{lessons.filter(x=>x.course_id===selected.id).length} محاضرة</span></div></div>}
+          {selected&&<div className="owner-selected-detail"><h3>تفاصيل الكورس المحدد</h3>{selected.cover_image_url?<img className="owner-detail-cover" src={selected.cover_image_url} alt={selected.title}/>:null}<b>{selected.title}</b><p>{selected.description||"لا يوجد وصف."}</p><small>{selected.grade} · {selected.subject} · {moneyText(selected.price_egp)}</small><div className="owner-detail-meta"><span>المدرس: {studentName(selected.teacher_id)}</span><span>{lessons.filter(x=>x.course_id===selected.id).length} محاضرة</span></div>
+            <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
+            <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
+              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}><span>{String(index+1).padStart(2,"0")}</span><div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}
+              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رابط الفيديو<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><button className="owner-primary-button" disabled={saving==="lesson"}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
+            </div></div>}
         </div>
       </div>
     </section>}
@@ -365,7 +418,7 @@ export default function OwnerConsole() {
         <div className="owner-library-card"><h3>الامتحانات الحالية</h3><div className="owner-media-grid">{exams.map(exam=><article className="owner-media-card" key={exam.id}>
           {exam.cover_image_url?<img src={exam.cover_image_url} alt={"صورة "+exam.title}/>:<span className="owner-media-fallback">EXAM</span>}
           <span className="owner-media-copy"><b>{exam.title}</b><small>{courses.find(x=>x.id===exam.course_id)?.title||"كورس غير معروف"} · {exam.duration_minutes} دقيقة</small></span>
-          <div className="owner-media-actions"><span className={exam.is_published?"published":"draft"}>{exam.is_published?"منشور":"مسودة"}</span><button disabled={saving===exam.id} onClick={()=>toggleExam(exam)}>{exam.is_published?"إيقاف النشر":"نشر"}</button></div>
+          <div className="owner-media-actions"><span className={exam.is_published?"published":"draft"}>{exam.is_published?"منشور":"مسودة"}</span><button disabled={saving===exam.id} onClick={()=>toggleExam(exam)}>{exam.is_published?"إيقاف النشر":"نشر"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"exams",exam)}/></label></div>
         </article>)}</div>{!exams.length&&<p className="owner-note">لا توجد امتحانات حتى الآن.</p>}</div>
       </div>
       <p className="owner-warning">تنبيه: إنشاء الامتحان وصورته متاحان، لكن يجب إضافة الأسئلة ومفتاح الإجابة ومراجعتها قبل النشر. محرر الأسئلة وتصحيح المحاولات ضمن مرحلة بناء الامتحانات التالية.</p>
@@ -388,7 +441,7 @@ export default function OwnerConsole() {
         <div className="owner-library-card"><h3>الواجبات الحالية</h3><div className="owner-media-grid">{homework.map(item=><article className="owner-media-card" key={item.id}>
           {item.cover_image_url?<img src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="owner-media-fallback">TASK</span>}
           <span className="owner-media-copy"><b>{item.title}</b><small>{item.grade} · {item.group_name||"كل المجموعات"}</small></span>
-          <div className="owner-media-actions"><span className={item.is_published?"published":"draft"}>{statusText(item.is_published?"published":"draft")}</span><button disabled={saving===item.id} onClick={()=>toggleHomework(item)}>{item.is_published?"إيقاف النشر":"نشر"}</button></div>
+          <div className="owner-media-actions"><span className={item.is_published?"published":"draft"}>{statusText(item.is_published?"published":"draft")}</span><button disabled={saving===item.id} onClick={()=>toggleHomework(item)}>{item.is_published?"إيقاف النشر":"نشر"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"homework_assignments",item)}/></label></div>
         </article>)}</div>{!homework.length&&<p className="owner-note">لا توجد واجبات حتى الآن.</p>}</div>
       </div>
       <p className="owner-warning">الواجب الجديد يُحفظ كمسودة. أضف الأسئلة ومفتاح الإجابة من محرر الواجبات قبل نشره للطلاب؛ لن أنشر واجبًا فارغًا تلقائيًا.</p>
