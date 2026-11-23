@@ -45,8 +45,8 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
    else if(isOwner)path+="&kind=in.(grade_group,support)";
    let rows=await emadChatApi(portal,path);
    if(isSupport&&!rows.length){
-    const created=await emadChatApi(portal,"emad_conversations",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({kind:"support",title:"خدمة العملاء — "+(profile.full_name||"طالب"),created_by:myId})});
-    rows=Array.isArray(created)?created:[created];
+    await emadChatApi(portal,"emad_conversations",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({kind:"support",title:"خدمة العملاء — "+(profile.full_name||"طالب"),created_by:myId})});
+    rows=await emadChatApi(portal,"emad_conversations?select=id,kind,title,grade,created_by,updated_at,created_at,is_active&kind=eq.support&created_by=eq."+encodeURIComponent(myId)+"&is_active=eq.true&limit=1");
    }
    const ids=(rows||[]).map(x=>x.id);
    let memberRows=[];
