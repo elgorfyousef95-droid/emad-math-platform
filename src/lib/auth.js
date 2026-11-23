@@ -1,6 +1,6 @@
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLIC_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
-const SESSION_KEY = "emad_student_auth_session";
+const SESSION_KEY = "emad_student_auth_session_v2";
 
 function config() {
   if (!SUPABASE_URL || !SUPABASE_PUBLIC_KEY) {
@@ -87,6 +87,7 @@ export async function refreshStudentSession() {
 export function clearStudentSession() {
   try {
     localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem("emad_student_auth_session");
   } catch {
     // Ignore unavailable local storage.
   }
