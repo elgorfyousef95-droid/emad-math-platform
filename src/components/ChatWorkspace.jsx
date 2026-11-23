@@ -28,6 +28,8 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const [attachmentUrls,setAttachmentUrls]=useState({});
  const [pinBusy,setPinBusy]=useState(false);
  const bottomRef=useRef(null);
+ const messageListRef=useRef(null);
+ const stickToBottom=useRef(true);
  const fileRef=useRef(null);
  const selected=conversations.find(c=>c.id===selectedId)||null;
  const isOwner=mode==="owner";
@@ -38,7 +40,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const loadConversations=useCallback(async()=>{
   if(!myId)return;
   try{
-   let path="emad_conversations?select=id,kind,title,grade,created_by,updated_at,created_at,is_active&is_active=eq.true&order=updated_at.desc&limit=250";
+   let path="emad_conversations?select=id,kind,title,grade,created_by,updated_at,created_at,is_active&is_active=eq.true&order=updated_at.desc&limit=80";
    if(isSupport)path+="&kind=eq.support&created_by=eq."+encodeURIComponent(myId);
    else if(mode==="teacher")path+="&kind=eq.grade_group";
    else if(mode==="groups")path+="&kind=eq.grade_group";
@@ -88,11 +90,12 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
    }
    if(myId){
     const now=new Date().toISOString();
-    await emadChatApi(portal,"emad_conversation_members?conversation_id=eq."+encodeURIComponent(selectedId)+"&user_id=eq."+encodeURIComponent(myId),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({last_read_at:now})}).catch(()=>{});
     const unseen=(rows||[]).filter(m=>m.sender_id!==myId).map(m=>m.id);
-    if(unseen.length)await emadChatApi(portal,"emad_message_receipts?user_id=eq."+encodeURIComponent(myId)+"&message_id=in.("+unseen.join(",")+")&read_at=is.null",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({read_at:now})}).catch(()=>{});
+    if(unseen.length){
+     await emadChatApi(portal,"emad_conversation_members?conversation_id=eq."+encodeURIComponent(selectedId)+"&user_id=eq."+encodeURIComponent(myId),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({last_read_at:now})}).catch(()=>{});
+     await emadChatApi(portal,"emad_message_receipts?user_id=eq."+encodeURIComponent(myId)+"&message_id=in.("+unseen.join(",")+")&read_at=is.null",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({read_at:now})}).catch(()=>{});
+    }
    }
-   bottomRef.current?.scrollIntoView({behavior:"smooth",block:"end"});
   }catch(e){console.error("emad_chat_messages",e);setError("تعذر تحميل رسائل المحادثة.");}
  },[selectedId,portal,myId,attachmentUrls]);
 
@@ -100,9 +103,13 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  useEffect(()=>{setMessages([]);setAttachmentUrls({});loadMessages();},[selectedId]);
  useEffect(()=>{
   if(!myId)return;
-  const timer=window.setInterval(()=>{loadConversations();if(selectedId)loadMessages();},4000);
-  return()=>window.clearInterval(timer);
+  const conversationTimer=window.setInterval(loadConversations,12000);
+  const messageTimer=window.setInterval(()=>{if(selectedId)loadMessages();},4000);
+  return()=>{window.clearInterval(conversationTimer);window.clearInterval(messageTimer);};
  },[myId,selectedId,loadConversations,loadMessages]);
+ useEffect(()=>{
+  if(stickToBottom.current)bottomRef.current?.scrollIntoView({behavior:"smooth",block:"end"});
+ },[messages]);
 
  const send=async()=>{
   const text=draft.trim();
@@ -188,7 +195,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
       <div className="emad-chat-thread-actions">{isOwner&&selected.kind==="support"?<button onClick={togglePin} disabled={pinBusy}>{selectedMember?.is_pinned?"إلغاء التثبيت":"تثبيت المحادثة"}</button>:null}<span>{members.filter(m=>m.conversation_id===selectedId).length} أعضاء</span></div>
      </header>
      {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <span className="emad-chat-roster-member" key={m.user_id}><button title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>{isOwner&&m.user_id!==myId?<button className="emad-chat-remove-member" title="إزالة من الجروب" onClick={()=>removeMember(m.user_id)}>×</button>:null}</span>;})}</div>:null}
-     <div className="emad-chat-message-list">
+     <div className="emad-chat-message-list" ref={messageListRef} onScroll={e=>{const el=e.currentTarget;stickToBottom.current=el.scrollHeight-el.scrollTop-el.clientHeight<130;}}>
       {!messages.length?<div className="emad-chat-empty large">{selected.kind==="support"?"اكتب رسالتك الأولى، وسيظهر رد خدمة العملاء هنا.":"ابدأ النقاش مع أعضاء الجروب."}</div>:messages.map(message=>{
        const sender=profiles[message.sender_id]||{};
        const mine=message.sender_id===myId;
