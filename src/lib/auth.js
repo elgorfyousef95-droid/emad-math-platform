@@ -142,6 +142,7 @@ export async function loadStudentWorkspace() {
   ]);
   const profile = profiles?.[0] || null;
   if (!profile || profile.id !== userId) throw new Error("authenticated_profile_not_found");
+  if (profile.role !== "student") throw new Error("student_account_required");
   return {
     profile,
     subscription: subscriptions?.[0] || null,
