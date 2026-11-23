@@ -60,7 +60,7 @@ export default function OwnerConsole() {
   const [announcementForm, setAnnouncementForm] = useState({ title: "", body: "", course_id: "", cover_image_url: "" });
   const [homeworkQuestionForm, setHomeworkQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
-  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "" });
+  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
 
   const read = async (path) => {
     try { return await portalApi("owner", path); }
@@ -150,6 +150,7 @@ export default function OwnerConsole() {
       if (kind === "course") setCourseForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "exam") setExamForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "homework") setHomeworkForm((old) => ({ ...old, cover_image_url: url }));
+      if (kind === "lesson") setLessonForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "announcement") setAnnouncementForm((old) => ({ ...old, cover_image_url: url }));
       setNotice("تم رفع الصورة وحفظ رابطها في نموذج المحتوى.");
     } catch (e) {
@@ -178,18 +179,19 @@ export default function OwnerConsole() {
   const createLesson = async (event) => {
     event.preventDefault();
     if (!selectedCourse || !lessonForm.title.trim()) return;
+    if (!lessonForm.cover_image_url) return setError("ارفع صورة للمحاضرة قبل حفظها.");
     setSaving("lesson"); setError(""); setNotice("");
     try {
       const order = lessons.filter((x) => x.course_id === selectedCourse).length + 1;
       const rows = await portalApi("owner", "lessons", { method: "POST", headers: { Prefer: "return=representation" }, body: JSON.stringify({
         course_id: selectedCourse, title: lessonForm.title.trim(), description: lessonForm.description.trim(),
         content: lessonForm.content.trim(), video_url: lessonForm.video_url.trim() || null, sort_order: order,
-        is_published: false,
+        cover_image_url: lessonForm.cover_image_url || null, is_published: false,
       }) });
       const created = Array.isArray(rows) ? rows[0] : rows;
       if (!created?.id) throw new Error("lesson_not_created");
       setLessons((old) => [...old, created]);
-      setLessonForm({ title: "", description: "", content: "", video_url: "" });
+      setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
       setNotice("تمت إضافة المحاضرة كمسودة.");
     } catch (e) { setError("تعذر إضافة المحاضرة. " + (e.message || "")); }
     finally { setSaving(""); }
@@ -212,7 +214,7 @@ export default function OwnerConsole() {
     try {
       const url = await uploadPortalImage(file, "owner");
       await portalApi("owner", table + "?id=eq." + encodeURIComponent(item.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ cover_image_url: url }) });
-      const setter = table === "courses" ? setCourses : table === "exams" ? setExams : table === "announcements" ? setAnnouncements : setHomework;
+      const setter = table === "courses" ? setCourses : table === "exams" ? setExams : table === "lessons" ? setLessons : table === "announcements" ? setAnnouncements : setHomework;
       setter((old) => old.map((x) => x.id === item.id ? { ...x, cover_image_url: url } : x));
       setNotice("تم تحديث صورة العنصر.");
     } catch { setError("تعذر تحديث الصورة. تحقق من مساحة التخزين وصلاحيات المالك."); }
@@ -510,8 +512,8 @@ export default function OwnerConsole() {
             <form className="owner-form owner-edit-course-form" onSubmit={saveCourseEdits}><h4>تعديل بيانات الكورس</h4><label>اسم الكورس<input required value={editCourseForm.title} onChange={e=>setEditCourseForm({...editCourseForm,title:e.target.value})}/></label><div className="owner-form-two"><label>الصف<select value={editCourseForm.grade} onChange={e=>setEditCourseForm({...editCourseForm,grade:e.target.value})}>{GRADES.map(x=><option key={x}>{x}</option>)}</select></label><label>المادة<input value={editCourseForm.subject} onChange={e=>setEditCourseForm({...editCourseForm,subject:e.target.value})}/></label></div><label>المدرس المسؤول<select value={editCourseForm.teacher_id} onChange={e=>setEditCourseForm({...editCourseForm,teacher_id:e.target.value})}>{teachers.map(x=><option key={x.id} value={x.id}>{x.full_name||"مدرس"}</option>)}<option value={profile.id}>المالك</option></select></label><label>السعر<input type="number" min="0" value={editCourseForm.price_egp} onChange={e=>setEditCourseForm({...editCourseForm,price_egp:e.target.value})}/></label><label>الوصف<textarea rows="3" value={editCourseForm.description} onChange={e=>setEditCourseForm({...editCourseForm,description:e.target.value})}/></label><button className="owner-primary-button" disabled={saving===selected.id}>حفظ تعديلات الكورس</button></form>
             <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
             <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
-              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}><span>{String(index+1).padStart(2,"0")}</span><div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}
-              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رابط الفيديو<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><button className="owner-primary-button" disabled={saving==="lesson"}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
+              {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}
+              <form className="owner-form" onSubmit={createLesson}><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رابط الفيديو<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":"إضافة المحاضرة كمسودة"}</button></form>
             </div></div>}
         </div>
       </div>
