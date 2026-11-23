@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
   portalApi,
+  portalLogin,
   refreshPortalSession,
   logoutPortalSession,
   uploadPortalImage,
@@ -44,6 +45,8 @@ export default function OwnerConsole() {
   const [uploading, setUploading] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginBusy, setLoginBusy] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState({});
   const [selectedCourse, setSelectedCourse] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
@@ -440,7 +443,7 @@ export default function OwnerConsole() {
   };
 
   if (busy) return <main className="owner-shell"><div className="owner-loading">جارٍ تأمين وفتح مركز تحكم المالك...</div></main>;
-  if (!profile || profile.role !== "owner") return <div className="owner-shell"><div className="owner-denied"><span>OWNER ACCESS</span><h1>دخول بوابة المالك</h1><p>{error || "هذه الصفحة مخصصة للمالك فقط."}</p><button onClick={() => window.location.reload()}>إعادة المحاولة</button><button onClick={() => { logoutPortalSession("owner"); window.location.reload(); }}>تسجيل الدخول بحساب آخر</button></div></div>;
+  if (!profile || profile.role !== "owner") return <main className="owner-shell owner-login-shell" dir="rtl"><section className="owner-login-card"><span>EMAD EL SANAFIRY · OWNER ACCESS</span><h1>بوابة المالك</h1><p>دخول مستقل عن حسابات الطلاب والمدرسين.</p><form onSubmit={async(e)=>{e.preventDefault();setLoginBusy(true);setError("");try{await portalLogin("owner",loginPassword);setLoginPassword("");await load();}catch{setError("كلمة المرور غير صحيحة أو تعذر الاتصال. حاول مرة أخرى.");}finally{setLoginBusy(false);}}}><label>كلمة مرور المالك<input type="password" required autoComplete="current-password" value={loginPassword} onChange={e=>setLoginPassword(e.target.value)} placeholder="اكتب كلمة المرور"/></label><button className="owner-primary-button" disabled={loginBusy}>{loginBusy?"جارٍ التحقق...":"تسجيل الدخول"}</button></form>{error&&<p className="owner-error">{error}</p>}<button className="owner-secondary-button" onClick={()=>{logoutPortalSession("owner");setLoginPassword("");setError("");}}>مسح الجلسة والمحاولة مجددًا</button></section></main>;
 
   return <main className="owner-shell owner-control-center" dir="rtl">
     <header className="owner-header owner-hero">
