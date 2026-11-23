@@ -8,7 +8,7 @@ import AuthScreen from "./pages/AuthScreen.jsx";
 import StudentExperience from "./pages/StudentExperience.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
 import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode } from "./lib/auth.js";
-import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage, uploadPortalVideo } from "./lib/portalAuth.js";
+import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage, uploadPortalVideo, deletePortalVideo } from "./lib/portalAuth.js";
 import OwnerConsole from "./pages/OwnerConsole.jsx";
 import ExamRunner from "./components/ExamRunner.jsx";
 import ChatWorkspace from "./components/ChatWorkspace.jsx";
@@ -101,6 +101,7 @@ function TeacherConsole(){
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:"",cover_image_url:""});
  const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"60"});
  const [lessonVideoPreviewUrl,setLessonVideoPreviewUrl]=useState("");
+ const [uploadProgress,setUploadProgress]=useState(0);
  const [examForm,setExamForm]=useState({title:"",course_id:"",duration_minutes:"60",opens_at:"",closes_at:""});
  const [examQuestionForm,setExamQuestionForm]=useState({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
  const [examDraftQuestions,setExamDraftQuestions]=useState([]);
@@ -164,7 +165,7 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
  };
- const uploadLessonVideo=async(file)=>{if(!file)return;setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher");const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonForm(old=>({...old,video_url:path}));setLessonVideoPreviewUrl(previewUrl);setNotice("تم رفع فيديو المحاضرة بشكل خاص من جهازك.");}catch(e){setError(e.message==="video_too_large"?"حجم الفيديو أكبر من الحد المسموح (100 ميجابايت). اختر نسخة مضغوطة من جهازك.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"تعذر رفع ملف الفيديو. تحقق من نوع الملف والاتصال.");}finally{setSaving(false);}};
+ const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonForm(old=>({...old,video_url:path}));setLessonVideoPreviewUrl(previewUrl);setNotice("تم رفع فيديو المحاضرة بشكل خاص من جهازك.");}catch(e){setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"تعذر رفع ملف الفيديو. تحقق من نوع الملف والاتصال.");}finally{setSaving(false);}};
  const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
   try{
@@ -227,6 +228,16 @@ function TeacherConsole(){
   try{await portalApi("teacher", "lessons?id=eq."+encodeURIComponent(lesson.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setLessons(old=>old.map(x=>x.id===lesson.id?{...x,is_published}:x));setNotice(is_published?"تم نشر المحاضرة.":"تم إخفاء المحاضرة.");}
   catch{setError("تعذر تحديث المحاضرة.");}finally{setSaving(false);}
  };
+ const deleteLesson=async(lesson)=>{
+  if(!window.confirm("حذف المحاضرة «"+lesson.title+"» نهائيًا؟"))return;
+  setSaving(true);setError("");setNotice("");
+  try{
+   await portalApi("teacher","lessons?id=eq."+encodeURIComponent(lesson.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+   try{await deletePortalVideo(lesson.video_url,"teacher");}catch(mediaError){console.warn("lecture_media_cleanup",mediaError);}
+   setLessons(old=>old.filter(x=>x.id!==lesson.id));setNotice("تم حذف المحاضرة.");
+  }catch(e){setError("تعذر حذف المحاضرة. "+(e.message||""));}
+  finally{setSaving(false);}
+ };
  const current=courses.find(x=>x.id===selected);
  const replyToMessage=async(message)=>{
   const reply=(replyDrafts[message.id]||"").trim();
@@ -260,8 +271,8 @@ function TeacherConsole(){
    </section>
    <section className="teacher-panel teacher-lessons-panel"><div className="teacher-panel-heading"><div><span>LECTURE MANAGEMENT</span><h2>{current?current.title:"اختر كورسًا"}</h2></div>{current?<i className={current.status==="published"?"published":"draft"}>{current.status==="published"?"منشور":"مسودة"}</i>:null}</div>
     {current?<>{current.cover_image_url&&<img className="teacher-course-detail-image" src={current.cover_image_url} alt={current.title}/>}<div className="teacher-course-actions"><p>{current.description||"لا يوجد وصف للكورس."}</p><button disabled={saving} onClick={()=>toggleCourse(current)}>{current.status==="published"?"إيقاف النشر":"نشر الكورس"}</button></div>
-     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="teacher-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
-     <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><div className="teacher-form-grid"><input type="number" min="1" max="300" value={lessonForm.duration_minutes} onChange={e=>setLessonForm({...lessonForm,duration_minutes:e.target.value})} placeholder="مدة المحاضرة بالدقائق"/><div className="teacher-video-selected">{lessonForm.video_url?"تم اختيار ورفع فيديو المحاضرة":"لم يتم اختيار فيديو بعد"}</div></div><label className="teacher-video-label"><span>اختيار فيديو المحاضرة من الهاتف أو الجهاز</span><small>افتح المعرض أو الملفات واختر الفيديو مباشرة — MP4 أو WEBM أو MOV، حتى 100MB</small><input type="file" accept="video/*" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/></label>{lessonForm.video_url&&<video className="teacher-video-preview" src={lessonVideoPreviewUrl} controls playsInline/>}<textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><label className="teacher-image-label">صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadLessonCover(e.target.files?.[0])}/></label>{lessonForm.cover_image_url&&<img className="teacher-course-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button disabled={saving||!lessonForm.cover_image_url}>حفظ المحاضرة كمسودة</button></form>
+     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="teacher-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="teacher-lesson-actions"><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="teacher-danger-button" disabled={saving} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
+     <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><div className="teacher-form-grid"><input type="number" min="1" max="300" value={lessonForm.duration_minutes} onChange={e=>setLessonForm({...lessonForm,duration_minutes:e.target.value})} placeholder="مدة المحاضرة بالدقائق"/><div className="teacher-video-selected">{lessonForm.video_url?"تم اختيار ورفع فيديو المحاضرة":"لم يتم اختيار فيديو بعد"}</div></div><label className="teacher-video-label"><span>اختيار فيديو المحاضرة من الهاتف أو الجهاز</span><small>افتح المعرض أو الملفات واختر الفيديو مباشرة — MP4 أو WEBM أو MOV، حتى 1GB · رفع متقطع قابل للاستكمال</small><input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={e=>uploadLessonVideo(e.target.files?.[0])}/></label>{saving&&uploadProgress>0&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>لو الاتصال انقطع، اختر نفس الملف مرة أخرى لاستكمال الرفع.</small></div>}{lessonForm.video_url&&<video className="teacher-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>}<textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><label className="teacher-image-label">صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadLessonCover(e.target.files?.[0])}/></label>{lessonForm.cover_image_url&&<img className="teacher-course-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button disabled={saving||!lessonForm.cover_image_url}>حفظ المحاضرة كمسودة</button></form>
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>}
