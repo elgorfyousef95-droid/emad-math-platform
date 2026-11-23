@@ -71,7 +71,7 @@ export async function refreshPortalSession(portal) {
 }
 export async function portalApi(portal, path, options = {}) {
   const { url, key } = config();
-  const session = getPortalSession(portal);
+  const session = await refreshPortalSession(portal);
   if (!session?.access_token) throw new Error("portal_not_authenticated");
   const response = await fetch(`${url}/rest/v1/${path}`, {
     ...options,
@@ -87,4 +87,30 @@ export async function portalApi(portal, path, options = {}) {
     throw new Error(body.message || body.code || "portal_api_error");
   }
   return response.status === 204 ? null : response.json();
+}
+
+
+export async function uploadPortalImage(file, portal = "owner") {
+  if (!file || !String(file.type || "").startsWith("image/")) throw new Error("invalid_image_file");
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) throw new Error("unsupported_image_type");
+  if (file.size > 5 * 1024 * 1024) throw new Error("image_too_large");
+  const session = await refreshPortalSession(portal);
+  if (!session?.access_token) throw new Error("portal_not_authenticated");
+  const { url, key } = config();
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const folder = portal === "teacher" ? `teacher/${session.user?.id}` : `owner/${session.user?.id}`;
+  const path = `${folder}/${crypto.randomUUID()}.${extension}`;
+  const response = await fetch(`${url}/storage/v1/object/emad-learning-media/${path}`, {
+    method: "POST",
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": file.type,
+      "x-upsert": "false",
+    },
+    body: file,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || data.error || "image_upload_failed");
+  return `${url}/storage/v1/object/public/emad-learning-media/${path}`;
 }
