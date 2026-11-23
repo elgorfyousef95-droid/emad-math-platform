@@ -95,7 +95,7 @@ function PortalAccess({portal,onSuccess}){
 function TeacherConsole(){
  const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("courses"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:"",cover_image_url:""});
- const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:""});
+ const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:""});
  const load=async()=>{
   setBusy(true);setError("");
   try{
@@ -124,7 +124,7 @@ function TeacherConsole(){
   let active=true;
   const fetchLessons=async()=>{
    if(!selected){setLessons([]);return;}
-   try{const rows=await portalApi("teacher", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
+   try{const rows=await portalApi("teacher", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,cover_image_url,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
    catch{if(active)setError("تعذر تحميل المحاضرات لهذا الكورس.");}
   };
   fetchLessons();return()=>{active=false;};
@@ -144,13 +144,18 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setCourseForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة غلاف الكورس.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع الصورة. تحقق من صيغة الصورة وصلاحيات التخزين.");}
  };
+ const uploadLessonCover=async(file)=>{
+  if(!file)return;setError("");setNotice("");
+  try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
+  catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
+ };
  const createLesson=async(e)=>{
-  e.preventDefault();if(!selected)return;setSaving(true);setError("");setNotice("");
+  e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
   try{
    const rows=await portalApi("teacher", "lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...lessonForm,course_id:selected,sort_order:lessons.length+1,is_published:false})});
    const created=Array.isArray(rows)?rows[0]:rows;
    if(!created?.id)throw new Error("create_failed");
-   setLessons(old=>[...old,created]);setLessonForm({title:"",description:"",content:"",video_url:""});setNotice("تم حفظ المحاضرة كمسودة.");
+   setLessons(old=>[...old,created]);setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:""});setNotice("تم حفظ المحاضرة كمسودة.");
   }catch{setError("لم يتم حفظ المحاضرة. تحقق من صلاحية الكورس والبيانات.");}
   finally{setSaving(false);}
  };
@@ -194,8 +199,8 @@ function TeacherConsole(){
    </section>
    <section className="teacher-panel teacher-lessons-panel"><div className="teacher-panel-heading"><div><span>LECTURE MANAGEMENT</span><h2>{current?current.title:"اختر كورسًا"}</h2></div>{current?<i className={current.status==="published"?"published":"draft"}>{current.status==="published"?"منشور":"مسودة"}</i>:null}</div>
     {current?<>{current.cover_image_url&&<img className="teacher-course-detail-image" src={current.cover_image_url} alt={current.title}/>}<div className="teacher-course-actions"><p>{current.description||"لا يوجد وصف للكورس."}</p><button disabled={saving} onClick={()=>toggleCourse(current)}>{current.status==="published"?"إيقاف النشر":"نشر الكورس"}</button></div>
-     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}><span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span><div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
-     <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="رابط الفيديو (اختياري)"/><textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><button disabled={saving}>حفظ المحاضرة كمسودة</button></form>
+     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="teacher-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
+     <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="رابط الفيديو (اختياري)"/><textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><label className="teacher-image-label">صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadLessonCover(e.target.files?.[0])}/></label>{lessonForm.cover_image_url&&<img className="teacher-course-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button disabled={saving||!lessonForm.cover_image_url}>حفظ المحاضرة كمسودة</button></form>
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>}
