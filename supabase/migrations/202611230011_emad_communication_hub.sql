@@ -154,31 +154,33 @@ $$;
 create or replace function private.emad_chat_after_message()
 returns trigger language plpgsql security definer
 set search_path = pg_catalog, public, auth, private
-as $$
-declare c record;
+as $
+declare c record; conversation_kind text;
 begin
   insert into public.emad_message_receipts(message_id,user_id)
   select new.id,m.user_id from public.emad_conversation_members m
   where m.conversation_id=new.conversation_id and m.user_id<>new.sender_id and m.left_at is null
   on conflict(message_id,user_id) do nothing;
 
-  update public.emad_conversations set updated_at=new.created_at where id=new.conversation_id;
+  update public.emad_conversations set updated_at=new.created_at
+    where id=new.conversation_id
+    returning kind into conversation_kind;
 
   for c in
     select m.user_id from public.emad_conversation_members m
     where m.conversation_id=new.conversation_id and m.user_id<>new.sender_id and m.left_at is null
   loop
     insert into public.emad_notifications(recipient_id,notification_type,title,body,action_url,metadata)
-    values(c.user_id,'chat_message','رسالة جديدة',
+    values(c.user_id,case when conversation_kind='support' then 'support' else 'general' end,'رسالة جديدة',
       case when new.message_type='image' then 'أرسل صورة جديدة'
            when new.message_type='file' then 'أرسل ملفًا جديدًا'
-           else left(new.body,180) end,
-      case when (select kind from public.emad_conversations where id=new.conversation_id)='support' then '/messages' else '/groups' end,
+           else coalesce(nullif(left(trim(new.body),180),''),'أرسل مرفقًا جديدًا') end,
+      case when conversation_kind='support' then '/messages' else '/groups' end,
       jsonb_build_object('conversation_id',new.conversation_id,'message_id',new.id));
   end loop;
   return new;
 end;
-$$;
+$;
 
 drop trigger if exists emad_chat_profile_memberships on public.profiles;
 create trigger emad_chat_profile_memberships
