@@ -484,3 +484,52 @@ drop trigger if exists emad_welcome_new_profile on public.profiles;
 create trigger emad_welcome_new_profile
 after insert on public.profiles
 for each row execute function private.emad_welcome_new_profile();
+
+-- Protect paid lecture videos: only the owner, assigned teacher, or an active
+-- subscriber to the published lesson can mint signed playback URLs.
+update storage.buckets
+set public=false
+where id='emad-lecture-videos';
+
+drop policy if exists emad_lecture_videos_public_read on storage.objects;
+drop policy if exists emad_lecture_videos_staff_read on storage.objects;
+create policy emad_lecture_videos_staff_read on storage.objects
+for select to authenticated
+using (
+  bucket_id='emad-lecture-videos'
+  and (
+    private.current_profile_role()='owner'
+    or (
+      private.current_profile_role()='teacher'
+      and (
+        ((storage.foldername(name))[1]='teacher' and (storage.foldername(name))[2]=auth.uid()::text)
+        or exists (
+          select 1 from public.lessons l
+          join public.courses c on c.id=l.course_id
+          where l.video_url=name and c.teacher_id=auth.uid()
+        )
+      )
+    )
+  )
+);
+
+drop policy if exists emad_lecture_videos_student_read on storage.objects;
+create policy emad_lecture_videos_student_read on storage.objects
+for select to authenticated
+using (
+  bucket_id='emad-lecture-videos'
+  and private.current_profile_role()='student'
+  and exists (
+    select 1
+    from public.lessons l
+    join public.courses c on c.id=l.course_id
+    join public.profiles p on p.id=auth.uid()
+    join public.emad_student_subscriptions s
+      on s.student_id=p.id and s.grade=p.grade and s.ends_at>now()
+    where l.video_url=name
+      and l.is_published=true
+      and c.status='published'
+      and c.grade=p.grade
+      and p.role='student'
+  )
+);
