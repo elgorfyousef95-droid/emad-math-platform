@@ -123,16 +123,21 @@ $$;
 create or replace function private.emad_chat_add_support_owners()
 returns trigger language plpgsql security definer
 set search_path = pg_catalog, public, auth, private
-as $$
+as $
 begin
   if new.kind='support' then
+    if new.created_by is not null then
+      insert into public.emad_conversation_members(conversation_id,user_id,member_role)
+      values(new.id,new.created_by,'student')
+      on conflict(conversation_id,user_id) do nothing;
+    end if;
     insert into public.emad_conversation_members(conversation_id,user_id,member_role)
     select new.id,p.id,'owner' from public.profiles p where p.role in ('owner','admin')
     on conflict(conversation_id,user_id) do nothing;
   end if;
   return new;
 end;
-$$;
+$;
 
 create or replace function private.emad_chat_add_course_teacher()
 returns trigger language plpgsql security definer
