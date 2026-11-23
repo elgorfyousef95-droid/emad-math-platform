@@ -300,7 +300,7 @@ function App(){
  if(window.location.pathname.replace(/\/$/,"")==="/owner")return <OwnerConsole/>;
  if(window.location.pathname.replace(/\/$/,"")==="/teacher")return <TeacherConsole/>;
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
- if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch{clearStudentSession();go("login");}}}/></div>;
+ if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch(error){clearStudentSession();go("login");throw error;}}}/></div>;
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;
