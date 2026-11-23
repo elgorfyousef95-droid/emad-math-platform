@@ -13,6 +13,7 @@ import OwnerConsole from "./pages/OwnerConsole.jsx";
 import ExamRunner from "./components/ExamRunner.jsx";
 import ChatWorkspace from "./components/ChatWorkspace.jsx";
 import { getLectureVideoUrl } from "./lib/lectureMedia.js";
+import "./pages/PlatformExperienceRefresh.css";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
 const navByGrade={
@@ -166,7 +167,7 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
  };
- const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setUploadingVideo(true);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonForm(old=>({...old,video_url:path}));setLessonVideoPreviewUrl(previewUrl);setNotice("تم رفع فيديو المحاضرة بشكل خاص من جهازك.");}catch(e){setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"تعذر رفع ملف الفيديو. تحقق من نوع الملف والاتصال.");}finally{setSaving(false);setUploadingVideo(false);}};
+ const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setUploadingVideo(true);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));setLessonForm(old=>({...old,video_url:path}));setLessonVideoPreviewUrl("");setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");try{const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonVideoPreviewUrl(previewUrl);setNotice("تم رفع الفيديو بنجاح. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");}catch(previewError){console.error("teacher_video_preview",previewError);setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");}}catch(e){console.error("teacher_video_upload",e);setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"فشل رفع الفيديو نفسه. راجع الاتصال وصلاحية التخزين ثم حاول مرة أخرى.");}finally{setSaving(false);setUploadingVideo(false);}};
  const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
   try{
