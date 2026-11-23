@@ -132,6 +132,23 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   finally{setPinBusy(false);}
  };
 
+ const removeMember=async(userId)=>{
+  if(!isOwner||!selectedId||userId===myId)return;
+  if(!window.confirm("إزالة هذا الحساب من جروب الصف؟"))return;
+  try{
+   await emadChatApi(portal,"emad_conversation_members?conversation_id=eq."+encodeURIComponent(selectedId)+"&user_id=eq."+encodeURIComponent(userId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+   await loadConversations();
+  }catch(e){setError("تعذر إزالة العضو من الجروب.");}
+ };
+ const deleteMessage=async(messageId)=>{
+  if(!isOwner)return;
+  if(!window.confirm("حذف الرسالة من المحادثة؟"))return;
+  try{
+   await emadChatApi(portal,"emad_messages?id=eq."+encodeURIComponent(messageId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+   await loadMessages();
+  }catch(e){setError("تعذر حذف الرسالة.");}
+ };
+
  const visibleConversations=useMemo(()=>conversations.filter(c=>{
   const person=profiles[c.created_by];
   return [c.title,c.grade,person?.full_name,person?.student_number].join(" ").toLowerCase().includes(filter.toLowerCase());
@@ -170,7 +187,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
       <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة مع خدمة العملاء":selected.grade+" · مجموعة الصف"}</small></div></div>
       <div className="emad-chat-thread-actions">{isOwner&&selected.kind==="support"?<button onClick={togglePin} disabled={pinBusy}>{selectedMember?.is_pinned?"إلغاء التثبيت":"تثبيت المحادثة"}</button>:null}<span>{members.filter(m=>m.conversation_id===selectedId).length} أعضاء</span></div>
      </header>
-     {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <button key={m.user_id} title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>;})}</div>:null}
+     {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <span className="emad-chat-roster-member" key={m.user_id}><button title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>{isOwner&&m.user_id!==myId?<button className="emad-chat-remove-member" title="إزالة من الجروب" onClick={()=>removeMember(m.user_id)}>×</button>:null}</span>;})}</div>:null}
      <div className="emad-chat-message-list">
       {!messages.length?<div className="emad-chat-empty large">{selected.kind==="support"?"اكتب رسالتك الأولى، وسيظهر رد خدمة العملاء هنا.":"ابدأ النقاش مع أعضاء الجروب."}</div>:messages.map(message=>{
        const sender=profiles[message.sender_id]||{};
@@ -184,7 +201,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
           {message.body?<p>{message.body}</p>:null}
           {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">📎 {message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
          </div>
-         <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?" · تم الإرسال":""}</small>
+         <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?" · تم الإرسال":""}{isOwner?<button className="emad-chat-delete-message" onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</small>
         </div>
        </article>;
       })}
