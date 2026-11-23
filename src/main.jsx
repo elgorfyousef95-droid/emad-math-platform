@@ -133,7 +133,7 @@ function OwnerConsole(){
 
 
 function TeacherConsole(){
- const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
+ const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("courses"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:""});
  const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:""});
  const load=async()=>{
@@ -147,6 +147,11 @@ function TeacherConsole(){
    if(me?.role!=="teacher")throw new Error("not_teacher");
    const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setCourses(list||[]);
+   const [studentRows,messageRows]=await Promise.all([
+    portalApi("teacher", "profiles?select=id,full_name,student_number,grade,group_name,phone,parent_name,parent_phone,governorate,city,avatar_url,created_at&role=eq.student&limit=500"),
+    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200")
+   ]);
+   setStudents(studentRows||[]);setMessages(messageRows||[]);
    const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
    setSelected(first);
   }catch(e){
@@ -194,13 +199,29 @@ function TeacherConsole(){
   catch{setError("تعذر تحديث المحاضرة.");}finally{setSaving(false);}
  };
  const current=courses.find(x=>x.id===selected);
+ const replyToMessage=async(message)=>{
+  const reply=(replyDrafts[message.id]||"").trim();
+  if(!reply)return;
+  setSaving(true);setError("");setNotice("");
+  try{
+   await portalApi("teacher", "support_messages?id=eq."+encodeURIComponent(message.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({admin_reply:reply,replied_by:profile.id,replied_at:new Date().toISOString(),status:"closed"})});
+   setMessages(old=>old.map(x=>x.id===message.id?{...x,admin_reply:reply,replied_by:profile.id,replied_at:new Date().toISOString(),status:"closed"}:x));
+   setReplyDrafts(old=>({...old,[message.id]:""}));setNotice("تم إرسال الرد وحفظه في سجل الرسالة.");
+  }catch{setError("تعذر إرسال الرد. تحقق من صلاحية الرسالة.");}
+  finally{setSaving(false);}
+ };
  if(busy)return <main className="owner-shell"><div className="owner-loading">جارٍ التحقق من صلاحية المدرس...</div></main>;
  if(!profile||profile.role!=="teacher")return <PortalAccess portal="teacher" onSuccess={load}/>;
  return <main className="teacher-shell" dir="rtl">
   <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("teacher");window.location.reload();}}>تسجيل الخروج</button></div></header>
   {error&&<p className="teacher-alert error">{error}</p>}{notice&&<p className="teacher-alert success">{notice}</p>}
   <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article></section>
-  <div className="teacher-layout">
+  <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
+   <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}>الكورسات والمحاضرات</button>
+   <button className={section==="students"?"active":""} onClick={()=>setSection("students")}>متابعة الطلاب <b>{students.length}</b></button>
+   <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}>مراسلات الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
+  </nav>
+  {section==="courses"&&<div className="teacher-layout">
    <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>COURSE LIBRARY</span><h2>كورساتي</h2></div><small>{courses.length} كورس</small></div>
     {courses.length?<div className="teacher-course-list">{courses.map(course=><button key={course.id} className={selected===course.id?"teacher-course active":"teacher-course"} onClick={()=>setSelected(course.id)}><span><b>{course.title}</b><small>{course.grade||"صف غير محدد"} · {course.subject||"رياضيات"}</small></span><i className={course.status==="published"?"published":"draft"}>{course.status==="published"?"منشور":"مسودة"}</i></button>)}</div>:<div className="teacher-empty">لم تنشئ كورسات بعد. ابدأ بإنشاء أول كورس.</div>}
     <form className="teacher-form" onSubmit={createCourse}><h3>إنشاء كورس جديد</h3><input required value={courseForm.title} onChange={e=>setCourseForm({...courseForm,title:e.target.value})} placeholder="اسم الكورس"/><div className="teacher-form-grid"><select value={courseForm.grade} onChange={e=>setCourseForm({...courseForm,grade:e.target.value})}><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select><input value={courseForm.subject} onChange={e=>setCourseForm({...courseForm,subject:e.target.value})} placeholder="المادة"/></div><textarea value={courseForm.description} onChange={e=>setCourseForm({...courseForm,description:e.target.value})} placeholder="وصف الكورس"/><button disabled={saving}>إنشاء كمسودة</button></form>
@@ -212,6 +233,26 @@ function TeacherConsole(){
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>
+
+  </div>}
+  {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
+   <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>الطلاب التابعون لك</h2></div><small>{students.length} طالب</small></div>
+   <p className="teacher-directory-note">تظهر هنا حسابات الطلاب في الصفوف المرتبطة بالكورسات التي تديرها فقط.</p>
+   <div className="teacher-student-grid">{students.map(student=><article className="teacher-student-card" key={student.id}>
+    <div className="teacher-student-top"><span className="teacher-student-avatar">{student.avatar_url?<img src={student.avatar_url} alt=""/>:(student.full_name||"ط").slice(0,1)}</span><div><b>{student.full_name||"طالب"}</b><small>رقم الطالب: {student.student_number||"—"}</small></div></div>
+    <dl><div><dt>الصف</dt><dd>{student.grade||"—"}</dd></div><div><dt>المجموعة</dt><dd>{student.group_name||"—"}</dd></div><div><dt>الهاتف</dt><dd dir="ltr">{student.phone||"—"}</dd></div><div><dt>ولي الأمر</dt><dd>{student.parent_name||"—"}</dd></div><div><dt>هاتف ولي الأمر</dt><dd dir="ltr">{student.parent_phone||"—"}</dd></div><div><dt>المحافظة / المدينة</dt><dd>{[student.governorate,student.city].filter(Boolean).join(" / ")||"—"}</dd></div></dl>
+   </article>)}{!students.length&&<div className="teacher-empty large">لا يوجد طلاب ظاهرون حتى الآن في الصفوف المرتبطة بكورساتك.</div>}</div>
+  </section>}
+  {section==="messages"&&<section className="teacher-panel teacher-inbox" dir="rtl">
+   <div className="teacher-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة</small></div>
+   <div className="teacher-message-list">{messages.map(message=>{const student=students.find(x=>x.id===message.user_id);return <article className="teacher-message-card" key={message.id}>
+    <div className="teacher-message-head"><div><b>{message.subject||"رسالة طالب"}</b><small>{student?.full_name||"طالب"} · {student?.student_number||"—"} · {new Date(message.created_at).toLocaleString("ar-EG")}</small></div><span className={message.status==="closed"?"closed":"open"}>{message.status==="closed"?"تم الرد":"بانتظار الرد"}</span></div>
+    <p>{message.message}</p>
+    {message.admin_reply&&<div className="teacher-existing-reply"><b>آخر رد من الإدارة</b><p>{message.admin_reply}</p></div>}
+    <textarea value={replyDrafts[message.id]||""} onChange={e=>setReplyDrafts(old=>({...old,[message.id]:e.target.value}))} placeholder="اكتب ردك للطالب..."/>
+    <button disabled={saving||!(replyDrafts[message.id]||"").trim()} onClick={()=>replyToMessage(message)}>إرسال الرد وإغلاق الرسالة</button>
+   </article>;})}{!messages.length&&<div className="teacher-empty large">لا توجد رسائل من الطلاب حاليًا.</div>}</div>
+  </section>}
   <p className="teacher-footnote">صلاحيات هذه البوابة محدودة بحساب المدرس وكورسات المدرس نفسه. لا تتيح إدارة حساب المالك أو إعدادات المنصة العليا.</p>
  </main>;
 }
