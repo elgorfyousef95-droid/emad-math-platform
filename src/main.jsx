@@ -11,6 +11,7 @@ import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, stude
 import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage, uploadPortalVideo } from "./lib/portalAuth.js";
 import OwnerConsole from "./pages/OwnerConsole.jsx";
 import ExamRunner from "./components/ExamRunner.jsx";
+import FloatingTools from "./components/FloatingTools.jsx";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
 const navByGrade={
@@ -532,4 +533,4 @@ function AdminPage({profile}){
  return <div className="platform-page"><PageBanner eyebrow="ADMINISTRATION" title="إدارة الاشتراكات والأكواد" description="إصدار أكواد شهرية مخصصة لكل صف دراسي. صلاحية الإصدار متاحة لحسابات الإدارة فقط." art="settings"/><section className="platform-panel platform-redeem-panel"><span className="platform-eyebrow">ONE-TIME SUBSCRIPTION CODE</span><h2>إنشاء كود اشتراك جديد</h2><label htmlFor="admin-code-grade">الصف الدراسي</label><select id="admin-code-grade" value={grade} onChange={e=>setGrade(e.target.value)}>{gradeNames.map(g=><option key={g}>{g}</option>)}</select><button className="platform-gold-button" onClick={create} disabled={busy}>{busy?"جارٍ إنشاء الكود...":"إنشاء كود جديد"}<Icon name="ticket"/></button>{generated&&<div className="platform-generated-code"><small>الكود الجديد — يظهر مرة واحدة</small><strong dir="ltr">{generated}</strong><button className="platform-gold-button" onClick={copy}>نسخ الكود<Icon name="file"/></button></div>}</section><HomeworkAdminPanel profile={profile}/></div>;
 }
 
-createRoot(document.getElementById("root")).render(<MessageProvider><App/></MessageProvider>);
+createRoot(document.getElementById("root")).render(<MessageProvider><App/><FloatingTools/></MessageProvider>);
