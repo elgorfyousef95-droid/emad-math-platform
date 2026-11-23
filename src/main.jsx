@@ -119,6 +119,7 @@ function TeacherConsole(){
   }finally{setBusy(false);}
  };
  useEffect(()=>{load();},[]);
+ useEffect(()=>{const nodes=[document.documentElement,document.body,document.getElementById("root")].filter(Boolean);nodes.forEach(node=>node.classList.add("admin-scroll-mode"));return()=>nodes.forEach(node=>node.classList.remove("admin-scroll-mode"));},[]);
  useEffect(()=>{
   let active=true;
   const fetchLessons=async()=>{
