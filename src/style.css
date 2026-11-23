@@ -1514,3 +1514,40 @@ button{ -webkit-tap-highlight-color:transparent}
 .portal-access-error{margin-top:13px;padding:12px;border:1px solid #b85b5b66;border-radius:10px;background:#62292944;color:#ffd0d0;font-size:10px;line-height:1.9}
 .portal-setup-note{margin:3px 0 8px;padding:12px;border:1px solid #d8b66c44;border-radius:10px;background:#d8b66c0c;color:#c9d3df;font-size:10px;line-height:2}
 @media(max-width:520px){.portal-access-shell{padding:13px}.portal-access-card{padding:25px 19px;border-radius:18px}.portal-access-card h1{font-size:23px}}
+
+
+/* Teacher portal: student directory and inbox */
+.teacher-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0}
+.teacher-tabs button{display:flex;align-items:center;gap:9px;padding:12px 18px;border:1px solid #ffffff20;border-radius:12px;background:#101e30;color:#cbd5e1;font:800 11px 'Cairo';cursor:pointer}
+.teacher-tabs button.active{border-color:#d8b66c88;background:linear-gradient(120deg,#d8b66c20,#152b40);color:#f4d89c}
+.teacher-tabs button b{display:grid;place-items:center;min-width:22px;height:22px;padding:0 5px;border-radius:20px;background:#ffffff14;font:800 10px Arial}
+.teacher-directory,.teacher-inbox{margin-top:18px}
+.teacher-directory-note{margin:0 0 18px;color:#9eb0c5;font-size:11px;line-height:1.9}
+.teacher-student-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.teacher-student-card,.teacher-message-card{min-width:0;padding:17px;border:1px solid #ffffff18;border-radius:15px;background:linear-gradient(145deg,#14283c,#0b1828);color:#e8edf4}
+.teacher-student-top{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid #ffffff12}
+.teacher-student-avatar{width:42px;height:42px;display:grid;place-items:center;overflow:hidden;border-radius:13px;background:#d6b56d22;color:#f0d69b;font-weight:900}
+.teacher-student-avatar img{width:100%;height:100%;object-fit:cover}
+.teacher-student-top b,.teacher-student-top small{display:block}
+.teacher-student-top b{font-size:13px}
+.teacher-student-top small{margin-top:4px;color:#a7b7c9;font-size:10px}
+.teacher-student-card dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:14px 0 0}
+.teacher-student-card dl div{min-width:0}
+.teacher-student-card dt{margin-bottom:4px;color:#8195ab;font-size:9px}
+.teacher-student-card dd{margin:0;overflow-wrap:anywhere;color:#e5eaf0;font-size:10px;font-weight:700}
+.teacher-message-list{display:grid;gap:13px}
+.teacher-message-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.teacher-message-head b,.teacher-message-head small{display:block}
+.teacher-message-head b{font-size:13px}
+.teacher-message-head small{margin-top:5px;color:#9db0c5;font-size:10px;line-height:1.8}
+.teacher-message-head span{flex:none;padding:5px 9px;border-radius:20px;font-size:9px;font-weight:900}
+.teacher-message-head span.open{background:#b7792820;color:#f2cb82}
+.teacher-message-head span.closed{background:#2a8a6820;color:#8ed5b4}
+.teacher-message-card>p{margin:14px 0;padding:13px;border-radius:10px;background:#071321;color:#d5dfeb;font-size:11px;line-height:2;white-space:pre-wrap}
+.teacher-existing-reply{margin:10px 0;padding:12px;border-right:2px solid #d8b66c;border-radius:8px;background:#d8b66c0d}
+.teacher-existing-reply b{font-size:10px;color:#e8cb8f}
+.teacher-existing-reply p{margin:6px 0 0;color:#d6e0ec;font-size:10px;line-height:1.9;white-space:pre-wrap}
+.teacher-message-card textarea{width:100%;min-height:78px;margin:8px 0;padding:12px;border:1px solid #ffffff20;border-radius:10px;background:#071321;color:#fff;font:11px 'Cairo';resize:vertical}
+.teacher-message-card>button{padding:10px 15px;border:1px solid #d8b66c66;border-radius:9px;background:#d8b66c18;color:#f1d69b;font:800 10px 'Cairo';cursor:pointer}
+.teacher-message-card>button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:760px){.teacher-student-grid{grid-template-columns:1fr}.teacher-tabs{display:grid;grid-template-columns:1fr}.teacher-tabs button{justify-content:space-between}}
