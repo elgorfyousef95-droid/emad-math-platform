@@ -236,14 +236,19 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
     try {
       const result = await createStudentAccount(payload);
       setShowPassword(false);
-      // New student accounts must sign in explicitly after registration.
-      setCreatedAccount({
-        studentNumber: String(result.student_number),
-        password,
-        avatarUrl: result.avatar_url || avatarPreview,
-        needsLogin: true
-      });
-      notify({ type: "success", title: "تم إنشاء الحساب", message: "احتفظ برقم الطالب وكلمة المرور قبل الانتقال." });
+      if (result.session?.access_token && result.session?.refresh_token) {
+        saveStudentSession(result.session);
+        notify({ type: "success", title: "تم إنشاء الحساب", message: "تم إنشاء حسابك وتسجيل دخولك بنجاح." });
+        await onSuccess?.();
+      } else {
+        setCreatedAccount({
+          studentNumber: String(result.student_number),
+          password,
+          avatarUrl: result.avatar_url || avatarPreview,
+          needsLogin: true
+        });
+        notify({ type: "success", title: "تم إنشاء الحساب", message: "احتفظ برقم الطالب وكلمة المرور وسجّل دخولك." });
+      }
     } catch (error) {
       showNotice(errorText(error.message));
     } finally {
@@ -261,7 +266,7 @@ export default function AuthScreen({ mode, onModeChange, onSuccess }) {
       const result = await loginStudent(studentId.trim(), password);
       saveStudentSession(result.session);
       notify({ type: "success", title: "أهلًا بعودتك", message: "تم تسجيل الدخول بنجاح." });
-      onSuccess?.();
+      await onSuccess?.();
     } catch (error) {
       showNotice(errorText(error.message));
     } finally {
