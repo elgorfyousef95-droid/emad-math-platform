@@ -248,6 +248,7 @@ function TeacherConsole(){
    <button className={section==="students"?"active":""} onClick={()=>setSection("students")}>متابعة الطلاب <b>{students.length}</b></button>
    <button className={section==="exams"?"active":""} onClick={()=>setSection("exams")}>الامتحانات <b>{exams.length}</b></button>
    <button className={section==="results"?"active":""} onClick={()=>setSection("results")}>النتائج <b>{attempts.length}</b></button>
+   <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}>جروبات الصفوف</button>
    <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}>مراسلات الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
   </nav>
   {section==="courses"&&<div className="teacher-layout">
@@ -262,6 +263,7 @@ function TeacherConsole(){
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>}
+  {section==="groups"&&<ChatWorkspace profile={profile} mode="teacher" portal="teacher"/>}
   {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>إدارة ومتابعة الطلاب</h2></div><small>{students.length} طالب</small></div>
    <input className="teacher-student-search" value={studentFilter} onChange={e=>setStudentFilter(e.target.value)} placeholder="ابحث باسم الطالب أو رقم الحساب أو المجموعة..."/>
