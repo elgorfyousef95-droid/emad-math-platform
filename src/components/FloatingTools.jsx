@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./floating-tools.css";
+import { generateYousefReply } from "../ai/yousefEngine.js";
 
 const FUNCTIONS = {
   sin: Math.sin, cos: Math.cos, tan: Math.tan,
@@ -111,12 +112,7 @@ function FloatingTools() {
   const sendVoiceText = () => {
     const text = voiceText.trim();
     if (!text) return;
-    let answer = "وصلت رسالتك: «" + text + "». واجهة الصوت جاهزة لالتقاط الكلام والرد المنطوق، لكن فهم الأسئلة المفتوح يحتاج توصيل محرك يوسف AI اللغوي قبل اعتمادها كمحادثة ذكية كاملة.";
-    const math = text.match(/(?:احسب|ناتج|يساوي)\s*([0-9π().+\-*/×÷^ ]+)/i);
-    if (math) {
-      try { answer = "الناتج هو " + calculateExpression(math[1].replace(/×/g,"*").replace(/÷/g,"/"), degrees); }
-      catch {}
-    }
+    const answer = generateYousefReply(text);
     setReply(answer);
     if (synth && "speechSynthesis" in window) {
       synth.cancel();
@@ -146,7 +142,7 @@ function FloatingTools() {
         <textarea value={voiceText} onChange={e=>setVoiceText(e.target.value)} placeholder="اكتب رسالتك أو اضغط على الميكروفون..." rows={3}/>
         <div className="emad-voice-actions"><button className={listening?"recording":""} onClick={startVoice}>{listening?"إيقاف الاستماع":"🎙 تحدث"}</button><button onClick={sendVoiceText} disabled={!voiceText.trim()}>إرسال</button><button onClick={()=>{synth?.cancel();}}>إيقاف الصوت</button></div>
         {!supported&&<small>التعرف على الصوت غير متاح في هذا المتصفح؛ الكتابة والرد الصوتي يعتمدان على دعم الجهاز.</small>}
-        <small className="emad-tools-note">تنبيه: هذه واجهة صوت أولية، وليست بعدُ محرك محادثة لغويًا كاملًا.</small>
+        <small className="emad-tools-note">تنبيه: النسخة الحالية محرك محلي محدود بقاعدة معرفة وقواعد رد؛ ليست نموذجًا لغويًا عامًا.</small>
       </div>}
     </section>}
   </div>;
