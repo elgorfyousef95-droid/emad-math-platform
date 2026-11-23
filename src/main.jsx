@@ -150,7 +150,8 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
  };
- const uploadLessonVideo=async(file)=>{if(!file)return;setSaving(true);try{const url=await uploadPortalVideo(file,"teacher");setLessonForm(old=>({...old,video_url:url}));setNotice("تم رفع الفيديو.");}catch(e){setError(e.message==="video_too_large"?"الفيديو أكبر من 100 ميجابايت؛ استخدم رابط استضافة خارجي.":"تعذر رفع الفيديو.");}finally{setSaving(false);}};\n const createLesson=async(e)=>{
+ const uploadLessonVideo=async(file)=>{if(!file)return;setSaving(true);try{const url=await uploadPortalVideo(file,"teacher");setLessonForm(old=>({...old,video_url:url}));setNotice("تم رفع الفيديو.");}catch(e){setError(e.message==="video_too_large"?"الفيديو أكبر من 100 ميجابايت؛ استخدم رابط استضافة خارجي.":"تعذر رفع الفيديو.");}finally{setSaving(false);}};
+ const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
   try{
    const rows=await portalApi("teacher", "lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...lessonForm,course_id:selected,sort_order:lessons.length+1,is_published:false})});
