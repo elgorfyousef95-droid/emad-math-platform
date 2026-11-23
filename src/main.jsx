@@ -460,7 +460,7 @@ function ProfilePage({profile,subscription,notifications=[],grade,go,loading}){
 function SettingsPage({profile}){return <div className="platform-page"><PageBanner eyebrow="ACCOUNT SETTINGS" title="إعدادات الحساب" description="إعدادات حساب الطالب وتجربته التعليمية." art="settings"/><div className="platform-settings-grid">{[["الملف الشخصي","بيانات الحساب وصورة الطالب","user"],["الأمان وتسجيل الدخول","بيانات الدخول والجلسات","lock"],["الإشعارات","تنبيهات المنصة والواجبات والامتحانات","bell"],["الاشتراك","حالة الاشتراك وتاريخ الانتهاء","ticket"]].map(([t,d,i])=><article key={t}><Icon name={i} size={22}/><b>{t}</b><p>{d}</p></article>)}</div><p className="platform-settings-note">الحساب الحالي: {profile?.full_name||"طالب"}</p></div>}
 function NotificationsPage({notifications,onRead,go}){return <div className="platform-page"><PageBanner eyebrow="NOTIFICATION CENTER" title="الإشعارات" description="تابع كل التنبيهات المرتبطة بحسابك التعليمي." art="bell"/><div className="platform-notification-list">{notifications.length?notifications.map(n=><article key={n.id} className={n.read_at?"is-read":""}><span className="platform-notification-icon"><Icon name="bell"/></span><div><b>{n.title}</b><p>{n.body}</p><small>{new Date(n.created_at).toLocaleString("ar-EG")}</small></div><div className="platform-notification-actions">{!n.read_at&&<button onClick={()=>onRead(n)}>تحديد كمقروء</button>}{n.action_url&&<button onClick={()=>go(n.action_url)}>فتح</button>}</div></article>):<div className="platform-empty-state"><Icon name="bell" size={34}/><b>لا توجد إشعارات حتى الآن</b><span>ستظهر هنا تنبيهات الحساب والواجبات والامتحانات.</span></div>}</div></div>}
 function LearningPage({page,grade,profile}){
- const [items,setItems]=useState([]),[busy,setBusy]=useState(true),[selected,setSelected]=useState(null),[examOpen,setExamOpen]=useState(false);
+ const [items,setItems]=useState([]),[busy,setBusy]=useState(true),[selected,setSelected]=useState(null),[examOpen,setExamOpen]=useState(false),[lessonVideoUrl,setLessonVideoUrl]=useState(""),[lessonVideoError,setLessonVideoError]=useState("");
  const configs={
   courses:{title:"الكورسات والوحدات",desc:"المحتوى التعليمي المنشور والمخصص لصفك.",table:"courses",select:"id,title,description,subject,grade,cover_image_url,created_at",filter:"status=eq.published",art:"book"},
   lessons:{title:"المحاضرات",desc:"المحاضرات والدروس المرتبطة بالكورسات المتاحة.",table:"lessons",select:"id,title,description,video_url,duration_minutes,sort_order,course_id,cover_image_url,created_at",filter:"is_published=eq.true",art:"play"},
@@ -468,6 +468,13 @@ function LearningPage({page,grade,profile}){
  };
  const cfg=configs[page];
  useEffect(()=>{let alive=true;setBusy(true);setSelected(null);const query=cfg.table+"?select="+cfg.select+"&"+cfg.filter+"&order=created_at.desc";studentApi(query).then(rows=>{if(alive)setItems(rows||[]);}).catch(e=>{console.error("learning_load",e);if(alive)setItems([]);}).finally(()=>{if(alive)setBusy(false);});return()=>{alive=false;};},[page]);
+ useEffect(()=>{
+  let alive=true;
+  setLessonVideoUrl("");setLessonVideoError("");
+  if(page!=="lessons"||!selected?.video_url)return;
+  getLectureVideoUrl(selected.video_url,"student").then(url=>{if(alive)setLessonVideoUrl(url);}).catch(error=>{console.error("lecture_video_access",error);if(alive)setLessonVideoError("تعذر فتح الفيديو. تأكد من أن اشتراكك نشط وأن المحاضرة منشورة.");});
+  return()=>{alive=false;};
+ },[page,selected?.id,selected?.video_url]);
  return <div className="platform-page"><PageBanner eyebrow={"GRADE CONTENT / "+(grade||"STUDENT").toUpperCase()} title={cfg.title} description={cfg.desc} art={cfg.art}/><div className="platform-content-list-heading"><h2>{cfg.title}</h2><span>{items.length} عنصر</span></div>{busy?<div className="platform-empty-state">جارٍ تحميل المحتوى من قاعدة البيانات...</div>:items.length?<div className="learning-media-grid">{items.map(item=><button type="button" className="learning-media-card" key={item.id} onClick={()=>setSelected(item)}>
   {item.cover_image_url?<img src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="learning-media-placeholder"><Icon name={cfg.art} size={32}/></span>}
   <span className="learning-media-card-copy"><b>{item.title}</b><small>{item.description||item.subject||item.courses?.title||"محتوى تعليمي"}</small>{item.duration_minutes&&<em>المدة: {item.duration_minutes} دقيقة</em>}</span>
@@ -480,7 +487,7 @@ function LearningPage({page,grade,profile}){
   <p>{selected.description||"تفاصيل المحتوى التعليمي."}</p>
   {page==="courses"&&<div className="learning-detail-meta"><span>المادة: {selected.subject||"رياضيات"}</span><span>الصف: {selected.grade||grade}</span></div>}
   {page==="exams"&&<><div className="learning-detail-meta"><span>الكورس: {selected.courses?.title||"—"}</span><span>المدة: {selected.duration_minutes} دقيقة</span><span>موعد الفتح: {selected.opens_at?new Date(selected.opens_at).toLocaleString("ar-EG"):"متاح حسب الجدول"}</span><span>موعد الإغلاق: {selected.closes_at?new Date(selected.closes_at).toLocaleString("ar-EG"):"—"}</span></div><button className="learning-start-exam" onClick={()=>setExamOpen(true)}>ابدأ الامتحان الآن</button></>}
-  {page==="lessons"&&<><div className="learning-detail-meta"><span>ترتيب المحاضرة: {selected.sort_order||"—"}</span><span>المدة: {selected.duration_minutes||60} دقيقة</span></div>{selected.video_url&&<div className="learning-video-player"><b>مشغل المحاضرة</b><video src={selected.video_url} controls playsInline preload="metadata"/></div>}</>}
+  {page==="lessons"&&<><div className="learning-detail-meta"><span>ترتيب المحاضرة: {selected.sort_order||"—"}</span><span>المدة: {selected.duration_minutes||60} دقيقة</span></div>{selected.video_url&&<div className="learning-video-player"><b>مشغل المحاضرة</b>{lessonVideoUrl?<video src={lessonVideoUrl} controls playsInline preload="metadata"/>:<small>{lessonVideoError||"جارٍ تجهيز رابط تشغيل آمن للمحاضرة..."}</small>}</div>}</>}
  </section></div>}
  {examOpen&&selected&&page==="exams"&&<ExamRunner exam={selected} profile={profile} studentApi={studentApi} onClose={()=>setExamOpen(false)}/>}
  </div>;
