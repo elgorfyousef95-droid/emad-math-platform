@@ -232,8 +232,6 @@ function TeacherConsole(){
      <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="رابط الفيديو (اختياري)"/><textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><button disabled={saving}>حفظ المحاضرة كمسودة</button></form>
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
-  </div>
-
   </div>}
   {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>الطلاب التابعون لك</h2></div><small>{students.length} طالب</small></div>
