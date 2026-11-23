@@ -286,3 +286,12 @@
  box-shadow:0 18px 55px #0006;
 }
 @media(max-width:680px){.lecture-video-embed{min-height:190px;border-radius:13px}}
+
+/* Teacher studio: distinct course and lecture workspaces */
+.teacher-layout-courses .teacher-lessons-panel{display:none}
+.teacher-layout-lessons{grid-template-columns:minmax(0,1fr)!important}
+.teacher-layout-lessons>.teacher-panel:first-child{display:none}
+.teacher-lesson-course-picker{display:flex;align-items:center;gap:10px;margin:0 0 14px;color:#d8e2f0;font-size:12px}
+.teacher-lesson-course-picker select{min-width:220px;max-width:100%;border:1px solid #ffffff24;border-radius:10px;background:#14243a;color:#fff;padding:10px 12px;font:inherit}
+.teacher-layout-lessons .teacher-lessons-panel{min-width:0}
+@media(max-width:640px){.teacher-lesson-course-picker{align-items:stretch;flex-direction:column}.teacher-lesson-course-picker select{width:100%}}
