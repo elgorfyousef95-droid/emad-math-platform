@@ -43,6 +43,47 @@ function Icon({name,size=19}){
  };
  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.spark}</svg>;
 }
+function OwnerConsole(){
+ const [profile,setProfile]=useState(null),[users,setUsers]=useState([]),[busy,setBusy]=useState(true),[error,setError]=useState(""),[filter,setFilter]=useState(""),[saving,setSaving]=useState("");
+ const load=async()=>{
+  setBusy(true);setError("");
+  try{
+   const session=await refreshStudentSession();
+   if(!session?.access_token)throw new Error("not_authenticated");
+   const rows=await studentApi("profiles?select=id,full_name,student_number,grade,group_name,role,is_verified&limit=500");
+   const me=(rows||[]).find(x=>x.id===session.user?.id)||null;
+   setProfile(me);setUsers(rows||[]);
+   if(me?.role!=="owner")setError("هذا الحساب لا يمتلك صلاحية مالك المنصة.");
+  }catch(e){setError(e.message==="not_authenticated"?"سجّل الدخول بحساب المالك أولًا.":"تعذر تحميل لوحة المالك. تحقق من تسجيل الدخول والصلاحيات.");}
+  finally{setBusy(false);}
+ };
+ useEffect(()=>{load();},[]);
+ const changeRole=async(user,role)=>{
+  if(!window.confirm("تأكيد تغيير صلاحية "+(user.full_name||user.student_number)+" إلى "+role+"؟"))return;
+  setSaving(user.id);
+  try{
+   await studentApi("profiles?id=eq."+encodeURIComponent(user.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({role})});
+   setUsers(old=>old.map(x=>x.id===user.id?{...x,role}:x));
+  }catch(e){setError("لم يتم تغيير الصلاحية. تأكد من صلاحية المالك.");}
+  finally{setSaving("");}
+ };
+ const visible=users.filter(u=>[u.full_name,u.student_number,u.grade,u.group_name,u.role].join(" ").toLowerCase().includes(filter.toLowerCase()));
+ if(busy)return <main className="owner-shell"><div className="owner-loading">جارٍ تأمين وفتح لوحة المالك...</div></main>;
+ if(!profile||profile.role!=="owner")return <main className="owner-shell"><section className="owner-denied"><span>EMAD · OWNER ACCESS</span><h1>لوحة المالك محمية</h1><p>{error||"لا يمكن فتح هذه الصفحة بهذا الحساب."}</p><button onClick={()=>{window.location.href="/";}}>العودة للمنصة</button></section></main>;
+ return <main className="owner-shell" dir="rtl">
+  <header className="owner-header"><div><span>EMAD EL SANAFIRY · CONTROL CENTER</span><h1>لوحة المالك</h1><p>إدارة المنصة والصلاحيات من مساحة مستقلة.</p></div><div className="owner-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>العودة للمنصة</button></div></header>
+  {error&&<p className="owner-error">{error}</p>}
+  <section className="owner-stats"><article><small>إجمالي الحسابات</small><strong>{users.length}</strong></article><article><small>الطلاب</small><strong>{users.filter(x=>x.role==="student").length}</strong></article><article><small>المدرسون</small><strong>{users.filter(x=>x.role==="teacher").length}</strong></article><article><small>الإدارة</small><strong>{users.filter(x=>["owner","admin"].includes(x.role)).length}</strong></article></section>
+  <section className="owner-panel"><div className="owner-panel-heading"><div><span>ACCOUNT DIRECTORY</span><h2>الحسابات والصلاحيات</h2></div><button onClick={load}>تحديث البيانات</button></div>
+   <input className="owner-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث بالاسم أو رقم الطالب أو الصف..."/>
+   <div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>الاسم</th><th>رقم الحساب</th><th>الصف / المجموعة</th><th>الصلاحية</th><th>تغيير الدور</th></tr></thead><tbody>
+    {visible.map(user=><tr key={user.id}><td>{user.full_name||"—"}</td><td dir="ltr">{user.student_number||"—"}</td><td>{user.grade||"—"}<small>{user.group_name||""}</small></td><td><span className={"owner-role role-"+user.role}>{user.role}</span></td><td><select value={user.role} disabled={saving===user.id||user.id===profile.id} onChange={e=>changeRole(user,e.target.value)}><option value="student">طالب</option><option value="teacher">مدرس</option><option value="admin">مدير</option><option value="owner">مالك</option></select></td></tr>)}
+   </tbody></table></div>
+   <p className="owner-note">لا يمكن تغيير دور حساب المالك الحالي من هذه القائمة. احتفظ بدور المالك لحسابك فقط، وامنح المستر دور «مدرس» بعد تحديد حسابه الصحيح.</p>
+  </section>
+ </main>;
+}
+
 function App(){
  const [page,setPage]=useState("splash"),[profile,setProfile]=useState(null),[subscription,setSubscription]=useState(null),[notifications,setNotifications]=useState([]),[moreOpen,setMoreOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[mobileNav,setMobileNav]=useState(false),[loading,setLoading]=useState(false);
  const pageRef=useRef(page);
@@ -57,7 +98,7 @@ function App(){
  const unread=notifications.filter(n=>!n.read_at).length;
  const go=next=>{const validPages=["splash","login","signup","home","courses","lessons","exams","homework","files","results","schedule","live","messages","ai","subscriptions","profile","settings","groups","admin","notifications"];if(!validPages.includes(next)||next===pageRef.current)return;try{const state={marker:"emad-platform",page:next};if(["splash","login","signup"].includes(pageRef.current))window.history.replaceState(state,"",window.location.href);else window.history.pushState(state,"",window.location.href);}catch{}pageRef.current=next;setPage(next);setMoreOpen(false);setAccountOpen(false);setMobileNav(false);};
  const logout=()=>{clearStudentSession();setProfile(null);setSubscription(null);setNotifications([]);go("login");};
- if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
+ if(window.location.pathname.replace(/\\/$/,"")==="/owner")return <OwnerConsole/>;\n if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
  if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{await loadWorkspace();go("home");}}/></div>;
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
