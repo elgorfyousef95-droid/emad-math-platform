@@ -1902,3 +1902,61 @@ body.admin-scroll-mode{width:100%!important}
  .course-selected-player>div{align-items:flex-start;flex-direction:column}
  .learning-page-exams,.homework-page{background-attachment:scroll!important}
 }
+
+
+/* Teacher Studio v2 — full workspace with independent visual panels */
+.teacher-shell{
+ min-height:100dvh!important;padding:clamp(14px,2.4vw,34px)!important;
+ background:
+  linear-gradient(135deg,rgba(5,13,25,.96),rgba(8,22,37,.91)),
+  url('https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=2200&q=85') center/cover fixed!important;
+ color:#f3f6fb!important
+}
+.teacher-header{position:relative;isolation:isolate;overflow:hidden;min-height:210px!important;border-radius:26px!important;border-color:#d9b66d66!important;background:linear-gradient(100deg,#071728f5 0%,#102b42e8 55%,#102b42a8 100%),url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2000&q=85') center 42%/cover!important}
+.teacher-header:after{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(circle at 82% 20%,#e4c47b25,transparent 28%),linear-gradient(0deg,#07152266,transparent 65%)}
+.teacher-header>div:first-child>span,.teacher-panel-heading span,.teacher-denied>span{color:#e2c47f!important;letter-spacing:2px}
+.teacher-header h1{color:#fff!important;text-shadow:0 5px 25px #0008}
+.teacher-header p{color:#c4d2e2!important}
+.teacher-header-actions button,.teacher-panel button,.teacher-form button,.teacher-denied button{border-color:#d7b66b88!important;background:linear-gradient(135deg,#e9cf91,#b98b47)!important;color:#15253b!important;box-shadow:0 8px 20px #0003}
+.teacher-stats{grid-template-columns:repeat(6,minmax(0,1fr))!important;max-width:none!important}
+.teacher-stats article{position:relative;overflow:hidden;min-height:108px;border:1px solid #d9b66d35!important;border-radius:18px!important;background:linear-gradient(145deg,#172d46ed,#0a1a2ded)!important;box-shadow:0 16px 38px #0005!important}
+.teacher-stats article:after{content:"";position:absolute;inset:auto -25px -42px auto;width:110px;height:110px;border-radius:50%;background:#d8b67510}
+.teacher-stats small{color:#b6c5d7!important}
+.teacher-stats strong{color:#efd28e!important}
+.teacher-studio-body{display:grid;grid-template-columns:275px minmax(0,1fr);gap:18px;align-items:start;max-width:none;margin:20px auto 0}
+.teacher-studio-sidebar{position:sticky;top:14px;min-height:calc(100dvh - 28px);padding:19px 14px;border:1px solid #d9b66d55;border-radius:22px;background:linear-gradient(165deg,#142b45f5,#091727f7 75%),url('https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=900&q=75') center/cover;box-shadow:0 20px 55px #0007;display:flex;flex-direction:column;gap:16px}
+.teacher-side-heading{display:grid;gap:5px;padding:5px 8px 17px;border-bottom:1px solid #ffffff19}
+.teacher-side-heading span{font:900 9px Arial,sans-serif;letter-spacing:2px;color:#d8b675}
+.teacher-side-heading b{font-size:14px;color:#fff}
+.teacher-side-heading small{font-size:10px;color:#9eafc4}
+.teacher-studio-sidebar .teacher-tabs{display:grid!important;gap:7px!important;margin:0!important;flex:1}
+.teacher-studio-sidebar .teacher-tabs button{position:relative;display:flex!important;align-items:center;justify-content:flex-start!important;gap:12px!important;min-height:49px;padding:10px 12px!important;border:1px solid transparent!important;border-radius:12px!important;background:#ffffff08!important;color:#c3d0df!important;text-align:right!important;font:800 11px 'Cairo'!important;transition:.2s}
+.teacher-studio-sidebar .teacher-tabs button>span{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:#ffffff0c;color:#e6c77e;font-size:16px}
+.teacher-studio-sidebar .teacher-tabs button>b{margin-right:auto;min-width:23px;height:23px;display:grid;place-items:center;border-radius:8px;background:#d8b67518;color:#e9cf91;font-size:9px}
+.teacher-studio-sidebar .teacher-tabs button:hover,.teacher-studio-sidebar .teacher-tabs button.active{border-color:#d8b67566!important;background:linear-gradient(100deg,#d8b67527,#ffffff09)!important;color:#ffe5a8!important;transform:translateX(-2px)}
+.teacher-studio-sidebar .teacher-tabs button.active:before{content:"";position:absolute;right:-14px;top:10px;bottom:10px;width:3px;border-radius:4px;background:#e5c77f;box-shadow:0 0 15px #e5c77f88}
+.teacher-side-note{display:grid;gap:5px;margin-top:auto;padding:13px;border:1px solid #70c7a733;border-radius:13px;background:linear-gradient(120deg,#174c4233,#0d2935aa)}
+.teacher-side-note b{font-size:10px;color:#9de0c1}
+.teacher-side-note span{font-size:9px;line-height:1.8;color:#a8b8c9}
+.teacher-studio-content{min-width:0;display:grid;gap:16px}
+.teacher-studio-content>.teacher-panel,.teacher-studio-content>.teacher-layout,.teacher-studio-content>.teacher-exam-layout,.teacher-studio-content>.teacher-directory,.teacher-studio-content>.teacher-inbox{max-width:none!important;width:100%}
+.teacher-studio-content .teacher-panel{border-color:#d8b67538!important;border-radius:20px!important;background:linear-gradient(145deg,#142942f2,#0a1a2bf5)!important;box-shadow:0 20px 55px #0005!important}
+.teacher-studio-content .teacher-panel-heading h2{color:#f5ead2}
+.teacher-overview-actions button{min-height:148px!important;border:1px solid #d8b67533!important;border-radius:17px!important;background:linear-gradient(145deg,#1c3551,#0b1c2e)!important;color:#f3f4f7!important;box-shadow:0 12px 30px #0003!important}
+.teacher-overview-actions button:hover{border-color:#e1c27b!important;transform:translateY(-3px)}
+.teacher-overview-actions button b{color:#f1d28e}
+.teacher-overview-actions button small{color:#aebed0}
+.teacher-overview-actions button strong{color:#91ddc1}
+.teacher-student-card,.teacher-message-card{border-color:#d8b67530!important;background:linear-gradient(145deg,#1a304a,#0b1a2b)!important;box-shadow:0 12px 32px #0004}
+.teacher-exam-layout{max-width:none!important}
+.teacher-student-search{width:100%;margin:0 0 15px;padding:13px 15px;border:1px solid #d8b67555;border-radius:12px;background:#081728;color:#fff;font:11px 'Cairo';outline:none}
+.teacher-student-search:focus{border-color:#efd28d;box-shadow:0 0 0 3px #efd28d18}
+.teacher-course,.teacher-course.active{border-color:#d8b67536!important}
+.teacher-course-thumb{width:54px;height:44px;flex:0 0 54px;object-fit:cover;border-radius:9px}
+.teacher-course-thumb-empty{display:grid;place-items:center;background:#d8b67522;color:#e9ce90;font-weight:900}
+.teacher-course-preview,.teacher-course-detail-image{width:100%;max-height:220px;object-fit:cover;border-radius:14px;border:1px solid #d8b67533}
+.teacher-lesson-thumb{width:38px;height:38px;object-fit:cover;border-radius:9px}
+.teacher-footnote{max-width:none!important;color:#9bacc1!important}
+@media(max-width:1150px){.teacher-stats{grid-template-columns:repeat(3,minmax(0,1fr))!important}.teacher-studio-body{grid-template-columns:235px minmax(0,1fr)}}
+@media(max-width:850px){.teacher-studio-body{grid-template-columns:1fr}.teacher-studio-sidebar{position:relative;top:auto;min-height:0}.teacher-studio-sidebar .teacher-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-side-note{display:none}.teacher-studio-content{gap:12px}}
+@media(max-width:600px){.teacher-shell{padding:9px!important}.teacher-header{min-height:0!important;padding:20px!important}.teacher-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-studio-sidebar{padding:12px;border-radius:16px}.teacher-studio-sidebar .teacher-tabs{grid-template-columns:1fr 1fr!important;gap:6px!important}.teacher-studio-sidebar .teacher-tabs button{min-height:45px;padding:8px!important;font-size:10px!important}.teacher-studio-sidebar .teacher-tabs button>span{width:23px;height:23px}.teacher-studio-content .teacher-panel{border-radius:15px!important}}
