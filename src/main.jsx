@@ -574,12 +574,36 @@ function HomeworkPage({profile}){
  return <div className="platform-page homework-page"><PageBanner eyebrow="HOMEWORK & PRACTICE" title="الواجبات والتدريبات" description="حل واجباتك داخل المنصة، احفظ إجاباتك، وسلّمها للمدرس وتابع نتيجتك." art="task"/><div className="hw-summary"><article><b>{items.length}</b><span>واجب متاح</span></article><article><b>{done}</b><span>تم تسليمه</span></article><article><b>{items.length-done}</b><span>لم يُسلّم بعد</span></article></div>{busy?<div className="platform-empty-state">جارٍ تحميل واجبات صفك ومجموعتك...</div>:items.length?<div className="hw-assignment-grid">{items.map(item=>{const sub=submissions.find(s=>s.assignment_id===item.id);const expired=item.due_at&&new Date(item.due_at)<new Date();return <article key={item.id} className="hw-assignment-card">{item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="hw-assignment-mark"><Icon name="task" size={23}/></span>}<div className="hw-card-meta"><span>{item.grade}</span><span>{sub?.status==="submitted"?"تم التسليم":expired?"انتهى الموعد":"متاح للحل"}</span></div><h2>{item.title}</h2><p>{item.description||"واجب تدريبي لقياس فهمك وتطبيقك."}</p>{item.due_at&&<small>آخر موعد: {new Date(item.due_at).toLocaleString("ar-EG")}</small>}{sub?.status==="submitted"?<div className="hw-card-result">تم التسليم{sub.objective_score!==null?" · "+sub.objective_score+" درجة":""}</div>:<button onClick={()=>open(item)} disabled={!!expired}> {sub?"استكمال الحل":"ابدأ الحل"} <Icon name="arrow"/></button>}</article>;})}</div>:<div className="platform-empty-state"><Icon name="task" size={36}/><b>مفيش واجبات منشورة لصفك حاليًا</b><span>أول ما المدرس ينشر واجب للصف أو المجموعة بتاعتك هيظهر هنا.</span></div>}</div>;
 }
 
+function LiveSessionsPage({profile}){
+ const [sessions,setSessions]=useState([]);
+ const [busy,setBusy]=useState(true);
+ const [error,setError]=useState("");
+ const [selected,setSelected]=useState(null);
+ const load=async()=>{
+  setBusy(true);setError("");
+  try{
+   const grade=profile?.grade;
+   if(!grade){setSessions([]);return;}
+   const rows=await studentApi("emad_teacher_live_sessions?select=id,title,grade,room_name,started_at,profiles:teacher_id(full_name)&grade=eq."+encodeURIComponent(grade)+"&status=eq.live&order=started_at.desc&limit=20");
+   setSessions(rows||[]);
+  }catch(e){console.error("live_sessions_load",e);setError("تعذر تحميل الحصص المباشرة. حاول تحديث الصفحة.");}
+  finally{setBusy(false);}
+ };
+ useEffect(()=>{load();const timer=window.setInterval(load,15000);return()=>window.clearInterval(timer);},[profile?.grade]);
+ const roomUrl=session=>"https://meet.jit.si/"+session.room_name+"#config.prejoinPageEnabled=false&config.startWithVideoMuted=true&config.startWithAudioMuted=false&userInfo.displayName="+encodeURIComponent(profile?.full_name||"طالب");
+ return <div className="platform-page student-live-page"><PageBanner eyebrow="LIVE CLASSROOM" title="المحاضرات المباشرة" description="انضم إلى الحصص المباشرة الخاصة بصفك الدراسي." art="live"/>
+  {error&&<div className="student-live-alert">{error}</div>}
+  {selected?<section className="student-live-room"><header><div><span className="student-live-dot"/> بث مباشر الآن<h2>{selected.title}</h2><small>{selected.grade} · {selected.profiles?.full_name||"مستر عماد"}</small></div><button onClick={()=>setSelected(null)}>العودة للحصص</button></header><iframe src={roomUrl(selected)} title={selected.title} allow="camera; microphone; fullscreen; display-capture; autoplay" allowFullScreen/><p>أنت داخل الحصة المباشرة. اسمح باستخدام الميكروفون إذا أردت المشاركة بالصوت.</p></section>:busy?<div className="platform-empty-state">جارٍ البحث عن الحصص المباشرة لصفك...</div>:sessions.length?<div className="student-live-grid">{sessions.map(session=><article key={session.id}><div className="student-live-card-art"><span>LIVE NOW</span><b>حصة مباشرة</b></div><div><small>{session.grade}</small><h3>{session.title}</h3><p>مستر {session.profiles?.full_name||"عماد السنافيري"} · بدأت {new Date(session.started_at).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"})}</p><button onClick={()=>setSelected(session)}>انضم للحصة الآن</button></div></article>)}</div>:<div className="platform-empty-state"><Icon name="live" size={36}/><b>لا توجد حصة مباشرة الآن</b><span>عندما يبدأ المدرس بثًا لصفك، سيظهر هنا تلقائيًا.</span><button className="platform-gold-button" onClick={load}>تحديث الحصص</button></div>}
+ </div>;
+}
+
 function SectionPage({page,go,profile}){
  if(page==="messages")return <ChatWorkspace profile={profile} mode="support" portal="student"/>;
  if(page==="groups")return <ChatWorkspace profile={profile} mode="groups" portal="student"/>;
+ if(page==="live")return <LiveSessionsPage profile={profile}/>;
  if(page==="results")return <StudentResults/>;
  const data={homework:["الواجبات والتدريبات","تابع التكليفات والتدريبات المطلوبة منك.","task"],files:["المذكرات والملفات","مكتبة المذكرات والملخصات وأوراق العمل.","file"],schedule:["جدول الحصص","مواعيد المحاضرات والامتحانات في جدول منظم.","calendar"],live:["المحاضرات المباشرة","تابع مواعيد البث المباشر والمحاضرات التفاعلية.","live"],ai:["المساعد الذكي","مساعد رياضيات مخصص لصفك الدراسي.","spark"],groups:["الجروبات الدراسية","مساحات تواصل منظمة لطلاب نفس الصف والمجموعة، مع إشراف وإعلانات ومناقشات تعليمية.","users"],admin:["إدارة المنصة","إدارة المحتوى والطلاب والاشتراكات والصلاحيات.","settings"]}[page]||["القسم","","book"];
- const unavailable={homework:"لا يوجد حتى الآن جدول واجبات مرتبط بحسابك في قاعدة البيانات.",files:"مكتبة الملفات لم يتم تجهيز جدولها ورفع ملفاتها بعد.",schedule:"جدول الحصص يحتاج إلى ربط مواعيد الحصص الفعلية من الإدارة.",live:"لا توجد خدمة بث مباشر مفعّلة ومتصلة بالمنصة حتى الآن.",ai:"المساعد الذكي يحتاج إلى ربط خدمة الذكاء الاصطناعي ومصادر المنهج.",groups:"خدمة الجروبات الدراسية لم يتم تجهيزها بعد."};
+ const unavailable={homework:"لا يوجد حتى الآن جدول واجبات مرتبط بحسابك في قاعدة البيانات.",files:"مكتبة الملفات لم يتم تجهيز جدولها ورفع ملفاتها بعد.",schedule:"جدول الحصص يحتاج إلى ربط مواعيد الحصص الفعلية من الإدارة.",ai:"المساعد الذكي يحتاج إلى ربط خدمة الذكاء الاصطناعي ومصادر المنهج.",groups:"خدمة الجروبات الدراسية لم يتم تجهيزها بعد."};
  return <div className="platform-page"><PageBanner eyebrow="STUDENT SERVICES" title={data[0]} description={data[1]} art={data[2]}/><div className="platform-empty-state"><Icon name={data[2]} size={36}/><b>مساحة {data[0]}</b><span>{unavailable[page]||"هذا القسم قيد التجهيز."}</span></div></div>;
 }
 
