@@ -99,60 +99,19 @@ function PortalAccess({portal,onSuccess}){
 
 
 function TeacherLiveStudio({profile}){
- const [title,setTitle]=useState("");
- const [grade,setGrade]=useState("الصف الثالث الثانوي");
- const [sessions,setSessions]=useState([]);
- const [active,setActive]=useState(null);
- const [busy,setBusy]=useState(true);
- const [saving,setSaving]=useState(false);
- const [error,setError]=useState("");
- const [notice,setNotice]=useState("");
- const load=async()=>{
-  setBusy(true);setError("");
-  try{
-   const rows=await portalApi("teacher","emad_teacher_live_sessions?select=id,title,grade,room_name,status,started_at,ended_at,created_at&teacher_id=eq."+encodeURIComponent(profile.id)+"&order=created_at.desc&limit=30");
-   setSessions(rows||[]);setActive((rows||[]).find(x=>x.status==="live")||null);
-  }catch(e){setError("تعذر تحميل سجل البث المباشر. راجع اتصال المنصة.");}
-  finally{setBusy(false);}
- };
- useEffect(()=>{load();},[]);
- const start=async()=>{
-  if(title.trim().length<3)return setError("اكتب عنوانًا واضحًا للحصة المباشرة.");
-  setSaving(true);setError("");setNotice("");
-  const room="emad-math-"+crypto.randomUUID().replace(/-/g,"").slice(0,20);
-  try{
-   const rows=await portalApi("teacher","emad_teacher_live_sessions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({teacher_id:profile.id,title:title.trim(),grade,room_name:room,status:"live"})});
-   const created=Array.isArray(rows)?rows[0]:rows;
-   if(!created?.id)throw new Error("live_session_create_failed");
-   setSessions(old=>[created,...old]);setActive(created);setTitle("");
-   setNotice("تم إنشاء الحصة المباشرة. اسمح للمتصفح باستخدام الكاميرا والميكروفون عند فتح الاستوديو.");
-  }catch(e){setError("لم نتمكن من إنشاء البث. تأكد من صلاحيات حساب المدرس.");}
-  finally{setSaving(false);}
- };
- const end=async()=>{
-  if(!active)return;
-  if(!window.confirm("هل تريد إنهاء الحصة المباشرة؟"))return;
-  setSaving(true);setError("");
-  try{
-   await portalApi("teacher","emad_teacher_live_sessions?id=eq."+encodeURIComponent(active.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status:"ended",ended_at:new Date().toISOString()})});
-   setSessions(old=>old.map(x=>x.id===active.id?{...x,status:"ended",ended_at:new Date().toISOString()}:x));setActive(null);setNotice("تم إنهاء الحصة وإخفاؤها من صفحة الطلاب.");
-  }catch(e){setError("تعذر إنهاء الحصة. حاول مرة أخرى.");}
-  finally{setSaving(false);}
- };
- const meetingUrl=active?"https://meet.jit.si/"+active.room_name+"#config.prejoinPageEnabled=false&config.startWithVideoMuted=false&config.startWithAudioMuted=false&userInfo.displayName="+encodeURIComponent(profile.full_name||"مستر عماد"):"";
- const copy=async()=>{try{await navigator.clipboard.writeText(meetingUrl);setNotice("تم نسخ رابط الحصة.");}catch{setError("تعذر نسخ الرابط من المتصفح.");}};
  return <section className="teacher-panel teacher-live-studio" dir="rtl">
-  <div className="teacher-panel-heading"><div><span>LIVE CLASSROOM</span><h2>استوديو البث المباشر</h2></div><small>{active?"الحصة تعمل الآن":"لا يوجد بث نشط"}</small></div>
-  {error&&<div className="teacher-live-alert error">{error}</div>}{notice&&<div className="teacher-live-alert success">{notice}</div>}
-  {!active?<div className="teacher-live-start-card">
-   <div className="teacher-live-art"><span>LIVE</span><b>استوديو الحصة المباشرة</b><small>ابدأ لقاءً مباشرًا بالصوت والصورة مع طلاب الصف.</small></div>
-   <div className="teacher-live-form"><label>عنوان الحصة<input value={title} onChange={e=>setTitle(e.target.value)} placeholder="مثال: مراجعة الفصل الأول"/></label><label>الصف الدراسي<select value={grade} onChange={e=>setGrade(e.target.value)}><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label><button disabled={saving} onClick={start}>{saving?"جارٍ تجهيز الاستوديو...":"إنشاء حصة مباشرة"}</button><small>تُتاح الحصة للطلاب المسجلين في الصف المختار فقط.</small></div>
-  </div>:<div className="teacher-live-active">
-   <div className="teacher-live-active-head"><div><span className="teacher-live-pulse"/> بث مباشر الآن <h3>{active.title}</h3><small>{active.grade} · بدأ {new Date(active.started_at).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"})}</small></div><div className="teacher-live-actions"><button onClick={copy}>نسخ رابط الحصة</button><button className="danger" disabled={saving} onClick={end}>إنهاء البث</button></div></div>
-   <iframe className="teacher-live-frame" src={meetingUrl} title="استوديو البث المباشر لمستر عماد" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write" allowFullScreen/>
-   <p className="teacher-live-note">الاستوديو يعمل داخل المنصة. سيظهر رابط الانضمام للطلاب في صفحة المحاضرات المباشرة. خدمة الاتصال الصوتي والمرئي مقدمة عبر Jitsi Meet.</p>
-  </div>}
-  <div className="teacher-live-history"><h3>سجل الحصص السابقة</h3>{busy?<p>جارٍ تحميل السجل...</p>:sessions.filter(x=>x.status==="ended").length?sessions.filter(x=>x.status==="ended").map(x=><article key={x.id}><b>{x.title}</b><span>{x.grade}</span><small>{new Date(x.started_at).toLocaleString("ar-EG")}</small></article>):<p>لا توجد حصص سابقة مسجلة.</p>}</div>
+  <div className="teacher-panel-heading"><div><span>LIVE CLASSROOM</span><h2>استوديو البث المباشر</h2></div><small>إعداد الخدمة</small></div>
+  <div className="teacher-live-start-card">
+   <div className="teacher-live-art"><span>LIVE</span><b>حصتك المباشرة من داخل المنصة</b><small>مساحة مخصصة للبث بالصوت والصورة ومشاركة الشاشة مع طلاب الصف.</small></div>
+   <div className="teacher-live-form">
+    <b className="teacher-live-pending-title">ربط خدمة البث المباشر</b>
+    <p>واجهة الاستوديو جاهزة، لكن تشغيل بث حقيقي وآمن يحتاج حساب خدمة بث مخصص ومفاتيح اتصال سرية تُحفظ على الخادم، وليس داخل كود الموقع.</p>
+    <div className="teacher-live-provider"><span>JaaS / LiveKit</span><small>خدمة بث خاصة بالمنصة مع صلاحيات للمدرس والطلاب</small></div>
+    <button type="button" disabled>سيتم تفعيل بدء البث بعد ربط الخدمة</button>
+    <small>لن نستخدم غرفة عامة غير محمية أو نعرض بيانات دخول المدرس للطلاب.</small>
+   </div>
+  </div>
+  <div className="teacher-live-history"><h3>حالة الاستوديو</h3><article><b>بانتظار ربط مزود البث</b><span>لم يتم إنشاء أي جلسات تجريبية</span><small>بيانات حساب المدرس محفوظة كما هي</small></article></div>
  </section>;
 }
 
