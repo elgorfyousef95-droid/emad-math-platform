@@ -540,3 +540,7 @@
 .hw-teacher-feedback{padding:12px;border:1px solid #8ac9a455;border-radius:10px;color:#c8f0d6}
 @media(max-width:1100px){.student-experience .homework-page .hw-assignment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:700px){.student-experience .homework-page .hw-assignment-grid{grid-template-columns:1fr}.hw-model-card{min-height:310px!important}.hw-subject-intro{align-items:flex-start;flex-direction:column}.hw-work-toolbar{gap:8px}.hw-save-state{margin-right:0}.hw-answer-count{margin-left:0}}
+
+.hw-question-diagram{margin:14px 0 18px;padding:12px;border:1px solid #d8e1eb;border-radius:14px;background:#f8fbff;text-align:center;overflow:hidden}
+.hw-question-diagram img{display:block;width:min(100%,760px);max-height:360px;object-fit:contain;margin:auto}
+.hw-question-diagram figcaption{margin-top:7px;color:#64748b;font-size:11px}
