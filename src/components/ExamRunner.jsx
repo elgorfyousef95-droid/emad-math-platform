@@ -69,7 +69,9 @@ export default function ExamRunner({exam,profile,studentApi,onClose}){
    <div className="exam-runner-instructions"><b>تعليمات الامتحان</b><span>الوقت يبدأ من فتح الامتحان. احفظ إجاباتك ثم اضغط تسليم قبل انتهاء الوقت.</span><span>الأسئلة المقالية والمسائل تُراجع بواسطة المدرس.</span></div>
    <div className="exam-runner-question-list">{questions.map((q,index)=>{
     const choices=Array.isArray(q.choices)?q.choices:[];
-    return <article className="exam-runner-question" key={q.id}><div className="exam-runner-question-title"><span>السؤال {index+1}</span><small>{q.points} درجة</small></div><h3>{q.prompt}</h3>
+    const imageMatch=String(q.prompt||"").match(/^\[\[EXAM_IMAGE:(https?:\/\/[^\]]+)\]\]\n?/);
+    const questionText=imageMatch?String(q.prompt).slice(imageMatch[0].length):String(q.prompt||"");
+    return <article className="exam-runner-question" key={q.id}><div className="exam-runner-question-title"><span>السؤال {index+1}</span><small>{q.points} درجة</small></div>{imageMatch&&<img className="exam-runner-question-image" src={imageMatch[1]} alt={"صورة السؤال "+(index+1)}/ >}{questionText&&<h3>{questionText}</h3>}
      {q.question_type==="single_choice"||q.question_type==="true_false"?<div className="exam-runner-options">{(q.question_type==="true_false"?["صحيح","خطأ"]:choices).map(option=><label key={option}><input type="radio" name={q.id} checked={answers[q.id]===option} onChange={()=>setAnswer(q.id,option)}/><span>{option}</span></label>)}</div>:null}
      {q.question_type==="multiple_choice"?<div className="exam-runner-options">{choices.map(option=><label key={option}><input type="checkbox" checked={(answers[q.id]||[]).includes(option)} onChange={e=>setAnswer(q.id,e.target.checked?[...(answers[q.id]||[]),option]:(answers[q.id]||[]).filter(x=>x!==option))}/><span>{option}</span></label>)}</div>:null}
      {q.question_type==="short_answer"?<input className="exam-runner-short" value={answers[q.id]||""} onChange={e=>setAnswer(q.id,e.target.value)} placeholder="اكتب إجابتك هنا"/>:null}
