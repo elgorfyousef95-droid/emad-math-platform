@@ -16,6 +16,7 @@ const GRADES = ["الصف الأول الثانوي", "الصف الثاني ا�
 const TABS = [
   ["overview", "نظرة عامة", "OVERVIEW"],
   ["accounts", "الحسابات", "ACCOUNTS"],
+  ["teachers", "إدارة المدرسين", "TEACHERS"],
   ["courses", "الكورسات والمحاضرات", "COURSES"],
   ["exams", "الامتحانات", "EXAMS"],
   ["homework", "الواجبات", "HOMEWORK"],
@@ -568,6 +569,27 @@ export default function OwnerConsole() {
         {visibleUsers.map(user=><tr key={user.id}><td>{user.full_name||"—"}</td><td dir="ltr">{user.student_number||"بوابة إدارية"}</td><td>{user.grade||"—"}<small>{user.group_name||""}</small></td><td dir="ltr">{user.phone||"—"}<small>{[user.governorate,user.city].filter(Boolean).join(" / ")}</small></td><td>{user.parent_name||"—"}<small dir="ltr">{user.parent_phone||""}</small></td><td><span className={"owner-role role-"+user.role}>{({owner:"مالك",teacher:"مدرس",admin:"مدير",student:"طالب"})[user.role]||user.role}</span></td><td><select value={user.role} disabled={saving===user.id||user.id===profile.id||!user.student_number} onChange={e=>changeRole(user,e.target.value)}><option value="student">طالب</option><option value="teacher">مدرس</option><option value="admin">مدير</option><option value="owner">مالك</option></select></td></tr>)}
       </tbody></table></div>
       <p className="owner-note">حساب المالك الحالي محمي من تغيير دوره من داخل الجدول. تغيير الدور لا يحذف حساب الطالب أو بياناته.</p>
+    </section>}
+
+    {section==="teachers" && <section className="owner-panel owner-teachers-panel">
+      <div className="owner-panel-heading"><div><span>TEACHER MANAGEMENT</span><h2>إدارة المدرسين</h2></div><small>{teachers.length} مدرس</small></div>
+      <div className="owner-teacher-summary">
+        <article><small>إجمالي المدرسين</small><strong>{teachers.length}</strong></article>
+        <article><small>الكورسات المسندة</small><strong>{courses.filter(x=>teachers.some(t=>t.id===x.teacher_id)).length}</strong></article>
+        <article><small>المحاضرات</small><strong>{lessons.filter(l=>courses.some(course=>course.id===l.course_id&&teachers.some(t=>t.id===course.teacher_id))).length}</strong></article>
+      </div>
+      <input className="owner-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث باسم المدرس أو رقم الحساب..."/>
+      <div className="owner-teacher-grid">{teachers.filter(t=>[t.full_name,t.student_number,t.grade,t.phone].join(" ").toLowerCase().includes(filter.toLowerCase())).map(teacher=>{
+        const assigned=courses.filter(course=>course.teacher_id===teacher.id);
+        const assignedLessons=lessons.filter(lesson=>assigned.some(course=>course.id===lesson.course_id));
+        return <article className="owner-teacher-card" key={teacher.id}>
+          <div className="owner-teacher-card-head"><span className="owner-teacher-avatar">{(teacher.full_name||"م").slice(0,1)}</span><div><b>{teacher.full_name||"مدرس"}</b><small>{teacher.student_number||"حساب بوابة مدرس"}</small></div><i>{teacher.is_verified?"موثق":"مدرس"}</i></div>
+          <div className="owner-teacher-metrics"><span><b>{assigned.length}</b><small>كورسات</small></span><span><b>{assignedLessons.length}</b><small>محاضرات</small></span><span><b>{assigned.filter(x=>x.status==="published").length}</b><small>منشور</small></span></div>
+          <div className="owner-teacher-courses">{assigned.slice(0,4).map(course=><button key={course.id} onClick={()=>{setSelectedCourse(course.id);setSection("courses");}}>{course.title}<small>{course.grade}</small></button>)}{!assigned.length&&<p>لم يتم إسناد كورسات لهذا المدرس بعد.</p>}</div>
+          <div className="owner-teacher-actions"><button onClick={()=>{setFilter(teacher.full_name||"");setSection("accounts");}}>عرض الحساب والصلاحيات</button><button onClick={()=>{setCourseForm(old=>({...old,teacher_id:teacher.id}));setSection("courses");}}>إسناد كورس جديد</button></div>
+        </article>;
+      })}{!teachers.length&&<p className="owner-note">لا توجد حسابات مدرسين حاليًا.</p>}</div>
+      <p className="owner-note">إسناد الكورسات وتغيير الصلاحيات يتم من أدوات الإدارة الحالية؛ هذه الصفحة تجمع بيانات المدرسين ومحتواهم في مكان واحد دون تعديل بيانات الحسابات تلقائيًا.</p>
     </section>}
 
     {section==="courses" && <section className="owner-panel">
