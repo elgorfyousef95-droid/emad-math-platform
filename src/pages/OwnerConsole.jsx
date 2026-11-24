@@ -40,6 +40,8 @@ export default function OwnerConsole() {
   const [examQuestions, setExamQuestions] = useState([]);
   const [homework, setHomework] = useState([]);
   const [homeworkQuestions, setHomeworkQuestions] = useState([]);
+  const [homeworkAnswerKeys, setHomeworkAnswerKeys] = useState([]);
+  const [previewHomeworkId, setPreviewHomeworkId] = useState("");
   const [announcements, setAnnouncements] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
   const [codes, setCodes] = useState([]);
@@ -99,7 +101,8 @@ export default function OwnerConsole() {
         ["exams", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,cover_image_url,created_at&order=created_at.desc&limit=500"],
         ["examQuestions", "exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&order=sort_order.asc&limit=5000"],
         ["homework", "homework_assignments?select=id,title,description,grade,group_name,due_at,is_published,cover_image_url,created_by,created_at&order=created_at.desc&limit=500"],
-        ["homeworkQuestions", "homework_questions?select=id,assignment_id,question_type,prompt,points,position&order=position.asc&limit=5000"],
+        ["homeworkQuestions", "homework_questions?select=id,assignment_id,question_type,prompt,choices,points,position,diagram_url&order=position.asc&limit=5000"],
+        ["homeworkAnswerKeys", "homework_answer_keys?select=question_id,correct_answer,explanation&limit=5000"],
         ["announcements", "announcements?select=id,author_id,course_id,title,body,published_at,cover_image_url,created_at&order=created_at.desc&limit=500"],
         ["subscriptions", "emad_student_subscriptions?select=id,student_id,grade,starts_at,ends_at,created_at&order=ends_at.desc&limit=1000"],
         ["codes", "emad_subscription_codes?select=id,grade,created_at,redeemed_by,redeemed_at,expires_at,code_hint&order=created_at.desc&limit=500"],
@@ -119,6 +122,7 @@ export default function OwnerConsole() {
       setExamQuestions(data.examQuestions || []);
       setHomework(data.homework || []);
       setHomeworkQuestions(data.homeworkQuestions || []);
+      setHomeworkAnswerKeys(data.homeworkAnswerKeys || []);
       setAnnouncements(data.announcements || []);
       setSubscriptions(data.subscriptions || []);
       setCodes(data.codes || []);
@@ -708,10 +712,11 @@ export default function OwnerConsole() {
         <div className="owner-library-card"><h3>الواجبات الحالية</h3><div className="owner-media-grid">{homework.map(item=><article className="owner-media-card" key={item.id}>
           {item.cover_image_url?<img src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="owner-media-fallback">TASK</span>}
           <span className="owner-media-copy"><b>{item.title}</b><small>{item.grade} · {item.group_name||"كل المجموعات"}</small></span>
-          <div className="owner-media-actions"><span className={item.is_published?"published":"draft"}>{statusText(item.is_published?"published":"draft")}</span><button disabled={saving===item.id} onClick={()=>toggleHomework(item)}>{item.is_published?"إيقاف النشر":"نشر"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"homework_assignments",item)}/></label></div>
+          <div className="owner-media-actions"><span className={item.is_published?"published":"draft"}>{statusText(item.is_published?"published":"draft")}</span><button type="button" onClick={()=>setPreviewHomeworkId(item.id)}>معاينة الأسئلة</button><button disabled={saving===item.id} onClick={()=>toggleHomework(item)}>{item.is_published?"إيقاف النشر":"نشر"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"homework_assignments",item)}/></label></div>
         </article>)}</div>{!homework.length&&<p className="owner-note">لا توجد واجبات حتى الآن.</p>}</div>
       </div>
       <p className="owner-warning">الواجب يُحفظ مع أسئلته كمسودة. لا يمكن نشره قبل وجود سؤال واحد على الأقل؛ الأسئلة الموضوعية تُصحح تلقائيًا، والمقالية تحتاج مراجعة المدرس.</p>
+      {previewHomeworkId && (()=>{const item=homework.find(x=>x.id===previewHomeworkId);const qs=homeworkQuestions.filter(q=>q.assignment_id===previewHomeworkId).sort((a,b)=>a.position-b.position);return <div role="dialog" aria-modal="true" aria-label="معاينة الواجب" style={{position:"fixed",inset:0,zIndex:10000,background:"rgba(2,8,18,.88)",overflowY:"auto",padding:"20px"}}><div style={{maxWidth:900,margin:"20px auto",background:"#102033",border:"1px solid #35506c",borderRadius:18,padding:20,color:"#f4f7fb"}}><div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}><div><small style={{color:"#a8c4df"}}>معاينة خاصة بالمالك — غير ظاهرة للطلاب</small><h2>{item?.title||"الواجب"}</h2><p>{item?.description||""}</p></div><button type="button" onClick={()=>setPreviewHomeworkId("")}>إغلاق المعاينة ✕</button></div><hr style={{borderColor:"#35506c"}}/>{qs.map((q,i)=>{const key=homeworkAnswerKeys.find(k=>k.question_id===q.id);return <article key={q.id} style={{padding:"14px 0",borderBottom:"1px solid #29415b"}}><b>{i+1}. {q.prompt}</b><small style={{display:"block",color:"#a8c4df",marginTop:5}}>{q.points} درجة · {q.question_type==="single_choice"?"اختيار من متعدد":"مسألة / سؤال مقالي"}</small>{q.diagram_url&&<img src={q.diagram_url} alt="رسم توضيحي للسؤال" style={{display:"block",maxWidth:"100%",maxHeight:260,margin:"12px auto",background:"#fff",borderRadius:10,padding:8}}/>}{Array.isArray(q.choices)&&q.choices.length>0&&<ol type="A" style={{paddingInlineStart:24}}>{q.choices.map((choice,j)=><li key={j} style={{margin:"5px 0"}}>{choice}</li>)}</ol>}<div style={{marginTop:10,padding:12,background:"#0a1727",borderRadius:10}}><b style={{color:"#8de0b5"}}>الإجابة النموذجية:</b><p>{key?.correct_answer||"لا توجد إجابة محفوظة"}</p><b style={{color:"#9fc9ff"}}>خطوات الحل:</b><p>{key?.explanation||"لا يوجد شرح محفوظ"}</p></div></article>})}{!qs.length&&<p>لا توجد أسئلة محفوظة لهذا الواجب.</p>}<button type="button" style={{marginTop:18}} onClick={()=>setPreviewHomeworkId("")}>إغلاق المعاينة</button></div></div>})()}
     </section>}
 
     {section==="announcements" && <section className="owner-panel">
