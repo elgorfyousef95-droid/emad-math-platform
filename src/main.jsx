@@ -97,8 +97,67 @@ function PortalAccess({portal,onSuccess}){
  </section></main>;
 }
 
+
+function TeacherLiveStudio({profile}){
+ const [title,setTitle]=useState("");
+ const [grade,setGrade]=useState("الصف الثالث الثانوي");
+ const [sessions,setSessions]=useState([]);
+ const [active,setActive]=useState(null);
+ const [busy,setBusy]=useState(true);
+ const [saving,setSaving]=useState(false);
+ const [error,setError]=useState("");
+ const [notice,setNotice]=useState("");
+ const load=async()=>{
+  setBusy(true);setError("");
+  try{
+   const rows=await portalApi("teacher","emad_teacher_live_sessions?select=id,title,grade,room_name,status,started_at,ended_at,created_at&teacher_id=eq."+encodeURIComponent(profile.id)+"&order=created_at.desc&limit=30");
+   setSessions(rows||[]);setActive((rows||[]).find(x=>x.status==="live")||null);
+  }catch(e){setError("تعذر تحميل سجل البث المباشر. راجع اتصال المنصة.");}
+  finally{setBusy(false);}
+ };
+ useEffect(()=>{load();},[]);
+ const start=async()=>{
+  if(title.trim().length<3)return setError("اكتب عنوانًا واضحًا للحصة المباشرة.");
+  setSaving(true);setError("");setNotice("");
+  const room="emad-math-"+crypto.randomUUID().replace(/-/g,"").slice(0,20);
+  try{
+   const rows=await portalApi("teacher","emad_teacher_live_sessions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({teacher_id:profile.id,title:title.trim(),grade,room_name:room,status:"live"})});
+   const created=Array.isArray(rows)?rows[0]:rows;
+   if(!created?.id)throw new Error("live_session_create_failed");
+   setSessions(old=>[created,...old]);setActive(created);setTitle("");
+   setNotice("تم إنشاء الحصة المباشرة. اسمح للمتصفح باستخدام الكاميرا والميكروفون عند فتح الاستوديو.");
+  }catch(e){setError("لم نتمكن من إنشاء البث. تأكد من صلاحيات حساب المدرس.");}
+  finally{setSaving(false);}
+ };
+ const end=async()=>{
+  if(!active)return;
+  if(!window.confirm("هل تريد إنهاء الحصة المباشرة؟"))return;
+  setSaving(true);setError("");
+  try{
+   await portalApi("teacher","emad_teacher_live_sessions?id=eq."+encodeURIComponent(active.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status:"ended",ended_at:new Date().toISOString()})});
+   setSessions(old=>old.map(x=>x.id===active.id?{...x,status:"ended",ended_at:new Date().toISOString()}:x));setActive(null);setNotice("تم إنهاء الحصة وإخفاؤها من صفحة الطلاب.");
+  }catch(e){setError("تعذر إنهاء الحصة. حاول مرة أخرى.");}
+  finally{setSaving(false);}
+ };
+ const meetingUrl=active?"https://meet.jit.si/"+active.room_name+"#config.prejoinPageEnabled=false&config.startWithVideoMuted=false&config.startWithAudioMuted=false&userInfo.displayName="+encodeURIComponent(profile.full_name||"مستر عماد"):"";
+ const copy=async()=>{try{await navigator.clipboard.writeText(meetingUrl);setNotice("تم نسخ رابط الحصة.");}catch{setError("تعذر نسخ الرابط من المتصفح.");}};
+ return <section className="teacher-panel teacher-live-studio" dir="rtl">
+  <div className="teacher-panel-heading"><div><span>LIVE CLASSROOM</span><h2>استوديو البث المباشر</h2></div><small>{active?"الحصة تعمل الآن":"لا يوجد بث نشط"}</small></div>
+  {error&&<div className="teacher-live-alert error">{error}</div>}{notice&&<div className="teacher-live-alert success">{notice}</div>}
+  {!active?<div className="teacher-live-start-card">
+   <div className="teacher-live-art"><span>LIVE</span><b>استوديو الحصة المباشرة</b><small>ابدأ لقاءً مباشرًا بالصوت والصورة مع طلاب الصف.</small></div>
+   <div className="teacher-live-form"><label>عنوان الحصة<input value={title} onChange={e=>setTitle(e.target.value)} placeholder="مثال: مراجعة الفصل الأول"/></label><label>الصف الدراسي<select value={grade} onChange={e=>setGrade(e.target.value)}><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label><button disabled={saving} onClick={start}>{saving?"جارٍ تجهيز الاستوديو...":"إنشاء حصة مباشرة"}</button><small>تُتاح الحصة للطلاب المسجلين في الصف المختار فقط.</small></div>
+  </div>:<div className="teacher-live-active">
+   <div className="teacher-live-active-head"><div><span className="teacher-live-pulse"/> بث مباشر الآن <h3>{active.title}</h3><small>{active.grade} · بدأ {new Date(active.started_at).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"})}</small></div><div className="teacher-live-actions"><button onClick={copy}>نسخ رابط الحصة</button><button className="danger" disabled={saving} onClick={end}>إنهاء البث</button></div></div>
+   <iframe className="teacher-live-frame" src={meetingUrl} title="استوديو البث المباشر لمستر عماد" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write" allowFullScreen/>
+   <p className="teacher-live-note">الاستوديو يعمل داخل المنصة. سيظهر رابط الانضمام للطلاب في صفحة المحاضرات المباشرة. خدمة الاتصال الصوتي والمرئي مقدمة عبر Jitsi Meet.</p>
+  </div>}
+  <div className="teacher-live-history"><h3>سجل الحصص السابقة</h3>{busy?<p>جارٍ تحميل السجل...</p>:sessions.filter(x=>x.status==="ended").length?sessions.filter(x=>x.status==="ended").map(x=><article key={x.id}><b>{x.title}</b><span>{x.grade}</span><small>{new Date(x.started_at).toLocaleString("ar-EG")}</small></article>):<p>لا توجد حصص سابقة مسجلة.</p>}</div>
+ </section>;
+}
+
 function TeacherConsole(){
- const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[exams,setExams]=useState([]),[attempts,setAttempts]=useState([]),[examQuestions,setExamQuestions]=useState([]),[section,setSection]=useState("overview"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState(""),[selectedAttempt,setSelectedAttempt]=useState(null),[attemptAnswers,setAttemptAnswers]=useState([]),[gradeDraft,setGradeDraft]=useState("");
+ const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("overview"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState("");
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:"",cover_image_url:""});
  const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});
  const [lessonVideoPreviewUrl,setLessonVideoPreviewUrl]=useState("");
@@ -118,18 +177,11 @@ function TeacherConsole(){
    if(me?.role!=="teacher")throw new Error("not_teacher");
    const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,cover_image_url,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setCourses(list||[]);
-   const [studentRows,messageRows,examRows]=await Promise.all([
+   const [studentRows,messageRows]=await Promise.all([
     portalApi("teacher", "profiles?select=id,full_name,student_number,grade,group_name,phone,parent_name,parent_phone,governorate,city,avatar_url,created_at&role=eq.student&limit=500"),
-    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200"),
-    portalApi("teacher", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,created_at&order=created_at.desc&limit=500")
+    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200")
    ]);
-   setStudents(studentRows||[]);setMessages(messageRows||[]);setExams(examRows||[]);
-   const examIds=(examRows||[]).map(x=>x.id);
-   const [attemptRows,questionRows]=examIds.length?await Promise.all([
-    portalApi("teacher","exam_attempts?select=id,exam_id,student_id,started_at,submitted_at,score,graded_at&exam_id=in.("+examIds.join(",")+")&order=started_at.desc&limit=1000"),
-    portalApi("teacher","exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&exam_id=in.("+examIds.join(",")+")&order=sort_order.asc&limit=5000")
-   ]):[[],[]];
-   setAttempts(attemptRows||[]);setExamQuestions(questionRows||[]);
+   setStudents(studentRows||[]);setMessages(messageRows||[]);
    const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
    setSelected(first);
   }catch(e){
@@ -193,48 +245,6 @@ function TeacherConsole(){
   if(lesson.video_url){try{const url=await getLectureVideoUrl(lesson.video_url,"teacher");setLessonVideoPreviewUrl(url);}catch{setNotice("تم فتح بيانات المحاضرة، لكن تعذر تجهيز معاينة الفيديو.");}}
   setNotice("أنت تعدّل المحاضرة المحددة. احفظ التعديلات عند الانتهاء.");
  };
- const addExamQuestion=()=>{
-  const q=examQuestionForm;const choices=q.question_type==="true_false"?["صحيح","خطأ"]:q.choices.split("\n").map(x=>x.trim()).filter(Boolean);
-  if(q.prompt.trim().length<4&&!q.image_url)return setError("اكتب نص السؤال أو ارفع صورة للسؤال.");
-  if(["single_choice","multiple_choice"].includes(q.question_type)&&choices.length<2)return setError("أضف اختيارين على الأقل.");
-  if(["single_choice","multiple_choice","true_false","short_answer"].includes(q.question_type)&&!q.correct_answer.trim())return setError("حدد الإجابة الصحيحة لهذا السؤال.");
-  const correct=q.question_type==="multiple_choice"?q.correct_answer.split("\n").map(x=>x.trim()).filter(Boolean):q.correct_answer.trim();
-  setExamDraftQuestions(old=>[...old,{id:crypto.randomUUID(),prompt:q.prompt.trim(),image_url:q.image_url,question_type:q.question_type,choices,correct_answer:correct,points:Number(q.points)||1}]);
-  setExamQuestionForm({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});setError("");
- };
- const createExam=async(e)=>{
-  e.preventDefault();if(!examForm.course_id||examForm.title.trim().length<3||!examDraftQuestions.length)return setError("اختر كورسًا واكتب عنوان الامتحان وأضف سؤالًا واحدًا على الأقل.");
-  setSaving(true);setError("");setNotice("");
-  try{
-   const examRows=await portalApi("teacher","exams",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({course_id:examForm.course_id,title:examForm.title.trim(),duration_minutes:Number(examForm.duration_minutes)||60,opens_at:examForm.opens_at?new Date(examForm.opens_at).toISOString():null,closes_at:examForm.closes_at?new Date(examForm.closes_at).toISOString():null,is_published:false})});
-   const exam=Array.isArray(examRows)?examRows[0]:examRows;if(!exam?.id)throw new Error("exam_create_failed");
-   for(let i=0;i<examDraftQuestions.length;i++){
-    const q=examDraftQuestions[i];const inserted=await portalApi("teacher","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:exam.id,question_type:q.question_type,prompt:(q.image_url?"[[EXAM_IMAGE:"+q.image_url+"]]\n":"")+q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
-    const question=Array.isArray(inserted)?inserted[0]:inserted;if(!question?.id)throw new Error("question_create_failed");
-    if(q.correct_answer!==""&&(!Array.isArray(q.correct_answer)||q.correct_answer.length))await portalApi("teacher","exam_answer_keys",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({question_id:question.id,correct_answer:q.correct_answer})});
-   }
-   setExams(old=>[exam,...old]);setExamQuestions(old=>[...old,...examDraftQuestions.map((q,i)=>({...q,id:crypto.randomUUID(),exam_id:exam.id,sort_order:i+1}))]);
-   setExamForm({title:"",course_id:examForm.course_id,duration_minutes:"60",opens_at:"",closes_at:""});setExamDraftQuestions([]);setNotice("تم حفظ الامتحان كمسودة. راجعه ثم انشره للطلاب.");
-  }catch(err){console.error("teacher_exam_create",err);setError("لم يكتمل حفظ الامتحان. راجع الأسئلة وصلاحيات الكورس.");}
-  finally{setSaving(false);}
- };
- const toggleExam=async(exam)=>{
-  setSaving(true);setError("");setNotice("");
-  try{const is_published=!exam.is_published;await portalApi("teacher","exams?id=eq."+encodeURIComponent(exam.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setExams(old=>old.map(x=>x.id===exam.id?{...x,is_published}:x));setNotice(is_published?"تم نشر الامتحان.":"تم إيقاف نشر الامتحان.");}
-  catch{setError("تعذر تحديث حالة الامتحان.");}finally{setSaving(false);}
- };
- const openAttempt=async(attempt)=>{
-  setSelectedAttempt(attempt);setGradeDraft(attempt.score===null||attempt.score===undefined?"":String(attempt.score));setAttemptAnswers([]);
-  try{const rows=await portalApi("teacher","exam_answers?select=id,question_id,answer,awarded_points,feedback,exam_questions(prompt,points,question_type)&attempt_id=eq."+encodeURIComponent(attempt.id)+"&order=created_at.asc");setAttemptAnswers(rows||[]);}
-  catch{setError("تعذر تحميل إجابات المحاولة.");}
- };
- const gradeAttempt=async()=>{
-  if(!selectedAttempt||gradeDraft==="")return setError("اكتب الدرجة النهائية أولًا.");
-  setSaving(true);setError("");
-  try{const result=await portalApi("teacher","rpc/teacher_grade_exam_attempt",{method:"POST",body:JSON.stringify({p_attempt_id:selectedAttempt.id,p_score:Number(gradeDraft)})});setAttempts(old=>old.map(x=>x.id===selectedAttempt.id?{...x,score:result.score,graded_at:new Date().toISOString()}:x));setSelectedAttempt(old=>({...old,score:result.score,graded_at:new Date().toISOString()}));setNotice("تم حفظ نتيجة الطالب.");}
-  catch{setError("تعذر حفظ الدرجة. تأكد أنها بين صفر والدرجة النهائية.");}
-  finally{setSaving(false);}
- };
  const toggleCourse=async(course)=>{
   const status=course.status==="published"?"draft":"published";setSaving(true);setError("");setNotice("");
   try{await portalApi("teacher", "courses?id=eq."+encodeURIComponent(course.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status})});setCourses(old=>old.map(x=>x.id===course.id?{...x,status}:x));setNotice(status==="published"?"تم نشر الكورس.":"تم إرجاع الكورس إلى المسودات.");}
@@ -272,17 +282,16 @@ function TeacherConsole(){
  return <main className="teacher-shell" dir="rtl">
   <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("teacher");window.location.reload();}}>تسجيل الخروج</button></div></header>
   {error&&<p className="teacher-alert error" role="status">{error}</p>}{notice&&<p className="teacher-alert success" role="status">{notice}</p>}
-  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article><article><small>الامتحانات</small><strong>{exams.length}</strong></article><article><small>محاولات الطلاب</small><strong>{attempts.length}</strong></article></section>
+  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article></section>
   <div className="teacher-studio-body">
    <aside className="teacher-studio-sidebar">
-    <div className="teacher-side-heading"><span>WORKSPACE</span><b>إدارة المنصة التعليمية</b><small>القائمة الرئيسية</small></div>
+    <div className="teacher-side-heading"><span>TEACHER STUDIO</span><b>مساحة مستر عماد</b><small>إدارة المحاضرات والبث المباشر</small></div>
     <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
      <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}><span>⌂</span> لوحة المتابعة</button>
      <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}><span>▤</span> الكورسات</button>
      <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}><span>▶</span> المحاضرات</button>
      <button className={section==="students"?"active":""} onClick={()=>setSection("students")}><span>♙</span> الطلاب <b>{students.length}</b></button>
-     <button className={section==="exams"?"active":""} onClick={()=>setSection("exams")}><span>▣</span> الامتحانات <b>{exams.length}</b></button>
-     <button className={section==="results"?"active":""} onClick={()=>setSection("results")}><span>▥</span> النتائج والتصحيح <b>{attempts.length}</b></button>
+     <button className={section==="live"?"active":""} onClick={()=>setSection("live")}><span>●</span> البث المباشر</button>
      <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}><span>◎</span> الجروبات</button>
      <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> رسائل الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
     </nav>
@@ -291,18 +300,17 @@ function TeacherConsole(){
    <div className="teacher-studio-content">
   {section==="overview"&&<section className="teacher-panel teacher-overview-panel" dir="rtl">
    <div className="teacher-panel-heading"><div><span>TEACHER CONTROL CENTER</span><h2>ملخص إدارة المدرس</h2></div><small>أهلاً {profile.full_name||"مستر عماد"}</small></div>
-   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>تابع محتواك وطلابك وامتحاناتك ونتائجهم، وانتقل مباشرة للقسم المطلوب.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
+   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>إدارة الكورسات والمحاضرات والفيديوهات والبث المباشر من مكان واحد.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
    <div className="teacher-overview-actions">
     <button onClick={()=>setSection("courses")}><span>01</span><b>إدارة الكورسات</b><small>إنشاء الكورسات وتعديلها ونشرها</small><strong>{courses.length} كورس</strong></button>
     <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة المحاضرات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} محاضرة</strong></button>
     <button onClick={()=>setSection("students")}><span>03</span><b>متابعة الطلاب</b><small>عرض الطلاب المرتبطين بكورساتك</small><strong>{students.length} طالب</strong></button>
-    <button onClick={()=>setSection("exams")}><span>04</span><b>الامتحانات</b><small>إنشاء الامتحانات وإدارة الأسئلة</small><strong>{exams.length} امتحان</strong></button>
-    <button onClick={()=>setSection("results")}><span>05</span><b>النتائج والتصحيح</b><small>مراجعة المحاولات واعتماد الدرجات</small><strong>{attempts.length} محاولة</strong></button>
-    <button onClick={()=>setSection("groups")}><span>06</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
-    <button onClick={()=>setSection("messages")}><span>07</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
+    <button onClick={()=>setSection("live")}><span>03</span><b>البث المباشر</b><small>ابدأ حصة مباشرة وتواصل مع الطلاب</small><strong>فتح استوديو البث</strong></button>
+    <button onClick={()=>setSection("groups")}><span>04</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
+    <button onClick={()=>setSection("messages")}><span>05</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
    </div>
    <div className="teacher-overview-bottom">
-    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p><p>محاولات تنتظر التصحيح: <b>{attempts.filter(x=>x.submitted_at&&!x.graded_at).length}</b></p></article>
+    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p></article>
     <article><h3>تذكير بالصلاحيات</h3><p>هذه اللوحة مخصصة لإدارة كورساتك وطلاب الصفوف المرتبطة بها. إعدادات المالك والحسابات والاشتراكات العامة تظل في لوحة المالك.</p></article>
    </div>
   </section>}
@@ -318,6 +326,7 @@ function TeacherConsole(){
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>}
+  {section==="live"&&<TeacherLiveStudio profile={profile}/>}
   {section==="groups"&&<ChatWorkspace profile={profile} mode="teacher" portal="teacher"/>}
   {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>إدارة ومتابعة الطلاب</h2></div><small>{students.length} طالب</small></div>
@@ -327,35 +336,6 @@ function TeacherConsole(){
     <div className="teacher-student-top"><span className="teacher-student-avatar">{student.avatar_url?<img src={student.avatar_url} alt=""/>:(student.full_name||"ط").slice(0,1)}</span><div><b>{student.full_name||"طالب"}</b><small>رقم الطالب: {student.student_number||"—"}</small></div></div>
     <dl><div><dt>الصف</dt><dd>{student.grade||"—"}</dd></div><div><dt>المجموعة</dt><dd>{student.group_name||"—"}</dd></div><div><dt>الهاتف</dt><dd dir="ltr">{student.phone||"—"}</dd></div><div><dt>ولي الأمر</dt><dd>{student.parent_name||"—"}</dd></div><div><dt>هاتف ولي الأمر</dt><dd dir="ltr">{student.parent_phone||"—"}</dd></div><div><dt>المحافظة / المدينة</dt><dd>{[student.governorate,student.city].filter(Boolean).join(" / ")||"—"}</dd></div></dl>
    </article>)}{!students.length&&<div className="teacher-empty large">لا يوجد طلاب ظاهرون حتى الآن في الصفوف المرتبطة بكورساتك.</div>}</div>
-  </section>}
-  {section==="exams"&&<div className="teacher-exam-layout" dir="rtl">
-   <section className="teacher-panel">
-    <div className="teacher-panel-heading"><div><span>EXAM BUILDER</span><h2>إنشاء امتحان احترافي</h2></div><small>{exams.length} امتحان</small></div>
-    <form className="teacher-form teacher-exam-form" onSubmit={createExam}>
-     <input required value={examForm.title} onChange={e=>setExamForm({...examForm,title:e.target.value})} placeholder="اسم الامتحان"/>
-     <select required value={examForm.course_id} onChange={e=>setExamForm({...examForm,course_id:e.target.value})}><option value="">اختر الكورس</option>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select>
-     <div className="teacher-form-grid"><label>مدة الامتحان بالدقائق<input type="number" min="1" max="600" value={examForm.duration_minutes} onChange={e=>setExamForm({...examForm,duration_minutes:e.target.value})}/></label><label>يفتح في<input type="datetime-local" value={examForm.opens_at} onChange={e=>setExamForm({...examForm,opens_at:e.target.value})}/></label><label>يغلق في<input type="datetime-local" value={examForm.closes_at} onChange={e=>setExamForm({...examForm,closes_at:e.target.value})}/></label></div>
-     <div className="teacher-exam-question-editor"><h3>بناء الأسئلة</h3><select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="multiple_choice">اختر أكثر من إجابة</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select>
-      <textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال أو ارفع صورة السؤال..."/><label className="teacher-image-label exam-question-image-label">صورة السؤال (اختياري) — JPG / PNG / WEBP<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadExamQuestionImage(e.target.files?.[0])}/></label>{examQuestionForm.image_url&&<img className="exam-question-image-preview" src={examQuestionForm.image_url} alt="معاينة صورة السؤال"/>}
-      {["single_choice","multiple_choice"].includes(examQuestionForm.question_type)&&<textarea rows="4" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})} placeholder={"كل اختيار في سطر منفصل\nالاختيار الثاني\nالاختيار الثالث\nالاختيار الرابع"}/>}
-      {examQuestionForm.question_type!=="essay"&&<textarea rows={examQuestionForm.question_type==="multiple_choice"?3:1} value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder={examQuestionForm.question_type==="multiple_choice"?"الإجابات الصحيحة، كل إجابة في سطر":"الإجابة الصحيحة"}/>}
-      <div className="teacher-form-grid"><label>درجة السؤال<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label><button type="button" onClick={addExamQuestion}>إضافة السؤال</button></div>
-     </div>
-     {examDraftQuestions.length>0&&<div className="teacher-exam-draft-list"><b>أسئلة الامتحان ({examDraftQuestions.length})</b>{examDraftQuestions.map((q,i)=><article key={q.id}><span>{i+1}. {q.prompt||"سؤال بصورة"}{q.image_url&&<img className="exam-question-draft-thumb" src={q.image_url} alt="صورة السؤال"/>}</span><small>{q.points} درجة · {q.question_type}</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></article>)}</div>}
-     <button disabled={saving||!examDraftQuestions.length}>حفظ الامتحان كمسودة</button>
-    </form>
-   </section>
-   <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>EXAM LIBRARY</span><h2>الامتحانات المنشأة</h2></div></div>
-    <div className="teacher-exam-list">{exams.map(exam=><article key={exam.id}><div><b>{exam.title}</b><small>{courses.find(c=>c.id===exam.course_id)?.title||"الكورس"} · {exam.duration_minutes} دقيقة · {examQuestions.filter(q=>q.exam_id===exam.id).length} سؤال</small></div><span className={exam.is_published?"published":"draft"}>{exam.is_published?"منشور":"مسودة"}</span><button disabled={saving} onClick={()=>toggleExam(exam)}>{exam.is_published?"إيقاف النشر":"نشر للطلاب"}</button></article>)}{!exams.length&&<div className="teacher-empty">لا توجد امتحانات بعد. ابدأ ببناء أول امتحان.</div>}</div>
-   </section>
-  </div>}
-  {section==="results"&&<section className="teacher-panel teacher-results-panel" dir="rtl">
-   <div className="teacher-panel-heading"><div><span>STUDENT PERFORMANCE</span><h2>نتائج ومحاولات الطلاب</h2></div><small>{attempts.length} محاولة</small></div>
-   <div className="teacher-results-list">{attempts.map(attempt=>{const student=students.find(s=>s.id===attempt.student_id),exam=exams.find(e=>e.id===attempt.exam_id),max=examQuestions.filter(q=>q.exam_id===attempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0);return <article key={attempt.id}><div><b>{student?.full_name||"طالب"}</b><small>{student?.student_number||"—"} · {exam?.title||"امتحان"} · {new Date(attempt.started_at).toLocaleString("ar-EG")}</small></div><strong>{attempt.score===null||attempt.score===undefined?"—":Number(attempt.score).toLocaleString("ar-EG")} / {max}</strong><span>{!attempt.submitted_at?"لم يسلّم":attempt.graded_at?"تم التصحيح":"بانتظار التصحيح"}</span><button onClick={()=>openAttempt(attempt)}>عرض الإجابات / التصحيح</button></article>})}{!attempts.length&&<div className="teacher-empty">ستظهر هنا محاولات الطلاب ونتائجهم بعد بدء الامتحانات.</div>}</div>
-   {selectedAttempt&&<div className="teacher-attempt-review"><div className="teacher-panel-heading"><div><span>ATTEMPT REVIEW</span><h3>{students.find(s=>s.id===selectedAttempt.student_id)?.full_name||"مراجعة المحاولة"}</h3></div><button onClick={()=>setSelectedAttempt(null)}>إغلاق</button></div>
-    {attemptAnswers.map((answer,i)=>{const q=answer.exam_questions||{};return <article key={answer.id}>{(()=>{const match=String(q.prompt||"").match(/^\[\[EXAM_IMAGE:(https?:\/\/[^\]]+)\]\]\n?/);const prompt=match?String(q.prompt).slice(match[0].length):String(q.prompt||"السؤال");return <>{match&&<img className="exam-runner-question-image" src={match[1]} alt="صورة السؤال"/>}<b>{i+1}. {prompt||"السؤال"}</b></>;})()}<p>إجابة الطالب: {Array.isArray(answer.answer)?answer.answer.join("، "):String(answer.answer??"—")}</p><small>الدرجة الآلية: {answer.awarded_points} / {q.points||0}</small></article>})}
-    {selectedAttempt.submitted_at&&<div className="teacher-manual-grade"><label>الدرجة النهائية من {examQuestions.filter(q=>q.exam_id===selectedAttempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0)}<input type="number" min="0" max={examQuestions.filter(q=>q.exam_id===selectedAttempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0)} step="0.5" value={gradeDraft} onChange={e=>setGradeDraft(e.target.value)}/></label><button disabled={saving||gradeDraft===""} onClick={gradeAttempt}>حفظ واعتماد النتيجة</button></div>}
-   </div>}
   </section>}
   {section==="messages"&&<section className="teacher-panel teacher-inbox" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة</small></div>
