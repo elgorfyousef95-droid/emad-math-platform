@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" viewBox="0 0 1000 560">
+<rect width="1000" height="560" rx="24" fill="#fbfcff"/>
+<g stroke="#26364b" stroke-width="3" fill="none"><path d="M100 455H930M500 500V45"/><path d="M930 455l-18-10v20z" fill="#26364b"/><path d="M500 45l-10 18h20z" fill="#26364b"/></g>
+<g stroke="#dce3ee" stroke-width="2"><path d="M100 355H920M100 255H920M100 155H920M300 70V455M700 70V455"/></g>
+<path d="M145 78 C220 165 280 285 355 300 C425 314 455 235 500 205 C545 175 575 120 645 130 C730 145 790 275 875 430" fill="none" stroke="#2255a4" stroke-width="7"/>
+<g fill="#c0392b" stroke="#fff" stroke-width="4"><circle cx="355" cy="300" r="10"/><circle cx="645" cy="130" r="10"/><circle cx="500" cy="205" r="10"/></g>
+<g font-family="Arial,sans-serif" font-size="26" fill="#172033"><text x="945" y="465">س</text><text x="515" y="42">ص</text><text x="280" y="280" fill="#c0392b">عظمى محلية</text><text x="660" y="115" fill="#c0392b">صغرى محلية</text><text x="520" y="235" fill="#c0392b">انقلاب</text><text x="390" y="535" font-size="20">رسم توضيحي تخطيطي لطبيعة منحنى دالة تكعيبية</text></g>
+</svg>
