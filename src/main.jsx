@@ -487,13 +487,7 @@ function HomeworkPage({profile}){
     studentApi("homework_assignments?select=id,title,description,grade,group_name,cover_image_url,created_at&is_published=eq.true&order=created_at.asc"),
     studentApi("homework_submissions?select=id,assignment_id,student_id,answers,status,objective_score,manual_score,feedback,submitted_at&student_id=eq."+encodeURIComponent(profile.id)+"&order=created_at.desc")
    ]);
-   const subjectOrder={"الجبر":0,"التفاضل":1,"الاستاتيكا":2};
-   const sorted=(a||[]).slice().sort((x,y)=>{
-    const sx=Object.keys(subjectOrder).find(k=>x.title.startsWith(k))||"";
-    const sy=Object.keys(subjectOrder).find(k=>y.title.startsWith(k))||"";
-    if(subjectOrder[sx]!==subjectOrder[sy])return (subjectOrder[sx]??9)-(subjectOrder[sy]??9);
-    return Number((x.title.match(/[٠-٩]+$/)||["٠"])[0].replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)))-Number((y.title.match(/[٠-٩]+$/)||["٠"])[0].replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)));
-   });
+   const sorted=(a||[]).slice();
    setItems(sorted);setSubmissions(s||[]);
   }catch(e){console.error("homework_load",e);notify({type:"error",title:"تعذر تحميل النماذج",message:"راجع اتصالك بالإنترنت وحاول مرة أخرى."});}
   finally{setBusy(false);}
@@ -554,7 +548,7 @@ function HomeworkPage({profile}){
  const draftCount=submissions.filter(s=>s.status==="draft").length;
  const answered=Object.values(answers).filter(v=>String(v??"").trim()).length;
  const progress=questions.length?Math.round(answered/questions.length*100):0;
- const subjectOf=title=>title.startsWith("الجبر")?"الجبر":title.startsWith("التفاضل")?"التفاضل":"الاستاتيكا";
+ const subjectOf=title=>title.startsWith("الاستاتيكا")?"الاستاتيكا":"الرياضيات البحتة";
  if(active)return <div className="platform-page homework-page" dir="rtl">
   <PageBanner eyebrow="EXAM MODEL / SOLVE" title={active.title} description={active.description||"نموذج تدريبي بنظام امتحان الثانوية العامة."} art="task"/>
   <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
@@ -580,9 +574,9 @@ function HomeworkPage({profile}){
   </>}
  </div>;
  return <div className="platform-page homework-page" dir="rtl">
-  <PageBanner eyebrow="THANAWYA AMMA / EXAM MODELS" title="نماذج امتحانات الرياضيات" description="٣٠ نموذجًا تدريبيًا للصف الثالث الثانوي — أسئلة متنوعة على نمط امتحان آخر السنة، مع حفظ تلقائي للتقدم وتصحيح بعد التسليم." art="task"/>
+  <PageBanner eyebrow="THANAWYA AMMA / EXAM MODELS" title="نماذج امتحانات الرياضيات" description="١٠٠ نموذج تدريبي للصف الثالث الثانوي: ٥٠ نموذج بحتة مختلطة و٥٠ استاتيكا، مع حفظ تلقائي للتقدم وتصحيح بعد التسليم." art="task"/>
   <div className="hw-summary"><article><b>{arNumber(items.length)}</b><span>نموذج متاح</span></article><article><b>{arNumber(done)}</b><span>تم تسليمه</span></article><article><b>{arNumber(draftCount)}</b><span>قيد الحل ومحفوظ</span></article></div>
-  {busy?<div className="platform-empty-state">جارٍ تحميل النماذج...</div>:items.length?<><div className="hw-subject-intro"><b>اختر الفرع الذي تريد التدريب عليه</b><span>كل نموذج مستقل، درجته ٣٠ درجة، ولا يوجد وقت محدد للحل.</span></div><div className="hw-assignment-grid">{items.map((item,index)=>{const sub=submissions.find(s=>s.assignment_id===item.id);const answeredCount=Object.values(sub?.answers||{}).filter(v=>String(v??"").trim()).length;const pct=sub?.status==="submitted"?100:Math.round(answeredCount/20*100);const subject=subjectOf(item.title);return <article key={item.id} className={"hw-assignment-card hw-model-card hw-model-"+(subject==="الجبر"?"algebra":subject==="التفاضل"?"calculus":"statics")}>
+  {busy?<div className="platform-empty-state">جارٍ تحميل النماذج...</div>:items.length?<><div className="hw-subject-intro"><b>اختر نموذج الامتحان الذي تريد التدريب عليه</b><span>كل نموذج مستقل، درجته ٣٠ درجة، ولا يوجد وقت محدد للحل.</span></div><div className="hw-assignment-grid">{items.map((item,index)=>{const sub=submissions.find(s=>s.assignment_id===item.id);const answeredCount=Object.values(sub?.answers||{}).filter(v=>String(v??"").trim()).length;const pct=sub?.status==="submitted"?100:Math.round(answeredCount/20*100);const subject=subjectOf(item.title);return <article key={item.id} className={"hw-assignment-card hw-model-card hw-model-"+(subject==="الاستاتيكا"?"statics":"algebra")}>
     {item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"غلاف "+item.title}/>:null}
     <div className="hw-card-shade"/>
     <div className="hw-card-content"><div className="hw-card-meta"><span>{subject}</span><span>{sub?.status==="submitted"?"تم التسليم":sub?.status==="draft"?"تم حفظ التقدم":"متاح للحل"}</span></div><h2>{item.title}</h2><p>{item.description}</p>
