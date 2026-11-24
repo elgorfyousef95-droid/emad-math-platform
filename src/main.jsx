@@ -97,16 +97,31 @@ function PortalAccess({portal,onSuccess}){
  </section></main>;
 }
 
+
+function TeacherLiveStudio({profile}){
+ return <section className="teacher-panel teacher-live-studio" dir="rtl">
+  <div className="teacher-panel-heading"><div><span>LIVE CLASSROOM</span><h2>استوديو البث المباشر</h2></div><small>إعداد الخدمة</small></div>
+  <div className="teacher-live-start-card">
+   <div className="teacher-live-art"><span>LIVE</span><b>حصتك المباشرة من داخل المنصة</b><small>مساحة مخصصة للبث بالصوت والصورة ومشاركة الشاشة مع طلاب الصف.</small></div>
+   <div className="teacher-live-form">
+    <b className="teacher-live-pending-title">ربط خدمة البث المباشر</b>
+    <p>واجهة الاستوديو جاهزة، لكن تشغيل بث حقيقي وآمن يحتاج حساب خدمة بث مخصص ومفاتيح اتصال سرية تُحفظ على الخادم، وليس داخل كود الموقع.</p>
+    <div className="teacher-live-provider"><span>JaaS / LiveKit</span><small>خدمة بث خاصة بالمنصة مع صلاحيات للمدرس والطلاب</small></div>
+    <button type="button" disabled>سيتم تفعيل بدء البث بعد ربط الخدمة</button>
+    <small>لن نستخدم غرفة عامة غير محمية أو نعرض بيانات دخول المدرس للطلاب.</small>
+   </div>
+  </div>
+  <div className="teacher-live-history"><h3>حالة الاستوديو</h3><article><b>بانتظار ربط مزود البث</b><span>لم يتم إنشاء أي جلسات تجريبية</span><small>بيانات حساب المدرس محفوظة كما هي</small></article></div>
+ </section>;
+}
+
 function TeacherConsole(){
- const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[exams,setExams]=useState([]),[attempts,setAttempts]=useState([]),[examQuestions,setExamQuestions]=useState([]),[section,setSection]=useState("overview"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState(""),[selectedAttempt,setSelectedAttempt]=useState(null),[attemptAnswers,setAttemptAnswers]=useState([]),[gradeDraft,setGradeDraft]=useState("");
+ const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("overview"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState("");
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:"",cover_image_url:""});
  const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});
  const [lessonVideoPreviewUrl,setLessonVideoPreviewUrl]=useState("");
  const [editingLessonId,setEditingLessonId]=useState(""),[uploadingVideo,setUploadingVideo]=useState(false);
  const [uploadProgress,setUploadProgress]=useState(0);
- const [examForm,setExamForm]=useState({title:"",course_id:"",duration_minutes:"60",opens_at:"",closes_at:""});
- const [examQuestionForm,setExamQuestionForm]=useState({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
- const [examDraftQuestions,setExamDraftQuestions]=useState([]);
  const load=async()=>{
   setBusy(true);setError("");
   try{
@@ -118,18 +133,11 @@ function TeacherConsole(){
    if(me?.role!=="teacher")throw new Error("not_teacher");
    const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,cover_image_url,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setCourses(list||[]);
-   const [studentRows,messageRows,examRows]=await Promise.all([
+   const [studentRows,messageRows]=await Promise.all([
     portalApi("teacher", "profiles?select=id,full_name,student_number,grade,group_name,phone,parent_name,parent_phone,governorate,city,avatar_url,created_at&role=eq.student&limit=500"),
-    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200"),
-    portalApi("teacher", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,created_at&order=created_at.desc&limit=500")
+    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200")
    ]);
-   setStudents(studentRows||[]);setMessages(messageRows||[]);setExams(examRows||[]);
-   const examIds=(examRows||[]).map(x=>x.id);
-   const [attemptRows,questionRows]=examIds.length?await Promise.all([
-    portalApi("teacher","exam_attempts?select=id,exam_id,student_id,started_at,submitted_at,score,graded_at&exam_id=in.("+examIds.join(",")+")&order=started_at.desc&limit=1000"),
-    portalApi("teacher","exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&exam_id=in.("+examIds.join(",")+")&order=sort_order.asc&limit=5000")
-   ]):[[],[]];
-   setAttempts(attemptRows||[]);setExamQuestions(questionRows||[]);
+   setStudents(studentRows||[]);setMessages(messageRows||[]);
    const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
    setSelected(first);
   }catch(e){
@@ -167,7 +175,6 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
  };
- const uploadExamQuestionImage=async(file)=>{if(!file)return;setError("");setNotice("");try{const url=await uploadPortalImage(file,"teacher");setExamQuestionForm(old=>({...old,image_url:url}));setNotice("تم رفع صورة السؤال ومعاينتها قبل إضافتها للامتحان.");}catch(e){setError(e.message==="image_too_large"?"حجم صورة السؤال أكبر من 5 ميجابايت.":"تعذر رفع صورة السؤال.");}};
  const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setUploadingVideo(true);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));setLessonForm(old=>({...old,video_url:path,duration_minutes:"0",duration_seconds:"0"}));setLessonVideoPreviewUrl("");setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");try{const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonVideoPreviewUrl(previewUrl);const measured=await new Promise(resolve=>{const probe=document.createElement("video");probe.preload="metadata";probe.onloadedmetadata=()=>{const value=Number.isFinite(probe.duration)?Math.round(probe.duration):0;probe.removeAttribute("src");probe.load();resolve(value);};probe.onerror=()=>resolve(0);probe.src=previewUrl;});if(measured>0)setLessonForm(old=>({...old,duration_seconds:String(measured),duration_minutes:String(Math.ceil(measured/60))}));setNotice(measured>0?"تم رفع الفيديو واستخراج مدته تلقائيًا. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.":"تم رفع الفيديو. تعذر قراءة المدة تلقائيًا من الملف الحالي.");}catch(previewError){console.error("teacher_video_preview",previewError);setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");}}catch(e){console.error("teacher_video_upload",e);setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"فشل رفع الفيديو نفسه. راجع الاتصال وصلاحية التخزين ثم حاول مرة أخرى.");}finally{setSaving(false);setUploadingVideo(false);}};
  const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
@@ -192,48 +199,6 @@ function TeacherConsole(){
   setLessonVideoPreviewUrl("");
   if(lesson.video_url){try{const url=await getLectureVideoUrl(lesson.video_url,"teacher");setLessonVideoPreviewUrl(url);}catch{setNotice("تم فتح بيانات المحاضرة، لكن تعذر تجهيز معاينة الفيديو.");}}
   setNotice("أنت تعدّل المحاضرة المحددة. احفظ التعديلات عند الانتهاء.");
- };
- const addExamQuestion=()=>{
-  const q=examQuestionForm;const choices=q.question_type==="true_false"?["صحيح","خطأ"]:q.choices.split("\n").map(x=>x.trim()).filter(Boolean);
-  if(q.prompt.trim().length<4&&!q.image_url)return setError("اكتب نص السؤال أو ارفع صورة للسؤال.");
-  if(["single_choice","multiple_choice"].includes(q.question_type)&&choices.length<2)return setError("أضف اختيارين على الأقل.");
-  if(["single_choice","multiple_choice","true_false","short_answer"].includes(q.question_type)&&!q.correct_answer.trim())return setError("حدد الإجابة الصحيحة لهذا السؤال.");
-  const correct=q.question_type==="multiple_choice"?q.correct_answer.split("\n").map(x=>x.trim()).filter(Boolean):q.correct_answer.trim();
-  setExamDraftQuestions(old=>[...old,{id:crypto.randomUUID(),prompt:q.prompt.trim(),image_url:q.image_url,question_type:q.question_type,choices,correct_answer:correct,points:Number(q.points)||1}]);
-  setExamQuestionForm({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});setError("");
- };
- const createExam=async(e)=>{
-  e.preventDefault();if(!examForm.course_id||examForm.title.trim().length<3||!examDraftQuestions.length)return setError("اختر كورسًا واكتب عنوان الامتحان وأضف سؤالًا واحدًا على الأقل.");
-  setSaving(true);setError("");setNotice("");
-  try{
-   const examRows=await portalApi("teacher","exams",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({course_id:examForm.course_id,title:examForm.title.trim(),duration_minutes:Number(examForm.duration_minutes)||60,opens_at:examForm.opens_at?new Date(examForm.opens_at).toISOString():null,closes_at:examForm.closes_at?new Date(examForm.closes_at).toISOString():null,is_published:false})});
-   const exam=Array.isArray(examRows)?examRows[0]:examRows;if(!exam?.id)throw new Error("exam_create_failed");
-   for(let i=0;i<examDraftQuestions.length;i++){
-    const q=examDraftQuestions[i];const inserted=await portalApi("teacher","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:exam.id,question_type:q.question_type,prompt:(q.image_url?"[[EXAM_IMAGE:"+q.image_url+"]]\n":"")+q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
-    const question=Array.isArray(inserted)?inserted[0]:inserted;if(!question?.id)throw new Error("question_create_failed");
-    if(q.correct_answer!==""&&(!Array.isArray(q.correct_answer)||q.correct_answer.length))await portalApi("teacher","exam_answer_keys",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({question_id:question.id,correct_answer:q.correct_answer})});
-   }
-   setExams(old=>[exam,...old]);setExamQuestions(old=>[...old,...examDraftQuestions.map((q,i)=>({...q,id:crypto.randomUUID(),exam_id:exam.id,sort_order:i+1}))]);
-   setExamForm({title:"",course_id:examForm.course_id,duration_minutes:"60",opens_at:"",closes_at:""});setExamDraftQuestions([]);setNotice("تم حفظ الامتحان كمسودة. راجعه ثم انشره للطلاب.");
-  }catch(err){console.error("teacher_exam_create",err);setError("لم يكتمل حفظ الامتحان. راجع الأسئلة وصلاحيات الكورس.");}
-  finally{setSaving(false);}
- };
- const toggleExam=async(exam)=>{
-  setSaving(true);setError("");setNotice("");
-  try{const is_published=!exam.is_published;await portalApi("teacher","exams?id=eq."+encodeURIComponent(exam.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setExams(old=>old.map(x=>x.id===exam.id?{...x,is_published}:x));setNotice(is_published?"تم نشر الامتحان.":"تم إيقاف نشر الامتحان.");}
-  catch{setError("تعذر تحديث حالة الامتحان.");}finally{setSaving(false);}
- };
- const openAttempt=async(attempt)=>{
-  setSelectedAttempt(attempt);setGradeDraft(attempt.score===null||attempt.score===undefined?"":String(attempt.score));setAttemptAnswers([]);
-  try{const rows=await portalApi("teacher","exam_answers?select=id,question_id,answer,awarded_points,feedback,exam_questions(prompt,points,question_type)&attempt_id=eq."+encodeURIComponent(attempt.id)+"&order=created_at.asc");setAttemptAnswers(rows||[]);}
-  catch{setError("تعذر تحميل إجابات المحاولة.");}
- };
- const gradeAttempt=async()=>{
-  if(!selectedAttempt||gradeDraft==="")return setError("اكتب الدرجة النهائية أولًا.");
-  setSaving(true);setError("");
-  try{const result=await portalApi("teacher","rpc/teacher_grade_exam_attempt",{method:"POST",body:JSON.stringify({p_attempt_id:selectedAttempt.id,p_score:Number(gradeDraft)})});setAttempts(old=>old.map(x=>x.id===selectedAttempt.id?{...x,score:result.score,graded_at:new Date().toISOString()}:x));setSelectedAttempt(old=>({...old,score:result.score,graded_at:new Date().toISOString()}));setNotice("تم حفظ نتيجة الطالب.");}
-  catch{setError("تعذر حفظ الدرجة. تأكد أنها بين صفر والدرجة النهائية.");}
-  finally{setSaving(false);}
  };
  const toggleCourse=async(course)=>{
   const status=course.status==="published"?"draft":"published";setSaving(true);setError("");setNotice("");
@@ -272,17 +237,16 @@ function TeacherConsole(){
  return <main className="teacher-shell" dir="rtl">
   <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("teacher");window.location.reload();}}>تسجيل الخروج</button></div></header>
   {error&&<p className="teacher-alert error" role="status">{error}</p>}{notice&&<p className="teacher-alert success" role="status">{notice}</p>}
-  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article><article><small>الامتحانات</small><strong>{exams.length}</strong></article><article><small>محاولات الطلاب</small><strong>{attempts.length}</strong></article></section>
+  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article></section>
   <div className="teacher-studio-body">
    <aside className="teacher-studio-sidebar">
-    <div className="teacher-side-heading"><span>WORKSPACE</span><b>إدارة المنصة التعليمية</b><small>القائمة الرئيسية</small></div>
+    <div className="teacher-side-heading"><span>TEACHER STUDIO</span><b>مساحة مستر عماد</b><small>إدارة المحاضرات والبث المباشر</small></div>
     <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
      <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}><span>⌂</span> لوحة المتابعة</button>
      <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}><span>▤</span> الكورسات</button>
      <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}><span>▶</span> المحاضرات</button>
      <button className={section==="students"?"active":""} onClick={()=>setSection("students")}><span>♙</span> الطلاب <b>{students.length}</b></button>
-     <button className={section==="exams"?"active":""} onClick={()=>setSection("exams")}><span>▣</span> الامتحانات <b>{exams.length}</b></button>
-     <button className={section==="results"?"active":""} onClick={()=>setSection("results")}><span>▥</span> النتائج والتصحيح <b>{attempts.length}</b></button>
+     <button className={section==="live"?"active":""} onClick={()=>setSection("live")}><span>●</span> البث المباشر</button>
      <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}><span>◎</span> الجروبات</button>
      <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> رسائل الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
     </nav>
@@ -291,18 +255,17 @@ function TeacherConsole(){
    <div className="teacher-studio-content">
   {section==="overview"&&<section className="teacher-panel teacher-overview-panel" dir="rtl">
    <div className="teacher-panel-heading"><div><span>TEACHER CONTROL CENTER</span><h2>ملخص إدارة المدرس</h2></div><small>أهلاً {profile.full_name||"مستر عماد"}</small></div>
-   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>تابع محتواك وطلابك وامتحاناتك ونتائجهم، وانتقل مباشرة للقسم المطلوب.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
+   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>إدارة الكورسات والمحاضرات والفيديوهات والبث المباشر من مكان واحد.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
    <div className="teacher-overview-actions">
     <button onClick={()=>setSection("courses")}><span>01</span><b>إدارة الكورسات</b><small>إنشاء الكورسات وتعديلها ونشرها</small><strong>{courses.length} كورس</strong></button>
     <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة المحاضرات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} محاضرة</strong></button>
     <button onClick={()=>setSection("students")}><span>03</span><b>متابعة الطلاب</b><small>عرض الطلاب المرتبطين بكورساتك</small><strong>{students.length} طالب</strong></button>
-    <button onClick={()=>setSection("exams")}><span>04</span><b>الامتحانات</b><small>إنشاء الامتحانات وإدارة الأسئلة</small><strong>{exams.length} امتحان</strong></button>
-    <button onClick={()=>setSection("results")}><span>05</span><b>النتائج والتصحيح</b><small>مراجعة المحاولات واعتماد الدرجات</small><strong>{attempts.length} محاولة</strong></button>
-    <button onClick={()=>setSection("groups")}><span>06</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
-    <button onClick={()=>setSection("messages")}><span>07</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
+    <button onClick={()=>setSection("live")}><span>03</span><b>البث المباشر</b><small>ابدأ حصة مباشرة وتواصل مع الطلاب</small><strong>فتح استوديو البث</strong></button>
+    <button onClick={()=>setSection("groups")}><span>04</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
+    <button onClick={()=>setSection("messages")}><span>05</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
    </div>
    <div className="teacher-overview-bottom">
-    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p><p>محاولات تنتظر التصحيح: <b>{attempts.filter(x=>x.submitted_at&&!x.graded_at).length}</b></p></article>
+    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p></article>
     <article><h3>تذكير بالصلاحيات</h3><p>هذه اللوحة مخصصة لإدارة كورساتك وطلاب الصفوف المرتبطة بها. إعدادات المالك والحسابات والاشتراكات العامة تظل في لوحة المالك.</p></article>
    </div>
   </section>}
@@ -318,6 +281,7 @@ function TeacherConsole(){
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>}
+  {section==="live"&&<TeacherLiveStudio profile={profile}/>}
   {section==="groups"&&<ChatWorkspace profile={profile} mode="teacher" portal="teacher"/>}
   {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>إدارة ومتابعة الطلاب</h2></div><small>{students.length} طالب</small></div>
@@ -327,35 +291,6 @@ function TeacherConsole(){
     <div className="teacher-student-top"><span className="teacher-student-avatar">{student.avatar_url?<img src={student.avatar_url} alt=""/>:(student.full_name||"ط").slice(0,1)}</span><div><b>{student.full_name||"طالب"}</b><small>رقم الطالب: {student.student_number||"—"}</small></div></div>
     <dl><div><dt>الصف</dt><dd>{student.grade||"—"}</dd></div><div><dt>المجموعة</dt><dd>{student.group_name||"—"}</dd></div><div><dt>الهاتف</dt><dd dir="ltr">{student.phone||"—"}</dd></div><div><dt>ولي الأمر</dt><dd>{student.parent_name||"—"}</dd></div><div><dt>هاتف ولي الأمر</dt><dd dir="ltr">{student.parent_phone||"—"}</dd></div><div><dt>المحافظة / المدينة</dt><dd>{[student.governorate,student.city].filter(Boolean).join(" / ")||"—"}</dd></div></dl>
    </article>)}{!students.length&&<div className="teacher-empty large">لا يوجد طلاب ظاهرون حتى الآن في الصفوف المرتبطة بكورساتك.</div>}</div>
-  </section>}
-  {section==="exams"&&<div className="teacher-exam-layout" dir="rtl">
-   <section className="teacher-panel">
-    <div className="teacher-panel-heading"><div><span>EXAM BUILDER</span><h2>إنشاء امتحان احترافي</h2></div><small>{exams.length} امتحان</small></div>
-    <form className="teacher-form teacher-exam-form" onSubmit={createExam}>
-     <input required value={examForm.title} onChange={e=>setExamForm({...examForm,title:e.target.value})} placeholder="اسم الامتحان"/>
-     <select required value={examForm.course_id} onChange={e=>setExamForm({...examForm,course_id:e.target.value})}><option value="">اختر الكورس</option>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select>
-     <div className="teacher-form-grid"><label>مدة الامتحان بالدقائق<input type="number" min="1" max="600" value={examForm.duration_minutes} onChange={e=>setExamForm({...examForm,duration_minutes:e.target.value})}/></label><label>يفتح في<input type="datetime-local" value={examForm.opens_at} onChange={e=>setExamForm({...examForm,opens_at:e.target.value})}/></label><label>يغلق في<input type="datetime-local" value={examForm.closes_at} onChange={e=>setExamForm({...examForm,closes_at:e.target.value})}/></label></div>
-     <div className="teacher-exam-question-editor"><h3>بناء الأسئلة</h3><select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="multiple_choice">اختر أكثر من إجابة</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select>
-      <textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال أو ارفع صورة السؤال..."/><label className="teacher-image-label exam-question-image-label">صورة السؤال (اختياري) — JPG / PNG / WEBP<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadExamQuestionImage(e.target.files?.[0])}/></label>{examQuestionForm.image_url&&<img className="exam-question-image-preview" src={examQuestionForm.image_url} alt="معاينة صورة السؤال"/>}
-      {["single_choice","multiple_choice"].includes(examQuestionForm.question_type)&&<textarea rows="4" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})} placeholder={"كل اختيار في سطر منفصل\nالاختيار الثاني\nالاختيار الثالث\nالاختيار الرابع"}/>}
-      {examQuestionForm.question_type!=="essay"&&<textarea rows={examQuestionForm.question_type==="multiple_choice"?3:1} value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder={examQuestionForm.question_type==="multiple_choice"?"الإجابات الصحيحة، كل إجابة في سطر":"الإجابة الصحيحة"}/>}
-      <div className="teacher-form-grid"><label>درجة السؤال<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label><button type="button" onClick={addExamQuestion}>إضافة السؤال</button></div>
-     </div>
-     {examDraftQuestions.length>0&&<div className="teacher-exam-draft-list"><b>أسئلة الامتحان ({examDraftQuestions.length})</b>{examDraftQuestions.map((q,i)=><article key={q.id}><span>{i+1}. {q.prompt||"سؤال بصورة"}{q.image_url&&<img className="exam-question-draft-thumb" src={q.image_url} alt="صورة السؤال"/>}</span><small>{q.points} درجة · {q.question_type}</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></article>)}</div>}
-     <button disabled={saving||!examDraftQuestions.length}>حفظ الامتحان كمسودة</button>
-    </form>
-   </section>
-   <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>EXAM LIBRARY</span><h2>الامتحانات المنشأة</h2></div></div>
-    <div className="teacher-exam-list">{exams.map(exam=><article key={exam.id}><div><b>{exam.title}</b><small>{courses.find(c=>c.id===exam.course_id)?.title||"الكورس"} · {exam.duration_minutes} دقيقة · {examQuestions.filter(q=>q.exam_id===exam.id).length} سؤال</small></div><span className={exam.is_published?"published":"draft"}>{exam.is_published?"منشور":"مسودة"}</span><button disabled={saving} onClick={()=>toggleExam(exam)}>{exam.is_published?"إيقاف النشر":"نشر للطلاب"}</button></article>)}{!exams.length&&<div className="teacher-empty">لا توجد امتحانات بعد. ابدأ ببناء أول امتحان.</div>}</div>
-   </section>
-  </div>}
-  {section==="results"&&<section className="teacher-panel teacher-results-panel" dir="rtl">
-   <div className="teacher-panel-heading"><div><span>STUDENT PERFORMANCE</span><h2>نتائج ومحاولات الطلاب</h2></div><small>{attempts.length} محاولة</small></div>
-   <div className="teacher-results-list">{attempts.map(attempt=>{const student=students.find(s=>s.id===attempt.student_id),exam=exams.find(e=>e.id===attempt.exam_id),max=examQuestions.filter(q=>q.exam_id===attempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0);return <article key={attempt.id}><div><b>{student?.full_name||"طالب"}</b><small>{student?.student_number||"—"} · {exam?.title||"امتحان"} · {new Date(attempt.started_at).toLocaleString("ar-EG")}</small></div><strong>{attempt.score===null||attempt.score===undefined?"—":Number(attempt.score).toLocaleString("ar-EG")} / {max}</strong><span>{!attempt.submitted_at?"لم يسلّم":attempt.graded_at?"تم التصحيح":"بانتظار التصحيح"}</span><button onClick={()=>openAttempt(attempt)}>عرض الإجابات / التصحيح</button></article>})}{!attempts.length&&<div className="teacher-empty">ستظهر هنا محاولات الطلاب ونتائجهم بعد بدء الامتحانات.</div>}</div>
-   {selectedAttempt&&<div className="teacher-attempt-review"><div className="teacher-panel-heading"><div><span>ATTEMPT REVIEW</span><h3>{students.find(s=>s.id===selectedAttempt.student_id)?.full_name||"مراجعة المحاولة"}</h3></div><button onClick={()=>setSelectedAttempt(null)}>إغلاق</button></div>
-    {attemptAnswers.map((answer,i)=>{const q=answer.exam_questions||{};return <article key={answer.id}>{(()=>{const match=String(q.prompt||"").match(/^\[\[EXAM_IMAGE:(https?:\/\/[^\]]+)\]\]\n?/);const prompt=match?String(q.prompt).slice(match[0].length):String(q.prompt||"السؤال");return <>{match&&<img className="exam-runner-question-image" src={match[1]} alt="صورة السؤال"/>}<b>{i+1}. {prompt||"السؤال"}</b></>;})()}<p>إجابة الطالب: {Array.isArray(answer.answer)?answer.answer.join("، "):String(answer.answer??"—")}</p><small>الدرجة الآلية: {answer.awarded_points} / {q.points||0}</small></article>})}
-    {selectedAttempt.submitted_at&&<div className="teacher-manual-grade"><label>الدرجة النهائية من {examQuestions.filter(q=>q.exam_id===selectedAttempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0)}<input type="number" min="0" max={examQuestions.filter(q=>q.exam_id===selectedAttempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0)} step="0.5" value={gradeDraft} onChange={e=>setGradeDraft(e.target.value)}/></label><button disabled={saving||gradeDraft===""} onClick={gradeAttempt}>حفظ واعتماد النتيجة</button></div>}
-   </div>}
   </section>}
   {section==="messages"&&<section className="teacher-panel teacher-inbox" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة</small></div>
@@ -576,7 +511,7 @@ function LearningPage({page,grade,profile}){
   <p>{selected.description||"تفاصيل المحتوى التعليمي."}</p>
   {page==="courses"&&<><div className="learning-detail-meta"><span>المادة: {selected.subject||"رياضيات"}</span><span>الصف: {selected.grade||grade}</span></div><section className="course-lesson-browser"><div className="course-lesson-browser-head"><div><b>محاضرات الكورس</b><small>افتح أي محاضرة وشاهدها من داخل الكورس</small></div><span>{courseLessons.length} محاضرة</span></div>{courseLessonsBusy?<p className="course-lesson-empty">جارٍ تجهيز قائمة المحاضرات...</p>:courseLessons.length?<div className="course-lesson-items">{courseLessons.map((lesson,index)=><button type="button" key={lesson.id} className={selectedCourseLesson?.id===lesson.id?"course-lesson-item active":"course-lesson-item"} onClick={()=>setSelectedCourseLesson(lesson)}>{lesson.cover_image_url?<img src={lesson.cover_image_url} alt=""/>:<span className="course-lesson-index">{String(index+1).padStart(2,"0")}</span>}<span><b>{lesson.title}</b><small>{lesson.description||"محاضرة تعليمية"} · {lesson.duration_seconds?Math.floor(lesson.duration_seconds/60)+" دقيقة "+(lesson.duration_seconds%60)+" ثانية":lesson.duration_minutes?lesson.duration_minutes+" دقيقة":"المدة من الفيديو"}</small></span><i>تشغيل</i></button>)}</div>:<p className="course-lesson-empty">لم تُنشر محاضرات في هذا الكورس بعد.</p>}{selectedCourseLesson&&<div className="course-selected-player"><div><b>{selectedCourseLesson.title}</b><small>مشغل المحاضرة داخل الكورس</small></div>{courseLessonVideoUrl?(getLectureEmbedUrl(courseLessonVideoUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(courseLessonVideoUrl)} title={selectedCourseLesson.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy"/>:<video key={courseLessonVideoUrl} src={courseLessonVideoUrl} poster={selectedCourseLesson.cover_image_url||undefined} controls playsInline preload="metadata" onError={()=>{setCourseLessonVideoError("تعذر تشغيل ملف الفيديو. لو الملف بصيغة MOV أو بترميز غير مدعوم، حوّله إلى MP4 بترميز H.264.");setCourseLessonVideoUrl("");}}/>):<div className="course-player-error"><p>{courseLessonVideoError||(selectedCourseLesson.video_url?"جارٍ تجهيز الفيديو للتشغيل...":"لم يتم ربط فيديو بهذه المحاضرة بعد.")}</p>{selectedCourseLesson.video_url&&<button type="button" onClick={retryCourseLessonVideo}>إعادة محاولة التشغيل</button>}</div>}</div>}</section></>}
   {page==="exams"&&<><div className="learning-detail-meta"><span>الكورس: {selected.courses?.title||"—"}</span><span>المدة: {selected.duration_minutes} دقيقة</span><span>موعد الفتح: {selected.opens_at?new Date(selected.opens_at).toLocaleString("ar-EG"):"متاح حسب الجدول"}</span><span>موعد الإغلاق: {selected.closes_at?new Date(selected.closes_at).toLocaleString("ar-EG"):"—"}</span></div><button className="learning-start-exam" onClick={()=>setExamOpen(true)}>ابدأ الامتحان الآن</button></>}
-  {page==="lessons"&&<><div className="learning-detail-meta"><span>ترتيب المحاضرة: {selected.sort_order||"—"}</span><span>المدة: {selected.duration_seconds?Math.floor(selected.duration_seconds/60)+" دقيقة "+(selected.duration_seconds%60)+" ثانية":selected.duration_minutes?selected.duration_minutes+" دقيقة":"تُقرأ من الفيديو"}</span></div>{selected.video_url&&<div className="learning-video-player"><b>مشغل المحاضرة</b>{lessonVideoUrl?(getLectureEmbedUrl(lessonVideoUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoUrl)} title={selected.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy"/>:<video key={lessonVideoUrl} src={lessonVideoUrl} poster={selected.cover_image_url||undefined} controls playsInline preload="metadata" onError={()=>{setLessonVideoError("تعذر تشغيل ملف الفيديو. استخدم MP4 بترميز H.264 أو WEBM مدعومًا.");setLessonVideoUrl("");}}/>):<div className="course-player-error"><small>{lessonVideoError||"جارٍ تجهيز رابط تشغيل آمن للمحاضرة..."}</small>{selected.video_url&&<button type="button" onClick={retryLessonVideo}>إعادة محاولة التشغيل</button>}</div>}</div>}</>}
+  {page==="lessons"&&<><div className="learning-detail-meta"><span>ترتيب المحاضرة: {selected.sort_order||"—"}</span><span>المدة: {selected.duration_seconds?Math.floor(selected.duration_seconds/60)+" دقيقة "+(selected.duration_seconds%60)+" ثانية":selected.duration_minutes?selected.duration_minutes+" دقيقة":"تُقرأ من الفيديو"}</span></div>{selected.video_url&&<div className="learning-video-player"><div className="learning-video-player-heading"><b>صفحة مشاهدة المحاضرة</b><span>مشغل آمن داخل المنصة · {selected.duration_minutes||"—"} دقيقة</span></div>{lessonVideoUrl?(getLectureEmbedUrl(lessonVideoUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoUrl)} title={selected.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy"/>:<video key={lessonVideoUrl} src={lessonVideoUrl} poster={selected.cover_image_url||undefined} controls playsInline preload="metadata" onError={()=>{setLessonVideoError("تعذر تشغيل ملف الفيديو. استخدم MP4 بترميز H.264 أو WEBM مدعومًا.");setLessonVideoUrl("");}}/>):<div className="course-player-error"><small>{lessonVideoError||"جارٍ تجهيز رابط تشغيل آمن للمحاضرة..."}</small>{selected.video_url&&<button type="button" onClick={retryLessonVideo}>إعادة محاولة التشغيل</button>}</div>}</div>}</>}
  </section></div>}
  {examOpen&&selected&&page==="exams"&&<ExamRunner exam={selected} profile={profile} studentApi={studentApi} onClose={()=>setExamOpen(false)}/>}
  </div>;
@@ -594,12 +529,22 @@ function HomeworkPage({profile}){
  return <div className="platform-page homework-page"><PageBanner eyebrow="HOMEWORK & PRACTICE" title="الواجبات والتدريبات" description="حل واجباتك داخل المنصة، احفظ إجاباتك، وسلّمها للمدرس وتابع نتيجتك." art="task"/><div className="hw-summary"><article><b>{items.length}</b><span>واجب متاح</span></article><article><b>{done}</b><span>تم تسليمه</span></article><article><b>{items.length-done}</b><span>لم يُسلّم بعد</span></article></div>{busy?<div className="platform-empty-state">جارٍ تحميل واجبات صفك ومجموعتك...</div>:items.length?<div className="hw-assignment-grid">{items.map(item=>{const sub=submissions.find(s=>s.assignment_id===item.id);const expired=item.due_at&&new Date(item.due_at)<new Date();return <article key={item.id} className="hw-assignment-card">{item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="hw-assignment-mark"><Icon name="task" size={23}/></span>}<div className="hw-card-meta"><span>{item.grade}</span><span>{sub?.status==="submitted"?"تم التسليم":expired?"انتهى الموعد":"متاح للحل"}</span></div><h2>{item.title}</h2><p>{item.description||"واجب تدريبي لقياس فهمك وتطبيقك."}</p>{item.due_at&&<small>آخر موعد: {new Date(item.due_at).toLocaleString("ar-EG")}</small>}{sub?.status==="submitted"?<div className="hw-card-result">تم التسليم{sub.objective_score!==null?" · "+sub.objective_score+" درجة":""}</div>:<button onClick={()=>open(item)} disabled={!!expired}> {sub?"استكمال الحل":"ابدأ الحل"} <Icon name="arrow"/></button>}</article>;})}</div>:<div className="platform-empty-state"><Icon name="task" size={36}/><b>مفيش واجبات منشورة لصفك حاليًا</b><span>أول ما المدرس ينشر واجب للصف أو المجموعة بتاعتك هيظهر هنا.</span></div>}</div>;
 }
 
+function LiveSessionsPage({profile}){
+ return <div className="platform-page student-live-page"><PageBanner eyebrow="LIVE CLASSROOM" title="المحاضرات المباشرة" description="انضم إلى الحصص المباشرة الخاصة بصفك الدراسي." art="live"/>
+  <section className="student-live-room student-live-not-ready">
+   <div className="student-live-card-art"><span>LIVE CLASSROOM</span><b>فصول مباشرة داخل المنصة</b></div>
+   <div><h2>استوديو البث قيد الإعداد</h2><p>سيظهر رابط الحصة هنا تلقائيًا عند تفعيل خدمة البث الآمنة وبدء المدرس للحصة المخصصة لصفك.</p><small>حسابك: {profile?.full_name||"طالب"} · {profile?.grade||"الصف الدراسي"}</small></div>
+  </section>
+ </div>;
+}
+
 function SectionPage({page,go,profile}){
  if(page==="messages")return <ChatWorkspace profile={profile} mode="support" portal="student"/>;
  if(page==="groups")return <ChatWorkspace profile={profile} mode="groups" portal="student"/>;
+ if(page==="live")return <LiveSessionsPage profile={profile}/>;
  if(page==="results")return <StudentResults/>;
  const data={homework:["الواجبات والتدريبات","تابع التكليفات والتدريبات المطلوبة منك.","task"],files:["المذكرات والملفات","مكتبة المذكرات والملخصات وأوراق العمل.","file"],schedule:["جدول الحصص","مواعيد المحاضرات والامتحانات في جدول منظم.","calendar"],live:["المحاضرات المباشرة","تابع مواعيد البث المباشر والمحاضرات التفاعلية.","live"],ai:["المساعد الذكي","مساعد رياضيات مخصص لصفك الدراسي.","spark"],groups:["الجروبات الدراسية","مساحات تواصل منظمة لطلاب نفس الصف والمجموعة، مع إشراف وإعلانات ومناقشات تعليمية.","users"],admin:["إدارة المنصة","إدارة المحتوى والطلاب والاشتراكات والصلاحيات.","settings"]}[page]||["القسم","","book"];
- const unavailable={homework:"لا يوجد حتى الآن جدول واجبات مرتبط بحسابك في قاعدة البيانات.",files:"مكتبة الملفات لم يتم تجهيز جدولها ورفع ملفاتها بعد.",schedule:"جدول الحصص يحتاج إلى ربط مواعيد الحصص الفعلية من الإدارة.",live:"لا توجد خدمة بث مباشر مفعّلة ومتصلة بالمنصة حتى الآن.",ai:"المساعد الذكي يحتاج إلى ربط خدمة الذكاء الاصطناعي ومصادر المنهج.",groups:"خدمة الجروبات الدراسية لم يتم تجهيزها بعد."};
+ const unavailable={homework:"لا يوجد حتى الآن جدول واجبات مرتبط بحسابك في قاعدة البيانات.",files:"مكتبة الملفات لم يتم تجهيز جدولها ورفع ملفاتها بعد.",schedule:"جدول الحصص يحتاج إلى ربط مواعيد الحصص الفعلية من الإدارة.",ai:"المساعد الذكي يحتاج إلى ربط خدمة الذكاء الاصطناعي ومصادر المنهج.",groups:"خدمة الجروبات الدراسية لم يتم تجهيزها بعد."};
  return <div className="platform-page"><PageBanner eyebrow="STUDENT SERVICES" title={data[0]} description={data[1]} art={data[2]}/><div className="platform-empty-state"><Icon name={data[2]} size={36}/><b>مساحة {data[0]}</b><span>{unavailable[page]||"هذا القسم قيد التجهيز."}</span></div></div>;
 }
 
