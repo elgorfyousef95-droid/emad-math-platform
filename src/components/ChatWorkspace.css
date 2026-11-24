@@ -45,3 +45,48 @@
 .emad-chat-delete-message{cursor:pointer}
 .emad-chat-remove-member{cursor:pointer}
 @media(max-width:680px){.emad-chat-roster{flex-wrap:wrap}.emad-chat-add-member{width:100%;margin:8px 0 0}.emad-chat-add-member select{flex:1;max-width:none}}
+
+
+/* WhatsApp-like full-height mobile conversation flow */
+.emad-chat-mobile-back{display:none;align-items:center;gap:5px;flex:0 0 auto;border:0;background:transparent;color:#e8cb8f;font:800 11px Cairo,sans-serif}
+.emad-chat-mobile-back:first-letter{font-size:22px}
+@media(max-width:680px){
+ .emad-chat-page{height:calc(100dvh - 108px);min-height:520px;max-height:calc(100dvh - 82px);display:flex;flex-direction:column;padding:8px;overflow:hidden}
+ .emad-chat-hero{display:none}
+ .emad-chat-error{flex:0 0 auto;margin:4px 0 8px}
+ .emad-chat-layout{flex:1;min-height:0;height:100%;margin:0;display:grid;grid-template-columns:minmax(0,1fr);gap:0;overflow:hidden;border:1px solid #ffffff20;border-radius:16px;background:#0b1728}
+ .emad-chat-sidebar{height:100%;max-height:none;min-height:0;border:0;border-radius:0;overflow-y:auto;overscroll-behavior:contain}
+ .emad-chat-thread{height:100%;min-height:0;border:0;border-radius:0;overflow:hidden}
+ .emad-chat-layout.mobile-list-open .emad-chat-thread{display:none}
+ .emad-chat-layout.mobile-thread-open .emad-chat-sidebar{display:none}
+ .emad-chat-layout.mobile-thread-open .emad-chat-thread{display:flex}
+ .emad-chat-thread-head{min-height:62px;padding:8px 10px;gap:8px}
+ .emad-chat-mobile-back{display:flex}
+ .emad-chat-thread-title{flex:1;min-width:0}
+ .emad-chat-thread-title .emad-chat-conv-avatar{width:36px;height:36px;flex-basis:36px}
+ .emad-chat-thread-title>div{min-width:0}
+ .emad-chat-thread-title b{max-width:42vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .emad-chat-thread-actions{flex-direction:row;align-items:center;gap:5px}
+ .emad-chat-thread-actions span{display:none}
+ .emad-chat-thread-actions button{padding:7px;font-size:9px}
+ .emad-chat-roster{flex:0 0 auto;max-height:64px;overflow-x:auto;flex-wrap:nowrap}
+ .emad-chat-message-list{flex:1;min-height:0;max-height:none;padding:12px 9px;overscroll-behavior:contain}
+ .emad-chat-message{max-width:94%;gap:6px}
+ .emad-chat-message-avatar{width:27px;height:27px;flex-basis:27px}
+ .emad-chat-bubble{min-width:70px;padding:9px 11px}
+ .emad-chat-bubble p{font-size:12px}
+ .emad-chat-composer{flex:0 0 auto;padding:8px 9px calc(8px + env(safe-area-inset-bottom));}
+ .emad-chat-composer textarea{min-height:45px;max-height:110px;resize:none}
+ .emad-chat-compose-actions{gap:6px}
+ .emad-chat-compose-actions>small{display:none}
+ .emad-chat-compose-actions>button{padding:9px 12px}
+ .emad-chat-attach,.emad-chat-record{padding:8px 9px}
+ .emad-chat-sidebar-head{padding:14px 13px 10px}
+ .emad-chat-conversation{min-height:70px;padding:10px 12px}
+}
+@media(max-width:380px){
+ .emad-chat-page{height:calc(100dvh - 98px);min-height:480px;padding:5px}
+ .emad-chat-thread-head{gap:5px}
+ .emad-chat-mobile-back span{font-size:10px}
+ .emad-chat-compose-actions>button{font-size:9px;padding-inline:9px}
+}
