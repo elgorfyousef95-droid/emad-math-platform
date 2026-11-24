@@ -197,7 +197,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   }catch(e){setError("تعذر إزالة العضو من الجروب.");}
  };
  const deleteMessage=async(messageId)=>{
-  if(!isOwner)return;
+  if(!isManager)return;
   if(!window.confirm("حذف الرسالة من المحادثة؟"))return;
   try{
    await emadChatApi(portal,"emad_messages?id=eq."+encodeURIComponent(messageId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
