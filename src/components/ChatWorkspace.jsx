@@ -100,7 +100,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
 
  const loadStudentsForGroup=useCallback(async()=>{
   if(mode==="teacher_support"){
-   try{const rows=await emadChatApi(portal,"profiles?select=id,full_name,student_number,grade,role&role=eq.student&order=full_name.asc&limit=1000");setAvailableStudents(rows||[]);}catch(e){setAvailableStudents([]);console.warn("teacher_direct_chat_students",e);}
+   try{const rows=await emadChatApi(portal,"rpc/emad_teacher_student_directory",{method:"POST",body:"{}"});setAvailableStudents(rows||[]);}catch(e){setAvailableStudents([]);console.warn("teacher_direct_chat_students",e);}
    return;
   }
   if(mode!=="teacher"||!selected||selected.kind!=="grade_group"){setAvailableStudents([]);return;}
