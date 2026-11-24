@@ -28,6 +28,9 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const [profileCard,setProfileCard]=useState(null);
  const [attachmentUrls,setAttachmentUrls]=useState({});
  const [pinBusy,setPinBusy]=useState(false);
+ const [availableStudents,setAvailableStudents]=useState([]);
+ const [addStudentId,setAddStudentId]=useState("");
+ const [memberBusy,setMemberBusy]=useState(false);
  const [recording,setRecording]=useState(false);
  const recorderRef=useRef(null);
  const streamRef=useRef(null);
@@ -37,6 +40,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const fileRef=useRef(null);
  const selected=conversations.find(c=>c.id===selectedId)||null;
  const isOwner=mode==="owner";
+ const isManager=isOwner||mode==="teacher";
  const isSupport=mode==="support";
  const title=isOwner?"مركز التواصل وخدمة العملاء":isSupport?"خدمة العملاء":mode==="teacher"?"جروبات الطلاب":"الجروبات الدراسية";
  const myId=profile?.id;
@@ -79,6 +83,15 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   finally{setBusy(false);}
  },[myId,portal,mode,isSupport,isOwner,profile?.full_name,selectedId]);
 
+ const loadStudentsForGroup=useCallback(async()=>{
+  if(mode!=="teacher"||!selected||selected.kind!=="grade_group"){setAvailableStudents([]);return;}
+  try{
+   const rows=await emadChatApi(portal,"profiles?select=id,full_name,student_number,grade,role&role=eq.student&grade=eq."+encodeURIComponent(selected.grade)+"&limit=500");
+   const current=new Set(members.filter(m=>m.conversation_id===selectedId&&m.left_at===null).map(m=>m.user_id));
+   setAvailableStudents((rows||[]).filter(p=>!current.has(p.id)));
+  }catch(e){setAvailableStudents([]);console.warn("teacher_group_students",e);}
+ },[mode,portal,selected?.id,selected?.grade,selectedId,members]);
+
  const loadMessages=useCallback(async()=>{
   if(!selectedId)return;
   try{
@@ -119,6 +132,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
 
  useEffect(()=>{loadConversations();},[loadConversations]);
  useEffect(()=>{setMessages([]);setAttachmentUrls({});setReceiptSummary({});loadMessages();},[selectedId]);
+ useEffect(()=>{loadStudentsForGroup();},[loadStudentsForGroup]);
  useEffect(()=>{
   if(!myId)return;
   const conversationTimer=window.setInterval(loadConversations,12000);
@@ -173,7 +187,9 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  };
 
  const removeMember=async(userId)=>{
-  if(!isOwner||!selectedId||userId===myId)return;
+  if(!isManager||!selectedId||userId===myId)return;
+  const target=members.find(m=>m.conversation_id===selectedId&&m.user_id===userId);
+  if(mode==="teacher"&&target?.member_role!=="student")return;
   if(!window.confirm("إزالة هذا الحساب من جروب الصف؟"))return;
   try{
    await emadChatApi(portal,"emad_conversation_members?conversation_id=eq."+encodeURIComponent(selectedId)+"&user_id=eq."+encodeURIComponent(userId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
@@ -194,6 +210,15 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   return [c.title,c.grade,person?.full_name,person?.student_number].join(" ").toLowerCase().includes(filter.toLowerCase());
  }),[conversations,profiles,filter]);
  const selectedMember=members.find(m=>m.conversation_id===selectedId&&m.user_id===myId);
+ const addStudent=async()=>{
+  if(!isManager||mode!=="teacher"||!selectedId||!addStudentId||memberBusy)return;
+  setMemberBusy(true);setError("");
+  try{
+   await emadChatApi(portal,"emad_conversation_members",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({conversation_id:selectedId,user_id:addStudentId,member_role:"student"})});
+   setAddStudentId("");await loadConversations();setError("");
+  }catch(e){setError("تعذر إضافة الطالب. تأكد من صلاحيات الجروب وأن الطالب تابع لنفس الصف.");}
+  finally{setMemberBusy(false);}
+ };
  const openProfile=async(id)=>{
   let person=profiles[id];
   if(!person){try{const cards=await getEmadChatProfileCards(portal,[id]);person=cards?.[0];if(person)setProfiles(old=>({...old,[id]:person}));}catch{}}
@@ -227,7 +252,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
       <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة مع خدمة العملاء":selected.grade+" · مجموعة الصف"}</small></div></div>
       <div className="emad-chat-thread-actions">{isOwner&&selected.kind==="support"?<button onClick={togglePin} disabled={pinBusy}>{selectedMember?.is_pinned?"إلغاء التثبيت":"تثبيت المحادثة"}</button>:null}<span>{members.filter(m=>m.conversation_id===selectedId).length} أعضاء</span></div>
      </header>
-     {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <span className="emad-chat-roster-member" key={m.user_id}><button title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>{isOwner&&m.user_id!==myId?<button className="emad-chat-remove-member" title="إزالة من الجروب" onClick={()=>removeMember(m.user_id)}>×</button>:null}</span>;})}</div>:null}
+     {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <span className="emad-chat-roster-member" key={m.user_id}><button title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>{isManager&&m.user_id!==myId&&(mode!=="teacher"||m.member_role==="student")?<button className="emad-chat-remove-member" title="إزالة من الجروب" onClick={()=>removeMember(m.user_id)}>×</button>:null}</span>;})}{mode==="teacher"?<div className="emad-chat-add-member"><select value={addStudentId} onChange={e=>setAddStudentId(e.target.value)}><option value="">إضافة طالب من نفس الصف</option>{availableStudents.map(p=><option key={p.id} value={p.id}>{p.full_name||"طالب"} · {p.student_number||"—"}</option>)}</select><button disabled={!addStudentId||memberBusy} onClick={addStudent}>{memberBusy?"جارٍ الإضافة...":"إضافة"}</button></div>:null}</div>:null}
      <div className="emad-chat-message-list" ref={messageListRef} onScroll={e=>{const el=e.currentTarget;stickToBottom.current=el.scrollHeight-el.scrollTop-el.clientHeight<130;}}>
       {!messages.length?<div className="emad-chat-empty large">{selected.kind==="support"?"اكتب رسالتك الأولى، وسيظهر رد خدمة العملاء هنا.":"ابدأ النقاش مع أعضاء الجروب."}</div>:messages.map(message=>{
        const sender=profiles[message.sender_id]||{};
@@ -241,7 +266,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
           {message.body?<p>{message.body}</p>:null}
           {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:message.message_type==="audio"?<div className="emad-chat-audio"><span>رسالة صوتية</span><audio controls preload="metadata" src={url}/></div>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">📎 {message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
          </div>
-         <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?(receiptSummary[message.id]?.delivered? " · تم التسليم":" · تم الإرسال"):""}{mine&&receiptSummary[message.id]?.read>0?" · قرأها "+receiptSummary[message.id].read:""}{isOwner?<button className="emad-chat-delete-message" onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</small>
+         <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?(receiptSummary[message.id]?.delivered? " · تم التسليم":" · تم الإرسال"):""}{mine&&receiptSummary[message.id]?.read>0?" · قرأها "+receiptSummary[message.id].read:""}{isManager?<button className="emad-chat-delete-message" onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</small>
         </div>
        </article>;
       })}
