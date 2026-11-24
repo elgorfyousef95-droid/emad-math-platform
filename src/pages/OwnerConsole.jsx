@@ -554,7 +554,7 @@ export default function OwnerConsole() {
     {section==="overview" && <section className="owner-panel owner-overview-panel">
       <div className="owner-panel-heading"><div><span>PLATFORM OVERVIEW</span><h2>ملخص المنصة</h2></div><button onClick={load}>تحديث الأرقام</button></div>
       <div className="owner-quick-grid">
-        {TABS.filter(x=>x[0]!=="overview").map(([id,label,sub])=><button key={id} onClick={()=>setSection(id)}><small>{sub}</small><b>{label}</b><span>{({accounts:users.length,courses:courses.length,exams:exams.length,homework:homework.length,announcements:announcements.length,subscriptions:subscriptions.length,payments:payments.length,messages:messages.length})[id] ?? 0}</span></button>)}
+        {TABS.filter(x=>x[0]!=="overview").map(([id,label,sub])=><button key={id} onClick={()=>setSection(id)}><small>{sub}</small><b>{label}</b><span>{({accounts:users.length,teachers:teachers.length,courses:courses.length,exams:exams.length,homework:homework.length,announcements:announcements.length,subscriptions:subscriptions.length,payments:payments.length,messages:messages.length})[id] ?? 0}</span></button>)}
       </div>
       <div className="owner-overview-columns">
         <section><h3>آخر الكورسات</h3>{courses.slice(0,5).map(x=><button className="owner-mini-row" key={x.id} onClick={()=>{setSelectedCourse(x.id);setSection("courses");}}>{x.cover_image_url?<img src={x.cover_image_url} alt=""/>:<span className="owner-mini-placeholder">C</span>}<span><b>{x.title}</b><small>{x.grade} · {statusText(x.status)}</small></span></button>)}{!courses.length&&<p className="owner-note">لا توجد كورسات بعد.</p>}</section>
