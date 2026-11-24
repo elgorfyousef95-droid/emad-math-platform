@@ -1,0 +1,37 @@
+/* Premium presentation for the 20 third-secondary homework assignments */
+.homework-page{position:relative}
+.homework-page .platform-page-banner{background:linear-gradient(120deg,#101a34 0%,#1c3652 55%,#235d62 100%);border:1px solid rgba(218,190,132,.22);box-shadow:0 18px 48px rgba(8,20,42,.18)}
+.homework-page .platform-page-banner h1{letter-spacing:-.035em}
+.hw-subject-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 22px;margin:22px 0;border:1px solid rgba(191,161,104,.25);border-radius:18px;background:linear-gradient(110deg,rgba(21,39,68,.96),rgba(31,73,79,.94));color:#fff}
+.hw-subject-intro b{font-size:1.05rem}.hw-subject-intro span{color:#d7e2e8;font-size:.9rem}
+.hw-assignment-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.hw-assignment-card.hw-model-card{position:relative;isolation:isolate;overflow:hidden;min-height:350px;border:1px solid rgba(205,177,121,.32);border-radius:24px;background:linear-gradient(135deg,#101a34,#274e69);box-shadow:0 16px 36px rgba(11,24,45,.2);color:#fff}
+.hw-assignment-card.hw-model-statics{background:linear-gradient(135deg,#102d32,#28635f)}
+.hw-assignment-card .hw-assignment-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.95;z-index:-2}
+.hw-assignment-card .hw-card-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(8,16,34,.94),rgba(8,19,35,.78) 58%,rgba(8,25,38,.36))}
+.hw-assignment-card.hw-model-statics .hw-card-shade{background:linear-gradient(90deg,rgba(7,30,32,.94),rgba(9,43,44,.78) 58%,rgba(9,43,44,.3))}
+.hw-assignment-card .hw-card-content{position:relative;z-index:1;display:flex;flex-direction:column;min-height:350px;padding:26px;gap:12px}
+.hw-card-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.hw-card-meta span{padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);font-size:.8rem;color:#f7e8c5}
+.hw-card-content h2{font-size:1.45rem;line-height:1.5;margin:10px 0 0;color:#fff}
+.hw-card-content p{color:#e1e8ef;line-height:1.8;margin:0;max-width:52ch}
+.hw-model-stats{display:flex;gap:9px;flex-wrap:wrap;margin-top:8px}
+.hw-model-stats span{padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.12);color:#fff;font-size:.85rem}
+.hw-card-progress{display:flex;justify-content:space-between;color:#fff;margin-top:auto}
+.hw-card-progress-track{height:7px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden}
+.hw-card-progress-track i{display:block;height:100%;border-radius:99px;background:#e4bd72}
+.hw-card-content>button{align-self:flex-start;display:flex;align-items:center;gap:10px;padding:12px 20px;border:0;border-radius:12px;background:#e4bd72;color:#17243a;font-weight:800;cursor:pointer}
+.hw-card-result{margin-top:auto;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.13);color:#fff}
+.hw-question-list{display:grid;gap:16px}
+.hw-question{padding:22px;border:1px solid #dce4ed;border-radius:18px;background:linear-gradient(160deg,#fff,#f7f9fc);box-shadow:0 8px 22px rgba(17,34,58,.06)}
+.hw-question>header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid #e4eaf0;color:#1e4562}
+.hw-question h3{line-height:2;font-size:1.04rem;color:#17243a}
+.hw-question-diagram{margin:14px auto;max-width:720px;text-align:center}
+.hw-question-diagram img{width:100%;max-height:280px;object-fit:contain;border-radius:14px;border:1px solid #e3eaf1}
+.hw-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hw-options label{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #dce4ed;border-radius:12px;background:#fff;cursor:pointer}
+.hw-options label.selected{border-color:#b98d45;background:#fff8e9}
+.hw-review-panel{padding:22px;border-radius:20px;background:#f7f9fc;border:1px solid #dce4ed}
+.hw-review-item{padding:18px 0;border-bottom:1px solid #e1e7ee}
+.hw-review-item:last-child{border-bottom:0}
+@media(max-width:760px){.hw-assignment-grid{grid-template-columns:1fr}.hw-subject-intro{align-items:flex-start;flex-direction:column}.hw-assignment-card.hw-model-card,.hw-assignment-card .hw-card-content{min-height:330px}.hw-card-content{padding:20px!important}.hw-options{grid-template-columns:1fr}.hw-question{padding:16px}}
