@@ -51,7 +51,7 @@ with check (
 
 -- A limited directory for teacher-initiated chats. It intentionally excludes
 -- phone numbers, parent contacts, and other private profile fields.
-create or replace function public.emad_teacher_student_directory()
+create or replace function private.emad_teacher_student_directory()
 returns table (
   id uuid,
   full_name text,
@@ -72,6 +72,27 @@ as $function$
     and p.role = 'student'
   order by p.full_name asc
   limit 2000;
+$function$;
+
+revoke all on function private.emad_teacher_student_directory() from public, anon;
+grant usage on schema private to authenticated;
+grant execute on function private.emad_teacher_student_directory() to authenticated;
+
+create or replace function public.emad_teacher_student_directory()
+returns table (
+  id uuid,
+  full_name text,
+  student_number bigint,
+  grade text,
+  group_name text,
+  avatar_url text
+)
+language sql
+stable
+security invoker
+set search_path to 'pg_catalog','public','private'
+as $function$
+  select * from private.emad_teacher_student_directory();
 $function$;
 
 revoke all on function public.emad_teacher_student_directory() from public, anon;
