@@ -2020,3 +2020,11 @@ body.admin-scroll-mode{width:100%!important}
 .learning-page-lessons .learning-video-player video,.learning-page-lessons .learning-video-player iframe{width:100%;max-height:70vh;aspect-ratio:16/9;border-radius:12px;background:#000;object-fit:contain}
 @media(max-width:850px){.teacher-live-start-card{grid-template-columns:1fr}.teacher-live-active-head{align-items:flex-start;flex-direction:column}.teacher-live-frame,.student-live-room iframe{min-height:340px;height:58vh}.teacher-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:520px){.teacher-live-frame,.student-live-room iframe{min-height:280px;height:52vh}.student-live-room header{align-items:flex-start;flex-direction:column}.teacher-live-history article{flex-wrap:wrap}}
+
+.owner-score-editor{display:flex;align-items:center;gap:6px;min-width:190px}
+.owner-score-editor input{width:72px;min-width:0;padding:7px 8px;border:1px solid #d8b67555;border-radius:8px;background:#0b1929;color:#fff;font:11px 'Cairo'}
+.owner-score-editor button{padding:7px 9px;border:0;border-radius:8px;background:linear-gradient(120deg,#ecd08f,#b78b49);color:#17263a;font:800 10px 'Cairo';white-space:nowrap}
+.owner-score-editor button:disabled{opacity:.45}
+.learning-video-player-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.learning-video-player-heading b{font-size:14px;color:#f3dfb4}
+.learning-video-player-heading span{font-size:10px;color:#9fb1c8}
