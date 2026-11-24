@@ -32,6 +32,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const [addStudentId,setAddStudentId]=useState("");
  const [memberBusy,setMemberBusy]=useState(false);
  const [recording,setRecording]=useState(false);
+ const [mobileView,setMobileView]=useState("list");
  const recorderRef=useRef(null);
  const streamRef=useRef(null);
  const bottomRef=useRef(null);
@@ -40,27 +41,33 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const fileRef=useRef(null);
  const selected=conversations.find(c=>c.id===selectedId)||null;
  const isOwner=mode==="owner";
- const isManager=isOwner||mode==="teacher";
- const isSupport=mode==="support";
- const title=isOwner?"مركز التواصل وخدمة العملاء":isSupport?"خدمة العملاء":mode==="teacher"?"جروبات الطلاب":"الجروبات الدراسية";
+ const isManager=isOwner||mode==="teacher"||mode==="teacher_support";
+ const isSupport=mode==="support"||mode==="teacher_support";
+ const title=isOwner?"مركز التواصل وخدمة العملاء":mode==="teacher_support"?"مراسلات الطلاب":isSupport?"خدمة العملاء":mode==="teacher"?"جروبات الطلاب":"الجروبات الدراسية";
  const myId=profile?.id;
 
  const loadConversations=useCallback(async()=>{
   if(!myId)return;
   try{
    let path="emad_conversations?select=id,kind,title,grade,created_by,updated_at,created_at,is_active&is_active=eq.true&order=updated_at.desc&limit=80";
-   if(isSupport)path+="&kind=eq.support&created_by=eq."+encodeURIComponent(myId);
+   if(isSupport){path+="&kind=eq.support";if(mode==="support")path+="&created_by=eq."+encodeURIComponent(myId);}
    else if(mode==="teacher")path+="&kind=eq.grade_group";
    else if(mode==="groups")path+="&kind=eq.grade_group";
    else if(isOwner)path+="&kind=in.(grade_group,support)";
    let rows=await emadChatApi(portal,path);
-   if(isSupport&&!rows.length){
+   if(mode==="support"&&!rows.length){
     await emadChatApi(portal,"emad_conversations",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({kind:"support",title:"خدمة العملاء — "+(profile.full_name||"طالب"),created_by:myId})});
     rows=await emadChatApi(portal,"emad_conversations?select=id,kind,title,grade,created_by,updated_at,created_at,is_active&kind=eq.support&created_by=eq."+encodeURIComponent(myId)+"&is_active=eq.true&limit=1");
    }
    const ids=(rows||[]).map(x=>x.id);
    let memberRows=[];
    if(ids.length)memberRows=await emadChatApi(portal,"emad_conversation_members?select=id,conversation_id,user_id,member_role,is_pinned,pinned_at,last_read_at,left_at&conversation_id=in.("+ids.join(",")+")&left_at=is.null");
+   if(mode==="teacher_support"&&ids.length){
+    const joined=new Set((memberRows||[]).filter(m=>m.user_id===myId).map(m=>m.conversation_id));
+    const missing=(rows||[]).filter(conversation=>!joined.has(conversation.id));
+    await Promise.all(missing.map(conversation=>emadChatApi(portal,"emad_conversation_members",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({conversation_id:conversation.id,user_id:myId,member_role:"teacher"})}).catch(error=>console.warn("teacher_support_join",error))));
+    memberRows=await emadChatApi(portal,"emad_conversation_members?select=id,conversation_id,user_id,member_role,is_pinned,pinned_at,last_read_at,left_at&conversation_id=in.("+ids.join(",")+")&left_at=is.null");
+   }
    const personIds=[...new Set([...(rows||[]).map(x=>x.created_by),...(memberRows||[]).map(x=>x.user_id)].filter(Boolean))];
    const cards=await getEmadChatProfileCards(portal,personIds);
    const map=Object.fromEntries((cards||[]).map(p=>[p.id,p]));
@@ -228,7 +235,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  return <section className="emad-chat-page" dir="rtl">
   <header className="emad-chat-hero"><div className="emad-chat-hero-mark">✦</div><div><span>EMAD EL SANAFIRY · SECURE MESSAGING</span><h1>{title}</h1><p>{isOwner?"كل محادثات الطلاب والجروبات في مركز واحد.":isSupport?"محادثة خاصة ومستمرة مع خدمة العملاء.":"تواصل منظم مع زملائك والمدرس داخل جروب الصف."}</p></div><div className="emad-chat-status"><i/> متصل بقاعدة البيانات</div></header>
   {error&&<div className="emad-chat-error" role="alert">{error}</div>}
-  <div className="emad-chat-layout">
+  <div className={"emad-chat-layout "+(mobileView==="thread"?"mobile-thread-open":"mobile-list-open")}>
    <aside className="emad-chat-sidebar">
     <div className="emad-chat-sidebar-head"><b>{isOwner?"المحادثات والجروبات":"المحادثات"}</b><small>{visibleConversations.length} مساحة</small></div>
     <input className="emad-chat-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث في المحادثات..."/>
@@ -237,7 +244,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
       const pinned=members.some(m=>m.conversation_id===c.id&&m.user_id===myId&&m.is_pinned);
       const count=members.filter(m=>m.conversation_id===c.id).length;
       const latest=messages.find(m=>m.conversation_id===c.id);
-      return <button key={c.id} className={"emad-chat-conversation "+(selectedId===c.id?"active":"")} onClick={()=>setSelectedId(c.id)}>
+      return <button key={c.id} className={"emad-chat-conversation "+(selectedId===c.id?"active":"")} onClick={()=>{setSelectedId(c.id);setMobileView("thread");}}>
        <span className={"emad-chat-conv-avatar "+(c.kind==="support"?"support":"group")}>{c.kind==="support"?(person?.avatar_url?<img src={person.avatar_url} alt=""/>:initials(person?.full_name||c.title)):"#"}</span>
        <span className="emad-chat-conv-copy"><b>{c.kind==="support"?(person?.full_name||c.title):c.title}</b><small>{c.kind==="support"?"خدمة العملاء · "+(person?.student_number||"حساب طالب"):(c.grade||"جروب دراسي")+" · "+count+" أعضاء"}</small></span>
        <span className="emad-chat-conv-meta">{pinned?<i title="مثبت">★</i>:null}<small>{shortDate(c.updated_at||c.created_at)}</small></span>
@@ -249,6 +256,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
    <section className="emad-chat-thread">
     {selected?<>
      <header className="emad-chat-thread-head">
+      <button type="button" className="emad-chat-mobile-back" onClick={()=>setMobileView("list")} aria-label="العودة إلى المحادثات">‹ <span>المحادثات</span></button>
       <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة مع خدمة العملاء":selected.grade+" · مجموعة الصف"}</small></div></div>
       <div className="emad-chat-thread-actions">{isOwner&&selected.kind==="support"?<button onClick={togglePin} disabled={pinBusy}>{selectedMember?.is_pinned?"إلغاء التثبيت":"تثبيت المحادثة"}</button>:null}<span>{members.filter(m=>m.conversation_id===selectedId).length} أعضاء</span></div>
      </header>
