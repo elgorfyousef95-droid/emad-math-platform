@@ -70,7 +70,7 @@ export default function OwnerConsole() {
   const [courseForm, setCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "", cover_image_url: "" });
   const [editCourseForm, setEditCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "" });
   const [examForm, setExamForm] = useState({ title: "", course_id: "", duration_minutes: "60", opens_at: "", closes_at: "", cover_image_url: "" });
-  const [examQuestionForm, setExamQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
+  const [examQuestionForm, setExamQuestionForm] = useState({ prompt: "", image_url: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [examDraftQuestions, setExamDraftQuestions] = useState([]);
   const [homeworkForm, setHomeworkForm] = useState({ title: "", description: "", grade: GRADES[2], group_name: "", due_at: "", cover_image_url: "", is_published: false });
   const [announcementForm, setAnnouncementForm] = useState({ title: "", body: "", course_id: "", cover_image_url: "" });
@@ -167,6 +167,7 @@ export default function OwnerConsole() {
       const url = await uploadPortalImage(file, "owner");
       if (kind === "course") setCourseForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "exam") setExamForm((old) => ({ ...old, cover_image_url: url }));
+      if (kind === "exam-question") setExamQuestionForm((old) => ({ ...old, image_url: url }));
       if (kind === "homework") setHomeworkForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "lesson") setLessonForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "announcement") setAnnouncementForm((old) => ({ ...old, cover_image_url: url }));
@@ -326,11 +327,11 @@ export default function OwnerConsole() {
   const addExamQuestion = () => {
     const q = examQuestionForm;
     const choices = q.question_type === "single_choice" ? q.choices.split("\n").map(x=>x.trim()).filter(Boolean) : q.question_type === "true_false" ? ["صحيح","خطأ"] : [];
-    if (q.prompt.trim().length < 4) return setError("اكتب نص السؤال بشكل واضح.");
+    if (q.prompt.trim().length < 4 && !q.image_url) return setError("اكتب نص السؤال أو ارفع صورة للسؤال.");
     if (q.question_type === "single_choice" && choices.length < 2) return setError("أضف اختيارين على الأقل للسؤال.");
     if (["single_choice","true_false"].includes(q.question_type) && !q.correct_answer.trim()) return setError("حدد الإجابة الصحيحة.");
-    setExamDraftQuestions(old=>[...old,{...q,id:crypto.randomUUID(),choices,points:Number(q.points)||1}]);
-    setExamQuestionForm({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
+    setExamDraftQuestions(old=>[...old,{...q,id:crypto.randomUUID(),prompt:q.prompt.trim(),choices,points:Number(q.points)||1}]);
+    setExamQuestionForm({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
     setError("");
   };
 
@@ -359,7 +360,7 @@ export default function OwnerConsole() {
       const savedQuestions = [];
       for (let i=0;i<examDraftQuestions.length;i++) {
         const q=examDraftQuestions[i];
-        const inserted=await portalApi("owner","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:created.id,question_type:q.question_type,prompt:q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
+        const inserted=await portalApi("owner","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:created.id,question_type:q.question_type,prompt:(q.image_url?"[[EXAM_IMAGE:"+q.image_url+"]]\n":"")+q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
         const saved=Array.isArray(inserted)?inserted[0]:inserted;
         if(!saved?.id)throw new Error("exam_question_not_created");
         savedQuestions.push(saved);
@@ -643,7 +644,7 @@ export default function OwnerConsole() {
           {examForm.cover_image_url&&<img className="owner-image-preview" src={examForm.cover_image_url} alt="معاينة صورة الامتحان"/>}
           <div className="owner-question-builder"><h4>بناء أسئلة الامتحان</h4>
             <label>نوع السؤال<select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select></label>
-            <label>نص السؤال<textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})}/></label>
+            <label>نص السؤال<textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال أو ارفع صورة السؤال"/></label><label className="owner-question-image-upload">صورة السؤال (اختياري)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"exam-question")}/></label>{uploading==="exam-question"&&<small className="owner-upload-state">جارٍ رفع صورة السؤال...</small>}{examQuestionForm.image_url&&<img className="exam-question-image-preview" src={examQuestionForm.image_url} alt="معاينة صورة السؤال"/>}
             {examQuestionForm.question_type==="single_choice"&&<label>الاختيارات (كل اختيار في سطر)<textarea rows="3" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})}/></label>}
             {["single_choice","true_false"].includes(examQuestionForm.question_type)&&<label>الإجابة الصحيحة<input value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder="اكتب الاختيار كما هو أو صحيح / خطأ"/></label>}
             <label>الدرجة<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label>
