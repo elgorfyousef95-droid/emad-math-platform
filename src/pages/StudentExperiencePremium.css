@@ -484,3 +484,13 @@
 .sd-card-image{background-image:var(--sd-card-image),linear-gradient(135deg,#31536e,#13243a)!important;background-repeat:no-repeat!important;background-position:center!important;background-size:cover!important}
 .sd-service-card:nth-child(4) .sd-card-image{background-image:var(--sd-card-image),url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=85"),linear-gradient(135deg,#31536e,#13243a)!important}
 .sd-service-card:nth-child(4) .sd-card-shade{background:linear-gradient(180deg,#07152530 0%,#08152542 28%,#081525f2 100%)!important}
+
+
+/* Every student destination keeps a visual surface, not a blank page */
+.se-content{background:radial-gradient(ellipse at 88% 0%,#26415b35,transparent 38%),linear-gradient(135deg,#081321cc,#0c1b2ccc),url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1900&q=75") center/cover fixed!important}
+.platform-page{min-height:100%;padding:clamp(8px,1.2vw,16px)!important;border-radius:20px;background:linear-gradient(135deg,#081725d9,#0b2030cf),url("https://images.unsplash.com/photo-1453738773917-9c3eff1db985?auto=format&fit=crop&w=1800&q=80") center/cover fixed!important}
+.platform-page-banner{min-height:clamp(165px,20vw,240px)!important}
+.platform-panel,.platform-lock-panel,.platform-empty-state,.platform-content-grid article,.platform-notification-list article,.platform-settings-grid article,.platform-subscription-layout>section{background-image:linear-gradient(145deg,#10263bed,#0b1a2ded),url("https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1100&q=75")!important;background-size:cover!important;background-position:center!important}
+.platform-content-grid article:nth-child(2n){background-image:linear-gradient(145deg,#102b3bed,#0b1a2ded),url("https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1100&q=75")!important}
+.platform-settings-grid article:nth-child(3n){background-image:linear-gradient(145deg,#102b3bed,#0b1a2ded),url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1100&q=75")!important}
+@media(max-width:760px){.se-content{padding:12px 9px 26px!important;background-attachment:scroll!important}.platform-page{padding:6px!important;border-radius:12px;background-attachment:scroll!important}.platform-page-banner{min-height:155px!important;padding:18px!important;border-radius:15px!important}.platform-banner-art{opacity:.2;transform:scale(.7)}}
