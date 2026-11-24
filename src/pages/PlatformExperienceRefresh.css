@@ -421,3 +421,40 @@
 .teacher-layout{grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr)!important}
 @media(max-width:1050px){.teacher-studio-body{grid-template-columns:1fr}.teacher-studio-sidebar{position:static}.teacher-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important}.teacher-overview-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.teacher-layout{grid-template-columns:1fr!important}}
 @media(max-width:640px){.teacher-shell{padding:10px!important}.teacher-header{min-height:0!important;flex-direction:column;align-items:stretch!important}.teacher-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-tabs button{min-height:46px!important;padding:9px!important;font-size:10px!important}.teacher-overview-actions{grid-template-columns:1fr}.teacher-overview-bottom{grid-template-columns:1fr}.teacher-studio-sidebar{padding:12px}.teacher-studio-content{width:100%;min-width:0}.teacher-layout{gap:12px!important}.teacher-panel{padding:14px!important}}
+
+
+/* Distinct image-backed panels and a full-width teacher control room */
+.teacher-shell{width:100%;max-width:none!important;min-height:100dvh;padding:clamp(12px,2.3vw,38px)!important;background:linear-gradient(120deg,#071522f0,#0b2132e8),url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85") center/cover fixed!important}
+.teacher-header{width:min(1840px,100%)!important;min-height:210px!important;margin:0 auto 18px!important;padding:clamp(22px,3.8vw,48px)!important;border:1px solid #9de8ef55!important;border-radius:26px!important;background:linear-gradient(105deg,#061827ed,#0d4050c9),url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1900&q=85") center/cover!important;box-shadow:0 24px 70px #0007!important}
+.teacher-header h1{font-size:clamp(30px,4.5vw,54px)!important;color:#fff!important}
+.teacher-header p{max-width:720px;color:#d5e7e8!important;font-size:13px!important;line-height:2}
+.teacher-studio-sidebar{background:linear-gradient(145deg,#0b3540eF,#071a2bf2),url("https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=80") center/cover!important}
+.teacher-side-heading{padding:10px 7px 18px;border-bottom:1px solid #ffffff20}
+.teacher-side-heading span{color:#8fe5dc!important;letter-spacing:1.7px}
+.teacher-side-heading b{display:block;margin-top:8px;color:#fff;font-size:20px}
+.teacher-side-heading small{display:block;margin-top:5px;color:#b5d3d9;font-size:10px}
+.teacher-tabs button{min-height:55px!important;border:1px solid #ffffff17!important;border-radius:13px!important;background:#041b2ab5!important;color:#d2e7e8!important;font-size:12px!important}
+.teacher-tabs button.active,.teacher-tabs button:hover{border-color:#92e4db!important;background:linear-gradient(110deg,#168a8277,#0d3549)!important;color:#fff!important;box-shadow:0 8px 24px #0003!important}
+.teacher-panel{position:relative;isolation:isolate;overflow:hidden;border:1px solid #9de8ef38!important;border-radius:22px!important;background:linear-gradient(135deg,#0a1d2cf0,#0d2b3aeb),url("https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1600&q=80") center/cover!important;box-shadow:0 22px 60px #0006!important}
+.teacher-panel:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(120deg,#061a2b88,#0b2b3c55)}
+.teacher-overview-panel{background-image:linear-gradient(120deg,#071c2bf0,#0d4352d9),url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1700&q=85")!important}
+.teacher-layout-courses>.teacher-panel:first-child{background-image:linear-gradient(125deg,#081a2bf2,#123d4be0),url("https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1500&q=85")!important}
+.teacher-layout-lessons>.teacher-panel:first-child{background-image:linear-gradient(125deg,#081a2bf2,#123d4be0),url("https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=85")!important}
+.teacher-lessons-panel{background-image:linear-gradient(125deg,#071b2bf4,#0c3444e8),url("https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1500&q=85")!important}
+.teacher-directory{background-image:linear-gradient(125deg,#071b2bf4,#0c3444e8),url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1500&q=85")!important}
+.teacher-inbox{background-image:linear-gradient(125deg,#071b2bf4,#0c3444e8),url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1500&q=85")!important}
+.teacher-stats article{background:linear-gradient(140deg,#0e3547f0,#081b2bf2),url("https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=600&q=75") center/cover!important;border:1px solid #8de5df35!important}
+.teacher-overview-actions button{min-height:145px!important;padding:20px!important;border:1px solid #8de5df44!important;border-radius:18px!important;background:linear-gradient(135deg,#0b2d3feF,#102e42df),url("https://images.unsplash.com/photo-1557682250-33bd709cbe85?auto=format&fit=crop&w=800&q=80") center/cover!important;color:#fff!important;box-shadow:0 15px 35px #0004!important}
+.teacher-overview-actions button:nth-child(2){background-image:linear-gradient(135deg,#0b2d3feF,#102e42df),url("https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=800&q=80")!important}
+.teacher-overview-actions button:nth-child(3){background-image:linear-gradient(135deg,#0b2d3feF,#102e42df),url("https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=800&q=80")!important}
+.teacher-overview-actions button:nth-child(4){background-image:linear-gradient(135deg,#0b2d3feF,#102e42df),url("https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80")!important}
+.teacher-overview-actions button:nth-child(5){background-image:linear-gradient(135deg,#0b2d3feF,#102e42df),url("https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=800&q=80")!important}
+.teacher-overview-actions button:nth-child(6){background-image:linear-gradient(135deg,#0b2d3feF,#102e42df),url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80")!important}
+.teacher-overview-actions button b{color:#fff!important;font-size:16px!important}
+.teacher-overview-actions button small{color:#d4e4ea!important}
+.teacher-overview-actions button strong{color:#a9eee3!important}
+.teacher-overview-bottom article{border:1px solid #8de5df35!important;border-radius:16px!important;background:linear-gradient(130deg,#092436eF,#0c3542ed),url("https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=75") center/cover!important}
+.teacher-header-actions button{min-height:42px!important;border:1px solid #a0e6df!important;border-radius:11px!important;background:#d9f4ee!important;color:#07333a!important;font-weight:900!important}
+.teacher-studio-content{min-width:0;width:100%}
+@media(max-width:1050px){.teacher-studio-body{grid-template-columns:1fr!important}.teacher-studio-sidebar{position:static!important}.teacher-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:640px){.teacher-shell{padding:8px!important}.teacher-header{min-height:0!important;padding:19px!important;border-radius:17px!important}.teacher-header-actions{display:flex;flex-wrap:wrap}.teacher-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-tabs button{min-height:46px!important;padding:8px!important;font-size:9px!important}.teacher-panel{border-radius:15px!important}.teacher-overview-actions button{min-height:112px!important;padding:13px!important}}

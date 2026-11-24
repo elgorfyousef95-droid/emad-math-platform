@@ -234,7 +234,7 @@ function TeacherConsole(){
     <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
      <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}><span>⌂</span> لوحة المتابعة</button>
      <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}><span>▤</span> الكورسات</button>
-     <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}><span>▶</span> الفيديوهات</button>
+     <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}><span>▶</span> المحاضرات</button>
      <button className={section==="students"?"active":""} onClick={()=>setSection("students")}><span>♙</span> الطلاب <b>{students.length}</b></button>
      <button className={section==="live"?"active":""} onClick={()=>setSection("live")}><span>●</span> البث المباشر</button>
      <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}><span>◎</span> الجروبات</button>
@@ -248,7 +248,7 @@ function TeacherConsole(){
    <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>إدارة الكورسات والفيديوهات والبث المباشر ومتابعة الطلاب من مكان واحد.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
    <div className="teacher-overview-actions">
     <button onClick={()=>setSection("courses")}><span>01</span><b>إدارة الكورسات</b><small>إنشاء الكورسات وتعديلها ونشرها</small><strong>{courses.length} كورس</strong></button>
-    <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة الفيديوهات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} فيديو</strong></button>
+    <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة المحاضرات</b><small>إضافة الفيديوهات داخل الكورسات وتنظيم الدروس</small><strong>{lessons.length} فيديو</strong></button>
     <button onClick={()=>setSection("students")}><span>03</span><b>متابعة الطلاب</b><small>عرض الطلاب المرتبطين بكورساتك</small><strong>{students.length} طالب</strong></button>
     <button onClick={()=>setSection("live")}><span>03</span><b>البث المباشر</b><small>ابدأ حصة مباشرة وتواصل مع الطلاب</small><strong>فتح استوديو البث</strong></button>
     <button onClick={()=>setSection("groups")}><span>04</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
