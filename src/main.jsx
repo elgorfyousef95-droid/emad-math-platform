@@ -560,7 +560,7 @@ function HomeworkPage({profile}){
   <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
   <div className="hw-progress-track"><span style={{width:progress+"%"}}/></div>
   {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
-   <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} <small>درجة موضوعية</small></strong></div>
+   <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} / {review?.objective_max??26} <small>من ٢٦ موضوعي · المقالي {review?.essay_max??4} درجات</small></strong></div>
    <p>تاريخ التسليم: {submission.submitted_at?new Date(submission.submitted_at).toLocaleString("ar-EG"):"—"}</p>
    {review?.items?.map((item,i)=><article className="hw-review-item" key={item.question_id}>
     <header><b>السؤال {arNumber(i+1)}</b><span>{item.question_type==="essay"?"سؤال مقالي":(String(item.student_answer).trim()===String(item.correct_answer).trim()?"إجابة صحيحة":"راجع الإجابة")}</span></header>
