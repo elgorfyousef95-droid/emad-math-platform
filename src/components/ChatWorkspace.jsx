@@ -63,7 +63,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const loadConversations=useCallback(async()=>{
   if(!myId)return;
   try{
-   let path="emad_conversations?select=id,kind,title,grade,created_by,updated_at,created_at,is_active&is_active=eq.true&order=updated_at.desc&limit=80";
+   let path="emad_conversations?select=id,kind,title,grade,description,avatar_url,created_by,updated_at,created_at,is_active&is_active=eq.true&order=updated_at.desc&limit=80";
    if(isSupport){path+="&kind=eq.support";if(mode==="support")path+="&created_by=eq."+encodeURIComponent(myId);}
    else if(mode==="teacher")path+="&kind=eq.grade_group";
    else if(mode==="groups")path+="&kind=eq.grade_group";
