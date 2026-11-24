@@ -1,0 +1,7 @@
+alter table public.lessons add column if not exists duration_minutes integer not null default 60 check (duration_minutes between 1 and 300);
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
+values ('emad-lecture-videos','emad-lecture-videos',true,104857600,array['video/mp4','video/webm','video/quicktime'])
+on conflict (id) do update set public=true,file_size_limit=104857600,allowed_mime_types=array['video/mp4','video/webm','video/quicktime'];
+create policy emad_lecture_videos_public_read on storage.objects for select using (bucket_id='emad-lecture-videos');
+create policy emad_lecture_videos_staff_insert on storage.objects for insert to authenticated with check (bucket_id='emad-lecture-videos' and (((select private.current_profile_role())='owner') or ((select private.current_profile_role())='teacher' and (storage.foldername(name))[1]='teacher' and (storage.foldername(name))[2]=(select auth.uid())::text)));
+create policy emad_lecture_videos_staff_delete on storage.objects for delete to authenticated using (bucket_id='emad-lecture-videos' and (((select private.current_profile_role())='owner') or ((select private.current_profile_role())='teacher' and (storage.foldername(name))[1]='teacher' and (storage.foldername(name))[2]=(select auth.uid())::text)));

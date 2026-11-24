@@ -86,7 +86,9 @@ export async function portalApi(portal, path, options = {}) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || body.code || "portal_api_error");
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  const raw = await response.text();
+  return raw ? JSON.parse(raw) : null;
 }
 
 
@@ -113,4 +115,181 @@ export async function uploadPortalImage(file, portal = "owner") {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || data.error || "image_upload_failed");
   return `${url}/storage/v1/object/public/emad-learning-media/${path}`;
+}
+
+
+const MAX_LECTURE_VIDEO_BYTES = 1024 * 1024 * 1024;
+const TUS_CHUNK_BYTES = 6 * 1024 * 1024;
+
+function encodeTusMetadata(value) {
+  return btoa(unescape(encodeURIComponent(String(value))));
+}
+
+function videoStorageHost(baseUrl) {
+  const hostname = new URL(baseUrl).hostname;
+  return hostname.endsWith(".supabase.co")
+    ? hostname.replace(".supabase.co", ".storage.supabase.co")
+    : new URL(baseUrl).host;
+}
+
+function videoResumeKey(userId, file) {
+  return "emad_video_upload_v2:" + [userId, file.name, file.size, file.lastModified].join(":");
+}
+
+async function tusRequest(url, options, token, key) {
+  return fetch(url, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: "Bearer " + token,
+      "Tus-Resumable": "1.0.0",
+      ...(options.headers || {}),
+    },
+  });
+}
+
+async function tusOffset(uploadUrl, token, key) {
+  const response = await tusRequest(uploadUrl, { method: "HEAD" }, token, key);
+  if (!response.ok) {
+    const error = new Error("tus_resume_unavailable");
+    error.status = response.status;
+    throw error;
+  }
+  return Number(response.headers.get("Upload-Offset") || 0);
+}
+
+export async function uploadPortalVideo(file, portal = "teacher", onProgress = () => {}) {
+  if (!file || !["video/mp4", "video/webm", "video/quicktime"].includes(file.type)) {
+    throw new Error("unsupported_video_type");
+  }
+  if (file.size > MAX_LECTURE_VIDEO_BYTES) throw new Error("video_too_large");
+
+  const session = await refreshPortalSession(portal);
+  if (!session?.access_token) throw new Error("portal_not_authenticated");
+
+  const { url, key } = config();
+  const projectHost = videoStorageHost(url);
+  const endpoint = "https://" + projectHost + "/storage/v1/upload/resumable";
+  const extension = file.type === "video/webm" ? "webm" : file.type === "video/quicktime" ? "mov" : "mp4";
+  const folder = portal === "teacher" ? "teacher/" + session.user?.id : "owner/" + session.user?.id;
+  const resumeKey = videoResumeKey(session.user?.id || portal, file);
+  let resume = null;
+
+  try {
+    resume = JSON.parse(localStorage.getItem(resumeKey) || "null");
+  } catch {}
+
+  const createUpload = async () => {
+    const path = folder + "/lectures/" + crypto.randomUUID() + "." + extension;
+    const metadata = [
+      ["bucketName", "emad-lecture-videos"],
+      ["objectName", path],
+      ["contentType", file.type],
+      ["cacheControl", "3600"],
+    ].map(([name, value]) => name + " " + encodeTusMetadata(value)).join(",");
+    const response = await tusRequest(endpoint, {
+      method: "POST",
+      headers: {
+        "Upload-Length": String(file.size),
+        "Upload-Metadata": metadata,
+        "x-upsert": "false",
+      },
+    }, session.access_token, key);
+    if (response.status !== 201) {
+      const detail = await response.text().catch(() => "");
+      const error = new Error("video_upload_start_failed");
+      error.status = response.status;
+      error.detail = detail;
+      throw error;
+    }
+    const location = response.headers.get("Location");
+    if (!location) throw new Error("video_upload_location_missing");
+    const uploadUrl = new URL(location, endpoint).toString();
+    resume = { path, uploadUrl, fileSize: file.size, fileName: file.name, lastModified: file.lastModified };
+    try { localStorage.setItem(resumeKey, JSON.stringify(resume)); } catch {}
+    return { path, uploadUrl };
+  };
+
+  let active;
+  if (resume?.uploadUrl && resume?.path && resume.fileSize === file.size && resume.lastModified === file.lastModified) {
+    try {
+      active = { path: resume.path, uploadUrl: resume.uploadUrl };
+      await tusOffset(active.uploadUrl, session.access_token, key);
+    } catch (error) {
+      if (![404, 410].includes(error.status)) throw error;
+      try { localStorage.removeItem(resumeKey); } catch {}
+      resume = null;
+    }
+  }
+  if (!active) active = await createUpload();
+
+  let offset = await tusOffset(active.uploadUrl, session.access_token, key);
+  if (offset > file.size) throw new Error("video_upload_offset_invalid");
+  onProgress(Math.round((offset / file.size) * 100), offset, file.size);
+
+  while (offset < file.size) {
+    const end = Math.min(offset + TUS_CHUNK_BYTES, file.size);
+    let attempts = 0;
+    let completed = false;
+    while (!completed) {
+      try {
+        const response = await tusRequest(active.uploadUrl, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/offset+octet-stream",
+            "Upload-Offset": String(offset),
+          },
+          body: file.slice(offset, end),
+        }, session.access_token, key);
+        if (response.status === 204) {
+          offset = Number(response.headers.get("Upload-Offset") || end);
+          completed = true;
+        } else if (response.status === 409) {
+          offset = await tusOffset(active.uploadUrl, session.access_token, key);
+          completed = offset >= end;
+        } else {
+          const detail = await response.text().catch(() => "");
+          const error = new Error("video_upload_chunk_failed");
+          error.status = response.status;
+          error.detail = detail;
+          throw error;
+        }
+      } catch (error) {
+        attempts += 1;
+        if (error.status && ![408, 429, 500, 502, 503, 504].includes(error.status)) throw error;
+        if (attempts > 5) throw error;
+        await new Promise((resolve) => setTimeout(resolve, Math.min(15000, 1500 * (2 ** (attempts - 1)))));
+        offset = await tusOffset(active.uploadUrl, session.access_token, key);
+        if (offset >= end) completed = true;
+      }
+    }
+    onProgress(Math.min(100, Math.round((offset / file.size) * 100)), offset, file.size);
+  }
+
+  try { localStorage.removeItem(resumeKey); } catch {}
+  return active.path;
+}
+
+export async function deletePortalVideo(value, portal = "owner") {
+  const raw = String(value || "").trim();
+  if (!raw) return;
+  const publicMarker = "/storage/v1/object/public/emad-lecture-videos/";
+  const markerIndex = raw.indexOf(publicMarker);
+  let path = markerIndex >= 0
+    ? decodeURIComponent(raw.slice(markerIndex + publicMarker.length).split("?")[0])
+    : raw.startsWith("emad-lecture-videos/")
+      ? raw.slice("emad-lecture-videos/".length)
+      : /^https?:\/\//i.test(raw) ? "" : raw.replace(/^\/+/, "");
+  if (!path) return;
+  const session = await refreshPortalSession(portal);
+  if (!session?.access_token) throw new Error("portal_not_authenticated");
+  const { url, key } = config();
+  const response = await fetch(url + "/storage/v1/object/emad-lecture-videos/" + path.split("/").map(encodeURIComponent).join("/"), {
+    method: "DELETE",
+    headers: { apikey: key, Authorization: "Bearer " + session.access_token },
+  });
+  if (!response.ok && response.status !== 404) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || "video_delete_failed");
+  }
 }

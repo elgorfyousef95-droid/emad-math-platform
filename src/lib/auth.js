@@ -110,7 +110,9 @@ export async function studentApi(path, options = {}) {
     const body = await response.json().catch(() => ({}));
     throw new Error(body.message || body.code || "student_api_error");
   }
-  return response.status === 204 ? null : response.json();
+  if (response.status === 204) return null;
+  const raw = await response.text();
+  return raw ? JSON.parse(raw) : null;
 }
 
 function getSessionUserId(session) {
@@ -142,6 +144,7 @@ export async function loadStudentWorkspace() {
   ]);
   const profile = profiles?.[0] || null;
   if (!profile || profile.id !== userId) throw new Error("authenticated_profile_not_found");
+  if (profile.role !== "student") throw new Error("student_account_required");
   return {
     profile,
     subscription: subscriptions?.[0] || null,

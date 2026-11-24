@@ -8,8 +8,12 @@ import AuthScreen from "./pages/AuthScreen.jsx";
 import StudentExperience from "./pages/StudentExperience.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
 import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode } from "./lib/auth.js";
-import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage } from "./lib/portalAuth.js";
+import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage, uploadPortalVideo, deletePortalVideo } from "./lib/portalAuth.js";
 import OwnerConsole from "./pages/OwnerConsole.jsx";
+import ExamRunner from "./components/ExamRunner.jsx";
+import ChatWorkspace from "./components/ChatWorkspace.jsx";
+import { getLectureVideoUrl, getLectureEmbedUrl } from "./lib/lectureMedia.js";
+import "./pages/PlatformExperienceRefresh.css";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
 const navByGrade={
@@ -94,9 +98,15 @@ function PortalAccess({portal,onSuccess}){
 }
 
 function TeacherConsole(){
- const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[section,setSection]=useState("courses"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState("");
+ const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[exams,setExams]=useState([]),[attempts,setAttempts]=useState([]),[examQuestions,setExamQuestions]=useState([]),[section,setSection]=useState("overview"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState(""),[selectedAttempt,setSelectedAttempt]=useState(null),[attemptAnswers,setAttemptAnswers]=useState([]),[gradeDraft,setGradeDraft]=useState("");
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:"",cover_image_url:""});
- const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:""});
+ const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});
+ const [lessonVideoPreviewUrl,setLessonVideoPreviewUrl]=useState("");
+ const [editingLessonId,setEditingLessonId]=useState(""),[uploadingVideo,setUploadingVideo]=useState(false);
+ const [uploadProgress,setUploadProgress]=useState(0);
+ const [examForm,setExamForm]=useState({title:"",course_id:"",duration_minutes:"60",opens_at:"",closes_at:""});
+ const [examQuestionForm,setExamQuestionForm]=useState({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
+ const [examDraftQuestions,setExamDraftQuestions]=useState([]);
  const load=async()=>{
   setBusy(true);setError("");
   try{
@@ -108,11 +118,18 @@ function TeacherConsole(){
    if(me?.role!=="teacher")throw new Error("not_teacher");
    const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,cover_image_url,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setCourses(list||[]);
-   const [studentRows,messageRows]=await Promise.all([
+   const [studentRows,messageRows,examRows]=await Promise.all([
     portalApi("teacher", "profiles?select=id,full_name,student_number,grade,group_name,phone,parent_name,parent_phone,governorate,city,avatar_url,created_at&role=eq.student&limit=500"),
-    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200")
+    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200"),
+    portalApi("teacher", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,created_at&order=created_at.desc&limit=500")
    ]);
-   setStudents(studentRows||[]);setMessages(messageRows||[]);
+   setStudents(studentRows||[]);setMessages(messageRows||[]);setExams(examRows||[]);
+   const examIds=(examRows||[]).map(x=>x.id);
+   const [attemptRows,questionRows]=examIds.length?await Promise.all([
+    portalApi("teacher","exam_attempts?select=id,exam_id,student_id,started_at,submitted_at,score,graded_at&exam_id=in.("+examIds.join(",")+")&order=started_at.desc&limit=1000"),
+    portalApi("teacher","exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&exam_id=in.("+examIds.join(",")+")&order=sort_order.asc&limit=5000")
+   ]):[[],[]];
+   setAttempts(attemptRows||[]);setExamQuestions(questionRows||[]);
    const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
    setSelected(first);
   }catch(e){
@@ -125,7 +142,7 @@ function TeacherConsole(){
   let active=true;
   const fetchLessons=async()=>{
    if(!selected){setLessons([]);return;}
-   try{const rows=await portalApi("teacher", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,cover_image_url,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
+   try{const rows=await portalApi("teacher", "lessons?select=id,course_id,title,description,content,video_url,duration_minutes,duration_seconds,sort_order,is_published,cover_image_url,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
    catch{if(active)setError("تعذر تحميل المحاضرات لهذا الكورس.");}
   };
   fetchLessons();return()=>{active=false;};
@@ -150,14 +167,72 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
  };
+ const uploadExamQuestionImage=async(file)=>{if(!file)return;setError("");setNotice("");try{const url=await uploadPortalImage(file,"teacher");setExamQuestionForm(old=>({...old,image_url:url}));setNotice("تم رفع صورة السؤال ومعاينتها قبل إضافتها للامتحان.");}catch(e){setError(e.message==="image_too_large"?"حجم صورة السؤال أكبر من 5 ميجابايت.":"تعذر رفع صورة السؤال.");}};
+ const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setUploadingVideo(true);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));setLessonForm(old=>({...old,video_url:path,duration_minutes:"0",duration_seconds:"0"}));setLessonVideoPreviewUrl("");setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");try{const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonVideoPreviewUrl(previewUrl);const measured=await new Promise(resolve=>{const probe=document.createElement("video");probe.preload="metadata";probe.onloadedmetadata=()=>{const value=Number.isFinite(probe.duration)?Math.round(probe.duration):0;probe.removeAttribute("src");probe.load();resolve(value);};probe.onerror=()=>resolve(0);probe.src=previewUrl;});if(measured>0)setLessonForm(old=>({...old,duration_seconds:String(measured),duration_minutes:String(Math.ceil(measured/60))}));setNotice(measured>0?"تم رفع الفيديو واستخراج مدته تلقائيًا. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.":"تم رفع الفيديو. تعذر قراءة المدة تلقائيًا من الملف الحالي.");}catch(previewError){console.error("teacher_video_preview",previewError);setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");}}catch(e){console.error("teacher_video_upload",e);setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"فشل رفع الفيديو نفسه. راجع الاتصال وصلاحية التخزين ثم حاول مرة أخرى.");}finally{setSaving(false);setUploadingVideo(false);}};
  const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
   try{
-   const rows=await portalApi("teacher", "lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...lessonForm,course_id:selected,sort_order:lessons.length+1,is_published:false})});
-   const created=Array.isArray(rows)?rows[0]:rows;
-   if(!created?.id)throw new Error("create_failed");
-   setLessons(old=>[...old,created]);setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:""});setNotice("تم حفظ المحاضرة كمسودة.");
-  }catch{setError("لم يتم حفظ المحاضرة. تحقق من صلاحية الكورس والبيانات.");}
+   const payload={...lessonForm,course_id:selected,sort_order:editingLessonId?(lessons.find(x=>x.id===editingLessonId)?.sort_order||1):lessons.length+1,duration_seconds:Number(lessonForm.duration_seconds)||null,duration_minutes:Number(lessonForm.duration_minutes)||null};
+   if(editingLessonId){
+    const rows=await portalApi("teacher","lessons?id=eq."+encodeURIComponent(editingLessonId),{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify(payload)});
+    const updated=Array.isArray(rows)?rows[0]:rows;
+    setLessons(old=>old.map(x=>x.id===editingLessonId?{...x,...payload,...(updated||{})}:x));setNotice("تم حفظ تعديلات المحاضرة.");
+   }else{
+    const rows=await portalApi("teacher","lessons",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...payload,is_published:false})});
+    const created=Array.isArray(rows)?rows[0]:rows;if(!created?.id)throw new Error("create_failed");
+    setLessons(old=>[...old,created]);setNotice("تم حفظ المحاضرة كمسودة.");
+   }
+   setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});setLessonVideoPreviewUrl("");setEditingLessonId("");
+  }catch(e){setError("لم يتم حفظ المحاضرة. "+(e.message||"تحقق من صلاحية الكورس والبيانات."));}
+  finally{setSaving(false);}
+ };
+ const editLesson=async(lesson)=>{
+  setEditingLessonId(lesson.id);
+  setLessonForm({title:lesson.title||"",description:lesson.description||"",content:lesson.content||"",video_url:lesson.video_url||"",cover_image_url:lesson.cover_image_url||"",duration_minutes:String(lesson.duration_minutes||0),duration_seconds:String(lesson.duration_seconds||0)});
+  setLessonVideoPreviewUrl("");
+  if(lesson.video_url){try{const url=await getLectureVideoUrl(lesson.video_url,"teacher");setLessonVideoPreviewUrl(url);}catch{setNotice("تم فتح بيانات المحاضرة، لكن تعذر تجهيز معاينة الفيديو.");}}
+  setNotice("أنت تعدّل المحاضرة المحددة. احفظ التعديلات عند الانتهاء.");
+ };
+ const addExamQuestion=()=>{
+  const q=examQuestionForm;const choices=q.question_type==="true_false"?["صحيح","خطأ"]:q.choices.split("\n").map(x=>x.trim()).filter(Boolean);
+  if(q.prompt.trim().length<4&&!q.image_url)return setError("اكتب نص السؤال أو ارفع صورة للسؤال.");
+  if(["single_choice","multiple_choice"].includes(q.question_type)&&choices.length<2)return setError("أضف اختيارين على الأقل.");
+  if(["single_choice","multiple_choice","true_false","short_answer"].includes(q.question_type)&&!q.correct_answer.trim())return setError("حدد الإجابة الصحيحة لهذا السؤال.");
+  const correct=q.question_type==="multiple_choice"?q.correct_answer.split("\n").map(x=>x.trim()).filter(Boolean):q.correct_answer.trim();
+  setExamDraftQuestions(old=>[...old,{id:crypto.randomUUID(),prompt:q.prompt.trim(),image_url:q.image_url,question_type:q.question_type,choices,correct_answer:correct,points:Number(q.points)||1}]);
+  setExamQuestionForm({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});setError("");
+ };
+ const createExam=async(e)=>{
+  e.preventDefault();if(!examForm.course_id||examForm.title.trim().length<3||!examDraftQuestions.length)return setError("اختر كورسًا واكتب عنوان الامتحان وأضف سؤالًا واحدًا على الأقل.");
+  setSaving(true);setError("");setNotice("");
+  try{
+   const examRows=await portalApi("teacher","exams",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({course_id:examForm.course_id,title:examForm.title.trim(),duration_minutes:Number(examForm.duration_minutes)||60,opens_at:examForm.opens_at?new Date(examForm.opens_at).toISOString():null,closes_at:examForm.closes_at?new Date(examForm.closes_at).toISOString():null,is_published:false})});
+   const exam=Array.isArray(examRows)?examRows[0]:examRows;if(!exam?.id)throw new Error("exam_create_failed");
+   for(let i=0;i<examDraftQuestions.length;i++){
+    const q=examDraftQuestions[i];const inserted=await portalApi("teacher","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:exam.id,question_type:q.question_type,prompt:(q.image_url?"[[EXAM_IMAGE:"+q.image_url+"]]\n":"")+q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
+    const question=Array.isArray(inserted)?inserted[0]:inserted;if(!question?.id)throw new Error("question_create_failed");
+    if(q.correct_answer!==""&&(!Array.isArray(q.correct_answer)||q.correct_answer.length))await portalApi("teacher","exam_answer_keys",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({question_id:question.id,correct_answer:q.correct_answer})});
+   }
+   setExams(old=>[exam,...old]);setExamQuestions(old=>[...old,...examDraftQuestions.map((q,i)=>({...q,id:crypto.randomUUID(),exam_id:exam.id,sort_order:i+1}))]);
+   setExamForm({title:"",course_id:examForm.course_id,duration_minutes:"60",opens_at:"",closes_at:""});setExamDraftQuestions([]);setNotice("تم حفظ الامتحان كمسودة. راجعه ثم انشره للطلاب.");
+  }catch(err){console.error("teacher_exam_create",err);setError("لم يكتمل حفظ الامتحان. راجع الأسئلة وصلاحيات الكورس.");}
+  finally{setSaving(false);}
+ };
+ const toggleExam=async(exam)=>{
+  setSaving(true);setError("");setNotice("");
+  try{const is_published=!exam.is_published;await portalApi("teacher","exams?id=eq."+encodeURIComponent(exam.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setExams(old=>old.map(x=>x.id===exam.id?{...x,is_published}:x));setNotice(is_published?"تم نشر الامتحان.":"تم إيقاف نشر الامتحان.");}
+  catch{setError("تعذر تحديث حالة الامتحان.");}finally{setSaving(false);}
+ };
+ const openAttempt=async(attempt)=>{
+  setSelectedAttempt(attempt);setGradeDraft(attempt.score===null||attempt.score===undefined?"":String(attempt.score));setAttemptAnswers([]);
+  try{const rows=await portalApi("teacher","exam_answers?select=id,question_id,answer,awarded_points,feedback,exam_questions(prompt,points,question_type)&attempt_id=eq."+encodeURIComponent(attempt.id)+"&order=created_at.asc");setAttemptAnswers(rows||[]);}
+  catch{setError("تعذر تحميل إجابات المحاولة.");}
+ };
+ const gradeAttempt=async()=>{
+  if(!selectedAttempt||gradeDraft==="")return setError("اكتب الدرجة النهائية أولًا.");
+  setSaving(true);setError("");
+  try{const result=await portalApi("teacher","rpc/teacher_grade_exam_attempt",{method:"POST",body:JSON.stringify({p_attempt_id:selectedAttempt.id,p_score:Number(gradeDraft)})});setAttempts(old=>old.map(x=>x.id===selectedAttempt.id?{...x,score:result.score,graded_at:new Date().toISOString()}:x));setSelectedAttempt(old=>({...old,score:result.score,graded_at:new Date().toISOString()}));setNotice("تم حفظ نتيجة الطالب.");}
+  catch{setError("تعذر حفظ الدرجة. تأكد أنها بين صفر والدرجة النهائية.");}
   finally{setSaving(false);}
  };
  const toggleCourse=async(course)=>{
@@ -169,6 +244,16 @@ function TeacherConsole(){
   const is_published=!lesson.is_published;setSaving(true);setError("");setNotice("");
   try{await portalApi("teacher", "lessons?id=eq."+encodeURIComponent(lesson.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setLessons(old=>old.map(x=>x.id===lesson.id?{...x,is_published}:x));setNotice(is_published?"تم نشر المحاضرة.":"تم إخفاء المحاضرة.");}
   catch{setError("تعذر تحديث المحاضرة.");}finally{setSaving(false);}
+ };
+ const deleteLesson=async(lesson)=>{
+  if(!window.confirm("حذف المحاضرة «"+lesson.title+"» نهائيًا؟"))return;
+  setSaving(true);setError("");setNotice("");
+  try{
+   await portalApi("teacher","lessons?id=eq."+encodeURIComponent(lesson.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
+   try{await deletePortalVideo(lesson.video_url,"teacher");}catch(mediaError){console.warn("lecture_media_cleanup",mediaError);}
+   setLessons(old=>old.filter(x=>x.id!==lesson.id));setNotice("تم حذف المحاضرة.");
+  }catch(e){setError("تعذر حذف المحاضرة. "+(e.message||""));}
+  finally{setSaving(false);}
  };
  const current=courses.find(x=>x.id===selected);
  const replyToMessage=async(message)=>{
@@ -186,32 +271,85 @@ function TeacherConsole(){
  if(!profile||profile.role!=="teacher")return <PortalAccess portal="teacher" onSuccess={load}/>;
  return <main className="teacher-shell" dir="rtl">
   <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("teacher");window.location.reload();}}>تسجيل الخروج</button></div></header>
-  {error&&<p className="teacher-alert error">{error}</p>}{notice&&<p className="teacher-alert success">{notice}</p>}
-  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article></section>
+  {error&&<p className="teacher-alert error" role="status">{error}</p>}{notice&&<p className="teacher-alert success" role="status">{notice}</p>}
+  <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article><article><small>الامتحانات</small><strong>{exams.length}</strong></article><article><small>محاولات الطلاب</small><strong>{attempts.length}</strong></article></section>
   <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
-   <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}>الكورسات والمحاضرات</button>
+   <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}>لوحة المتابعة</button>
+   <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}>الكورسات</button>
+   <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}>المحاضرات</button>
    <button className={section==="students"?"active":""} onClick={()=>setSection("students")}>متابعة الطلاب <b>{students.length}</b></button>
+   <button className={section==="exams"?"active":""} onClick={()=>setSection("exams")}>الامتحانات <b>{exams.length}</b></button>
+   <button className={section==="results"?"active":""} onClick={()=>setSection("results")}>النتائج <b>{attempts.length}</b></button>
+   <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}>جروبات الصفوف</button>
    <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}>مراسلات الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
   </nav>
-  {section==="courses"&&<div className="teacher-layout">
+  {section==="overview"&&<section className="teacher-panel teacher-overview-panel" dir="rtl">
+   <div className="teacher-panel-heading"><div><span>TEACHER CONTROL CENTER</span><h2>ملخص إدارة المدرس</h2></div><small>أهلاً {profile.full_name||"مستر عماد"}</small></div>
+   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>تابع محتواك وطلابك وامتحاناتك ونتائجهم، وانتقل مباشرة للقسم المطلوب.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
+   <div className="teacher-overview-actions">
+    <button onClick={()=>setSection("courses")}><span>01</span><b>إدارة الكورسات</b><small>إنشاء الكورسات وتعديلها ونشرها</small><strong>{courses.length} كورس</strong></button>
+    <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة المحاضرات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} محاضرة</strong></button>
+    <button onClick={()=>setSection("students")}><span>03</span><b>متابعة الطلاب</b><small>عرض الطلاب المرتبطين بكورساتك</small><strong>{students.length} طالب</strong></button>
+    <button onClick={()=>setSection("exams")}><span>04</span><b>الامتحانات</b><small>إنشاء الامتحانات وإدارة الأسئلة</small><strong>{exams.length} امتحان</strong></button>
+    <button onClick={()=>setSection("results")}><span>05</span><b>النتائج والتصحيح</b><small>مراجعة المحاولات واعتماد الدرجات</small><strong>{attempts.length} محاولة</strong></button>
+    <button onClick={()=>setSection("groups")}><span>06</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
+    <button onClick={()=>setSection("messages")}><span>07</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
+   </div>
+   <div className="teacher-overview-bottom">
+    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p><p>محاولات تنتظر التصحيح: <b>{attempts.filter(x=>x.submitted_at&&!x.graded_at).length}</b></p></article>
+    <article><h3>تذكير بالصلاحيات</h3><p>هذه اللوحة مخصصة لإدارة كورساتك وطلاب الصفوف المرتبطة بها. إعدادات المالك والحسابات والاشتراكات العامة تظل في لوحة المالك.</p></article>
+   </div>
+  </section>}
+  {(section==="courses"||section==="lessons")&&<div className={"teacher-layout teacher-layout-"+section}>
    <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>COURSE LIBRARY</span><h2>كورساتي</h2></div><small>{courses.length} كورس</small></div>
     {courses.length?<div className="teacher-course-list">{courses.map(course=><button key={course.id} className={selected===course.id?"teacher-course active":"teacher-course"} onClick={()=>setSelected(course.id)}>{course.cover_image_url?<img className="teacher-course-thumb" src={course.cover_image_url} alt=""/>:<span className="teacher-course-thumb teacher-course-thumb-empty">C</span>}<span><b>{course.title}</b><small>{course.grade||"صف غير محدد"} · {course.subject||"رياضيات"}</small></span><i className={course.status==="published"?"published":"draft"}>{course.status==="published"?"منشور":"مسودة"}</i></button>)}</div>:<div className="teacher-empty">لم تنشئ كورسات بعد. ابدأ بإنشاء أول كورس.</div>}
     <form className="teacher-form" onSubmit={createCourse}><h3>إنشاء كورس جديد</h3><input required value={courseForm.title} onChange={e=>setCourseForm({...courseForm,title:e.target.value})} placeholder="اسم الكورس"/><div className="teacher-form-grid"><select value={courseForm.grade} onChange={e=>setCourseForm({...courseForm,grade:e.target.value})}><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select><input value={courseForm.subject} onChange={e=>setCourseForm({...courseForm,subject:e.target.value})} placeholder="المادة"/></div><textarea value={courseForm.description} onChange={e=>setCourseForm({...courseForm,description:e.target.value})} placeholder="وصف الكورس"/><label className="teacher-image-label">صورة غلاف الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadCourseCover(e.target.files?.[0])}/></label>{courseForm.cover_image_url&&<img className="teacher-course-preview" src={courseForm.cover_image_url} alt="معاينة غلاف الكورس"/>}<button disabled={saving||!courseForm.cover_image_url}>إنشاء كمسودة</button></form>
    </section>
-   <section className="teacher-panel teacher-lessons-panel"><div className="teacher-panel-heading"><div><span>LECTURE MANAGEMENT</span><h2>{current?current.title:"اختر كورسًا"}</h2></div>{current?<i className={current.status==="published"?"published":"draft"}>{current.status==="published"?"منشور":"مسودة"}</i>:null}</div>
+   <section className="teacher-panel teacher-lessons-panel">{section==="lessons"&&<label className="teacher-lesson-course-picker">اختيار الكورس<select value={selected} onChange={e=>setSelected(e.target.value)}>{courses.map(course=><option key={course.id} value={course.id}>{course.title}</option>)}</select></label>}<div className="teacher-panel-heading"><div><span>LECTURE MANAGEMENT</span><h2>{current?current.title:"اختر كورسًا"}</h2></div>{current?<i className={current.status==="published"?"published":"draft"}>{current.status==="published"?"منشور":"مسودة"}</i>:null}</div>
     {current?<>{current.cover_image_url&&<img className="teacher-course-detail-image" src={current.cover_image_url} alt={current.title}/>}<div className="teacher-course-actions"><p>{current.description||"لا يوجد وصف للكورس."}</p><button disabled={saving} onClick={()=>toggleCourse(current)}>{current.status==="published"?"إيقاف النشر":"نشر الكورس"}</button></div>
-     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="teacher-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
-     <form className="teacher-form" onSubmit={createLesson}><h3>إضافة محاضرة</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="رابط الفيديو (اختياري)"/><textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><label className="teacher-image-label">صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadLessonCover(e.target.files?.[0])}/></label>{lessonForm.cover_image_url&&<img className="teacher-course-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button disabled={saving||!lessonForm.cover_image_url}>حفظ المحاضرة كمسودة</button></form>
+     <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="teacher-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="teacher-lesson-actions"><button disabled={saving} onClick={()=>editLesson(lesson)}>تعديل</button><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="teacher-danger-button" disabled={saving} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}{!lessons.length?<div className="teacher-empty">لا توجد محاضرات في هذا الكورس بعد.</div>:null}</div>
+     <form className="teacher-form" onSubmit={createLesson}><h3>{editingLessonId?"تعديل المحاضرة":"إضافة محاضرة"}</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان المحاضرة"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><div className="teacher-video-selected">{lessonForm.video_url?(Number(lessonForm.duration_seconds)>0?"مدة الفيديو المستخرجة تلقائيًا: "+Math.floor(Number(lessonForm.duration_seconds)/60)+" دقيقة و"+(Number(lessonForm.duration_seconds)%60)+" ثانية":"تم اختيار الفيديو — ستظهر مدته بعد تجهيز المعاينة"):"مدة المحاضرة تُستخرج تلقائيًا من الفيديو بعد رفعه"}</div><label className="teacher-video-label"><span>اختيار فيديو المحاضرة من الهاتف أو الجهاز</span><small>افتح المعرض أو الملفات واختر الفيديو مباشرة — MP4 أو WEBM أو MOV، حتى 1GB · رفع متقطع قابل للاستكمال</small><input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={uploadingVideo} onChange={e=>uploadLessonVideo(e.target.files?.[0])}/></label>{uploadingVideo&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>لو الاتصال انقطع، اختر نفس الملف مرة أخرى لاستكمال الرفع.</small></div>}{lessonForm.video_url&&(lessonVideoPreviewUrl?(getLectureEmbedUrl(lessonVideoPreviewUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoPreviewUrl)} title="معاينة فيديو المحاضرة" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>:<video className="teacher-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>):<div className="course-player-error">تم رفع الفيديو وحفظ مساره. المعاينة الخاصة لم تجهز بعد؛ احفظ المحاضرة ثم أعد المحاولة.</div>)}<textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="محتوى المحاضرة أو ملاحظات الشرح"/><label className="teacher-image-label">صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadLessonCover(e.target.files?.[0])}/></label>{lessonForm.cover_image_url&&<img className="teacher-course-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button disabled={saving||!lessonForm.cover_image_url}>{saving?"جارٍ الحفظ...":editingLessonId?"حفظ التعديلات":"حفظ المحاضرة كمسودة"}</button>{editingLessonId&&<button type="button" onClick={()=>{setEditingLessonId("");setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});setLessonVideoPreviewUrl("");}}>إلغاء التعديل</button>}</form>
     </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
    </section>
   </div>}
+  {section==="groups"&&<ChatWorkspace profile={profile} mode="teacher" portal="teacher"/>}
   {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
-   <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>الطلاب التابعون لك</h2></div><small>{students.length} طالب</small></div>
+   <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>إدارة ومتابعة الطلاب</h2></div><small>{students.length} طالب</small></div>
+   <input className="teacher-student-search" value={studentFilter} onChange={e=>setStudentFilter(e.target.value)} placeholder="ابحث باسم الطالب أو رقم الحساب أو المجموعة..."/>
    <p className="teacher-directory-note">تظهر هنا حسابات الطلاب في الصفوف المرتبطة بالكورسات التي تديرها فقط.</p>
-   <div className="teacher-student-grid">{students.map(student=><article className="teacher-student-card" key={student.id}>
+   <div className="teacher-student-grid">{students.filter(s=>[s.full_name,s.student_number,s.grade,s.group_name,s.phone].join(" ").toLowerCase().includes(studentFilter.toLowerCase())).map(student=><article className="teacher-student-card" key={student.id}>
     <div className="teacher-student-top"><span className="teacher-student-avatar">{student.avatar_url?<img src={student.avatar_url} alt=""/>:(student.full_name||"ط").slice(0,1)}</span><div><b>{student.full_name||"طالب"}</b><small>رقم الطالب: {student.student_number||"—"}</small></div></div>
     <dl><div><dt>الصف</dt><dd>{student.grade||"—"}</dd></div><div><dt>المجموعة</dt><dd>{student.group_name||"—"}</dd></div><div><dt>الهاتف</dt><dd dir="ltr">{student.phone||"—"}</dd></div><div><dt>ولي الأمر</dt><dd>{student.parent_name||"—"}</dd></div><div><dt>هاتف ولي الأمر</dt><dd dir="ltr">{student.parent_phone||"—"}</dd></div><div><dt>المحافظة / المدينة</dt><dd>{[student.governorate,student.city].filter(Boolean).join(" / ")||"—"}</dd></div></dl>
    </article>)}{!students.length&&<div className="teacher-empty large">لا يوجد طلاب ظاهرون حتى الآن في الصفوف المرتبطة بكورساتك.</div>}</div>
+  </section>}
+  {section==="exams"&&<div className="teacher-exam-layout" dir="rtl">
+   <section className="teacher-panel">
+    <div className="teacher-panel-heading"><div><span>EXAM BUILDER</span><h2>إنشاء امتحان احترافي</h2></div><small>{exams.length} امتحان</small></div>
+    <form className="teacher-form teacher-exam-form" onSubmit={createExam}>
+     <input required value={examForm.title} onChange={e=>setExamForm({...examForm,title:e.target.value})} placeholder="اسم الامتحان"/>
+     <select required value={examForm.course_id} onChange={e=>setExamForm({...examForm,course_id:e.target.value})}><option value="">اختر الكورس</option>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select>
+     <div className="teacher-form-grid"><label>مدة الامتحان بالدقائق<input type="number" min="1" max="600" value={examForm.duration_minutes} onChange={e=>setExamForm({...examForm,duration_minutes:e.target.value})}/></label><label>يفتح في<input type="datetime-local" value={examForm.opens_at} onChange={e=>setExamForm({...examForm,opens_at:e.target.value})}/></label><label>يغلق في<input type="datetime-local" value={examForm.closes_at} onChange={e=>setExamForm({...examForm,closes_at:e.target.value})}/></label></div>
+     <div className="teacher-exam-question-editor"><h3>بناء الأسئلة</h3><select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="multiple_choice">اختر أكثر من إجابة</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select>
+      <textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال أو ارفع صورة السؤال..."/><label className="teacher-image-label exam-question-image-label">صورة السؤال (اختياري) — JPG / PNG / WEBP<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadExamQuestionImage(e.target.files?.[0])}/></label>{examQuestionForm.image_url&&<img className="exam-question-image-preview" src={examQuestionForm.image_url} alt="معاينة صورة السؤال"/>}
+      {["single_choice","multiple_choice"].includes(examQuestionForm.question_type)&&<textarea rows="4" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})} placeholder={"كل اختيار في سطر منفصل\nالاختيار الثاني\nالاختيار الثالث\nالاختيار الرابع"}/>}
+      {examQuestionForm.question_type!=="essay"&&<textarea rows={examQuestionForm.question_type==="multiple_choice"?3:1} value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder={examQuestionForm.question_type==="multiple_choice"?"الإجابات الصحيحة، كل إجابة في سطر":"الإجابة الصحيحة"}/>}
+      <div className="teacher-form-grid"><label>درجة السؤال<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label><button type="button" onClick={addExamQuestion}>إضافة السؤال</button></div>
+     </div>
+     {examDraftQuestions.length>0&&<div className="teacher-exam-draft-list"><b>أسئلة الامتحان ({examDraftQuestions.length})</b>{examDraftQuestions.map((q,i)=><article key={q.id}><span>{i+1}. {q.prompt||"سؤال بصورة"}{q.image_url&&<img className="exam-question-draft-thumb" src={q.image_url} alt="صورة السؤال"/>}</span><small>{q.points} درجة · {q.question_type}</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></article>)}</div>}
+     <button disabled={saving||!examDraftQuestions.length}>حفظ الامتحان كمسودة</button>
+    </form>
+   </section>
+   <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>EXAM LIBRARY</span><h2>الامتحانات المنشأة</h2></div></div>
+    <div className="teacher-exam-list">{exams.map(exam=><article key={exam.id}><div><b>{exam.title}</b><small>{courses.find(c=>c.id===exam.course_id)?.title||"الكورس"} · {exam.duration_minutes} دقيقة · {examQuestions.filter(q=>q.exam_id===exam.id).length} سؤال</small></div><span className={exam.is_published?"published":"draft"}>{exam.is_published?"منشور":"مسودة"}</span><button disabled={saving} onClick={()=>toggleExam(exam)}>{exam.is_published?"إيقاف النشر":"نشر للطلاب"}</button></article>)}{!exams.length&&<div className="teacher-empty">لا توجد امتحانات بعد. ابدأ ببناء أول امتحان.</div>}</div>
+   </section>
+  </div>}
+  {section==="results"&&<section className="teacher-panel teacher-results-panel" dir="rtl">
+   <div className="teacher-panel-heading"><div><span>STUDENT PERFORMANCE</span><h2>نتائج ومحاولات الطلاب</h2></div><small>{attempts.length} محاولة</small></div>
+   <div className="teacher-results-list">{attempts.map(attempt=>{const student=students.find(s=>s.id===attempt.student_id),exam=exams.find(e=>e.id===attempt.exam_id),max=examQuestions.filter(q=>q.exam_id===attempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0);return <article key={attempt.id}><div><b>{student?.full_name||"طالب"}</b><small>{student?.student_number||"—"} · {exam?.title||"امتحان"} · {new Date(attempt.started_at).toLocaleString("ar-EG")}</small></div><strong>{attempt.score===null||attempt.score===undefined?"—":Number(attempt.score).toLocaleString("ar-EG")} / {max}</strong><span>{!attempt.submitted_at?"لم يسلّم":attempt.graded_at?"تم التصحيح":"بانتظار التصحيح"}</span><button onClick={()=>openAttempt(attempt)}>عرض الإجابات / التصحيح</button></article>})}{!attempts.length&&<div className="teacher-empty">ستظهر هنا محاولات الطلاب ونتائجهم بعد بدء الامتحانات.</div>}</div>
+   {selectedAttempt&&<div className="teacher-attempt-review"><div className="teacher-panel-heading"><div><span>ATTEMPT REVIEW</span><h3>{students.find(s=>s.id===selectedAttempt.student_id)?.full_name||"مراجعة المحاولة"}</h3></div><button onClick={()=>setSelectedAttempt(null)}>إغلاق</button></div>
+    {attemptAnswers.map((answer,i)=>{const q=answer.exam_questions||{};return <article key={answer.id}>{(()=>{const match=String(q.prompt||"").match(/^\\[\\[EXAM_IMAGE:(https?:\\/\\/[^\\]]+)\\]\\]\\n?/);const prompt=match?String(q.prompt).slice(match[0].length):String(q.prompt||"السؤال");return <>{match&&<img className="exam-runner-question-image" src={match[1]} alt="صورة السؤال"/>}<b>{i+1}. {prompt||"السؤال"}</b></>;})()}<p>إجابة الطالب: {Array.isArray(answer.answer)?answer.answer.join("، "):String(answer.answer??"—")}</p><small>الدرجة الآلية: {answer.awarded_points} / {q.points||0}</small></article>})}
+    {selectedAttempt.submitted_at&&<div className="teacher-manual-grade"><label>الدرجة النهائية من {examQuestions.filter(q=>q.exam_id===selectedAttempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0)}<input type="number" min="0" max={examQuestions.filter(q=>q.exam_id===selectedAttempt.exam_id).reduce((sum,q)=>sum+Number(q.points||0),0)} step="0.5" value={gradeDraft} onChange={e=>setGradeDraft(e.target.value)}/></label><button disabled={saving||gradeDraft===""} onClick={gradeAttempt}>حفظ واعتماد النتيجة</button></div>}
+   </div>}
   </section>}
   {section==="messages"&&<section className="teacher-panel teacher-inbox" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة</small></div>
@@ -245,7 +383,7 @@ function App(){
  if(window.location.pathname.replace(/\/$/,"")==="/teacher")return <TeacherConsole/>;
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
  if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch(error){clearStudentSession();go("login");throw error;}}}/></div>;
- const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai","groups"].includes(page);
+ const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;
  return <StudentExperience page={page} profile={profile} grade={grade} unread={unread} go={go} logout={logout}>
@@ -256,7 +394,7 @@ function App(){
    {page==="admin"&&profile?.role==="admin"?<AdminPage/>:null}
    {page==="notifications"?<NotificationsPage notifications={notifications} onRead={async n=>{try{await markStudentNotificationRead(n.id);setNotifications(old=>old.map(x=>x.id===n.id?{...x,read_at:new Date().toISOString()}:x));}catch{notify({type:"error",title:"تعذر تحديث الإشعار",message:"حاول مرة أخرى."});}}} go={go}/>:null}
    {isLocked?<LockedPage go={go} grade={grade}/>:null}
-   {!isLocked&&["courses","lessons","exams"].includes(page)?<LearningPage page={page} grade={grade}/>:null}
+   {!isLocked&&["courses","lessons","exams"].includes(page)?<LearningPage page={page} grade={grade} profile={profile}/>:null}
    {!isLocked&&["homework","files","results","schedule","live","ai","groups"].includes(page)?<SectionPage page={page} go={go} profile={profile}/>:null}
    {page==="messages"?<SectionPage page={page} go={go} profile={profile}/>:null}
    {page==="admin"&&profile?.role!=="admin"?<SectionPage page={page} go={go}/>:null}
@@ -368,16 +506,57 @@ function ProfilePage({profile,subscription,notifications=[],grade,go,loading}){
 }
 function SettingsPage({profile}){return <div className="platform-page"><PageBanner eyebrow="ACCOUNT SETTINGS" title="إعدادات الحساب" description="إعدادات حساب الطالب وتجربته التعليمية." art="settings"/><div className="platform-settings-grid">{[["الملف الشخصي","بيانات الحساب وصورة الطالب","user"],["الأمان وتسجيل الدخول","بيانات الدخول والجلسات","lock"],["الإشعارات","تنبيهات المنصة والواجبات والامتحانات","bell"],["الاشتراك","حالة الاشتراك وتاريخ الانتهاء","ticket"]].map(([t,d,i])=><article key={t}><Icon name={i} size={22}/><b>{t}</b><p>{d}</p></article>)}</div><p className="platform-settings-note">الحساب الحالي: {profile?.full_name||"طالب"}</p></div>}
 function NotificationsPage({notifications,onRead,go}){return <div className="platform-page"><PageBanner eyebrow="NOTIFICATION CENTER" title="الإشعارات" description="تابع كل التنبيهات المرتبطة بحسابك التعليمي." art="bell"/><div className="platform-notification-list">{notifications.length?notifications.map(n=><article key={n.id} className={n.read_at?"is-read":""}><span className="platform-notification-icon"><Icon name="bell"/></span><div><b>{n.title}</b><p>{n.body}</p><small>{new Date(n.created_at).toLocaleString("ar-EG")}</small></div><div className="platform-notification-actions">{!n.read_at&&<button onClick={()=>onRead(n)}>تحديد كمقروء</button>}{n.action_url&&<button onClick={()=>go(n.action_url)}>فتح</button>}</div></article>):<div className="platform-empty-state"><Icon name="bell" size={34}/><b>لا توجد إشعارات حتى الآن</b><span>ستظهر هنا تنبيهات الحساب والواجبات والامتحانات.</span></div>}</div></div>}
-function LearningPage({page,grade}){
- const [items,setItems]=useState([]),[busy,setBusy]=useState(true),[selected,setSelected]=useState(null);
+function LearningPage({page,grade,profile}){
+ const [items,setItems]=useState([]),[busy,setBusy]=useState(true),[selected,setSelected]=useState(null),[examOpen,setExamOpen]=useState(false),[lessonVideoUrl,setLessonVideoUrl]=useState(""),[lessonVideoError,setLessonVideoError]=useState(""),[courseLessons,setCourseLessons]=useState([]),[courseLessonsBusy,setCourseLessonsBusy]=useState(false),[selectedCourseLesson,setSelectedCourseLesson]=useState(null),[courseLessonVideoUrl,setCourseLessonVideoUrl]=useState(""),[courseLessonVideoError,setCourseLessonVideoError]=useState("");
  const configs={
   courses:{title:"الكورسات والوحدات",desc:"المحتوى التعليمي المنشور والمخصص لصفك.",table:"courses",select:"id,title,description,subject,grade,cover_image_url,created_at",filter:"status=eq.published",art:"book"},
-  lessons:{title:"المحاضرات",desc:"المحاضرات والدروس المرتبطة بالكورسات المتاحة.",table:"lessons",select:"id,title,description,video_url,sort_order,course_id,cover_image_url,created_at",filter:"is_published=eq.true",art:"play"},
+  lessons:{title:"المحاضرات",desc:"المحاضرات والدروس المرتبطة بالكورسات المتاحة.",table:"lessons",select:"id,title,description,video_url,duration_minutes,duration_seconds,sort_order,course_id,cover_image_url,created_at",filter:"is_published=eq.true",art:"play"},
   exams:{title:"الامتحانات",desc:"الاختبارات المنشورة لقياس مستواك.",table:"exams",select:"id,title,duration_minutes,opens_at,closes_at,course_id,cover_image_url,created_at,courses(title,subject,grade)",filter:"is_published=eq.true",art:"exam"}
  };
  const cfg=configs[page];
  useEffect(()=>{let alive=true;setBusy(true);setSelected(null);const query=cfg.table+"?select="+cfg.select+"&"+cfg.filter+"&order=created_at.desc";studentApi(query).then(rows=>{if(alive)setItems(rows||[]);}).catch(e=>{console.error("learning_load",e);if(alive)setItems([]);}).finally(()=>{if(alive)setBusy(false);});return()=>{alive=false;};},[page]);
- return <div className="platform-page"><PageBanner eyebrow={"GRADE CONTENT / "+(grade||"STUDENT").toUpperCase()} title={cfg.title} description={cfg.desc} art={cfg.art}/><div className="platform-content-list-heading"><h2>{cfg.title}</h2><span>{items.length} عنصر</span></div>{busy?<div className="platform-empty-state">جارٍ تحميل المحتوى من قاعدة البيانات...</div>:items.length?<div className="learning-media-grid">{items.map(item=><button type="button" className="learning-media-card" key={item.id} onClick={()=>setSelected(item)}>
+ useEffect(()=>{
+  let alive=true;
+  setLessonVideoUrl("");setLessonVideoError("");
+  if(page!=="lessons"||!selected?.video_url)return;
+  getLectureVideoUrl(selected.video_url,"student").then(url=>{if(alive)setLessonVideoUrl(url);}).catch(error=>{console.error("lecture_video_access",error);if(alive)setLessonVideoError("تعذر فتح الفيديو. تأكد من أن اشتراكك نشط وأن المحاضرة منشورة.");});
+  return()=>{alive=false;};
+ },[page,selected?.id,selected?.video_url]);
+ useEffect(()=>{
+  let alive=true;
+  setCourseLessons([]);setSelectedCourseLesson(null);setCourseLessonVideoUrl("");setCourseLessonVideoError("");
+  if(page!=="courses"||!selected?.id)return;
+  setCourseLessonsBusy(true);
+  studentApi("lessons?select=id,title,description,video_url,duration_minutes,duration_seconds,sort_order,cover_image_url&course_id=eq."+encodeURIComponent(selected.id)+"&is_published=eq.true&order=sort_order.asc")
+   .then(rows=>{if(alive)setCourseLessons(rows||[]);})
+   .catch(error=>{console.error("course_lessons_load",error);if(alive)setCourseLessons([]);})
+   .finally(()=>{if(alive)setCourseLessonsBusy(false);});
+  return()=>{alive=false;};
+ },[page,selected?.id]);
+ useEffect(()=>{
+  let alive=true;
+  setCourseLessonVideoUrl("");setCourseLessonVideoError("");
+  if(page!=="courses"||!selectedCourseLesson?.video_url)return;
+  getLectureVideoUrl(selectedCourseLesson.video_url,"student")
+   .then(url=>{if(alive)setCourseLessonVideoUrl(url);})
+   .catch(error=>{console.error("course_lecture_video_access",error);if(alive)setCourseLessonVideoError("تعذر تشغيل المحاضرة. تأكد من أن اشتراكك نشط وأن المحاضرة منشورة.");});
+  return()=>{alive=false;};
+ },[page,selectedCourseLesson?.id,selectedCourseLesson?.video_url]);
+
+ const retryLessonVideo=async()=>{
+  if(!selected?.video_url)return;
+  setLessonVideoError("");
+  try{setLessonVideoUrl(await getLectureVideoUrl(selected.video_url,"student"));}
+  catch(error){console.error("lecture_video_retry",error);setLessonVideoError("تعذر الحصول على رابط تشغيل آمن. تأكد من الاشتراك ونشر المحاضرة.");}
+ };
+ const retryCourseLessonVideo=async()=>{
+  if(!selectedCourseLesson?.video_url)return;
+  setCourseLessonVideoError("");
+  try{setCourseLessonVideoUrl(await getLectureVideoUrl(selectedCourseLesson.video_url,"student"));}
+  catch(error){console.error("course_lecture_video_retry",error);setCourseLessonVideoError("تعذر الحصول على رابط تشغيل آمن. تأكد من الاشتراك ونشر المحاضرة.");}
+ };
+
+ return <div className={"platform-page learning-page learning-page-"+page}><PageBanner eyebrow={"GRADE CONTENT / "+(grade||"STUDENT").toUpperCase()} title={cfg.title} description={cfg.desc} art={cfg.art}/><div className="platform-content-list-heading"><h2>{cfg.title}</h2><span>{items.length} عنصر</span></div>{busy?<div className="platform-empty-state">جارٍ تحميل المحتوى من قاعدة البيانات...</div>:items.length?<div className="learning-media-grid">{items.map(item=><button type="button" className="learning-media-card" key={item.id} onClick={()=>setSelected(item)}>
   {item.cover_image_url?<img src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="learning-media-placeholder"><Icon name={cfg.art} size={32}/></span>}
   <span className="learning-media-card-copy"><b>{item.title}</b><small>{item.description||item.subject||item.courses?.title||"محتوى تعليمي"}</small>{item.duration_minutes&&<em>المدة: {item.duration_minutes} دقيقة</em>}</span>
   <span className="learning-media-open">عرض التفاصيل</span>
@@ -387,10 +566,11 @@ function LearningPage({page,grade}){
   {selected.cover_image_url?<img className="learning-detail-image" src={selected.cover_image_url} alt={selected.title}/>:<div className="learning-detail-placeholder"><Icon name={cfg.art} size={38}/></div>}
   <span className="platform-eyebrow">{cfg.title}</span><h2>{selected.title}</h2>
   <p>{selected.description||"تفاصيل المحتوى التعليمي."}</p>
-  {page==="courses"&&<div className="learning-detail-meta"><span>المادة: {selected.subject||"رياضيات"}</span><span>الصف: {selected.grade||grade}</span></div>}
-  {page==="exams"&&<div className="learning-detail-meta"><span>الكورس: {selected.courses?.title||"—"}</span><span>المدة: {selected.duration_minutes} دقيقة</span><span>موعد الفتح: {selected.opens_at?new Date(selected.opens_at).toLocaleString("ar-EG"):"متاح حسب الجدول"}</span><span>موعد الإغلاق: {selected.closes_at?new Date(selected.closes_at).toLocaleString("ar-EG"):"—"}</span></div>}
-  {page==="lessons"&&<div className="learning-detail-meta"><span>ترتيب المحاضرة: {selected.sort_order||"—"}</span>{selected.video_url&&<a href={selected.video_url} target="_blank" rel="noreferrer">فتح المحاضرة</a>}</div>}
+  {page==="courses"&&<><div className="learning-detail-meta"><span>المادة: {selected.subject||"رياضيات"}</span><span>الصف: {selected.grade||grade}</span></div><section className="course-lesson-browser"><div className="course-lesson-browser-head"><div><b>محاضرات الكورس</b><small>افتح أي محاضرة وشاهدها من داخل الكورس</small></div><span>{courseLessons.length} محاضرة</span></div>{courseLessonsBusy?<p className="course-lesson-empty">جارٍ تجهيز قائمة المحاضرات...</p>:courseLessons.length?<div className="course-lesson-items">{courseLessons.map((lesson,index)=><button type="button" key={lesson.id} className={selectedCourseLesson?.id===lesson.id?"course-lesson-item active":"course-lesson-item"} onClick={()=>setSelectedCourseLesson(lesson)}>{lesson.cover_image_url?<img src={lesson.cover_image_url} alt=""/>:<span className="course-lesson-index">{String(index+1).padStart(2,"0")}</span>}<span><b>{lesson.title}</b><small>{lesson.description||"محاضرة تعليمية"} · {lesson.duration_seconds?Math.floor(lesson.duration_seconds/60)+" دقيقة "+(lesson.duration_seconds%60)+" ثانية":lesson.duration_minutes?lesson.duration_minutes+" دقيقة":"المدة من الفيديو"}</small></span><i>تشغيل</i></button>)}</div>:<p className="course-lesson-empty">لم تُنشر محاضرات في هذا الكورس بعد.</p>}{selectedCourseLesson&&<div className="course-selected-player"><div><b>{selectedCourseLesson.title}</b><small>مشغل المحاضرة داخل الكورس</small></div>{courseLessonVideoUrl?(getLectureEmbedUrl(courseLessonVideoUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(courseLessonVideoUrl)} title={selectedCourseLesson.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy"/>:<video key={courseLessonVideoUrl} src={courseLessonVideoUrl} poster={selectedCourseLesson.cover_image_url||undefined} controls playsInline preload="metadata" onError={()=>{setCourseLessonVideoError("تعذر تشغيل ملف الفيديو. لو الملف بصيغة MOV أو بترميز غير مدعوم، حوّله إلى MP4 بترميز H.264.");setCourseLessonVideoUrl("");}}/>):<div className="course-player-error"><p>{courseLessonVideoError||(selectedCourseLesson.video_url?"جارٍ تجهيز الفيديو للتشغيل...":"لم يتم ربط فيديو بهذه المحاضرة بعد.")}</p>{selectedCourseLesson.video_url&&<button type="button" onClick={retryCourseLessonVideo}>إعادة محاولة التشغيل</button>}</div>}</div>}</section></>}
+  {page==="exams"&&<><div className="learning-detail-meta"><span>الكورس: {selected.courses?.title||"—"}</span><span>المدة: {selected.duration_minutes} دقيقة</span><span>موعد الفتح: {selected.opens_at?new Date(selected.opens_at).toLocaleString("ar-EG"):"متاح حسب الجدول"}</span><span>موعد الإغلاق: {selected.closes_at?new Date(selected.closes_at).toLocaleString("ar-EG"):"—"}</span></div><button className="learning-start-exam" onClick={()=>setExamOpen(true)}>ابدأ الامتحان الآن</button></>}
+  {page==="lessons"&&<><div className="learning-detail-meta"><span>ترتيب المحاضرة: {selected.sort_order||"—"}</span><span>المدة: {selected.duration_seconds?Math.floor(selected.duration_seconds/60)+" دقيقة "+(selected.duration_seconds%60)+" ثانية":selected.duration_minutes?selected.duration_minutes+" دقيقة":"تُقرأ من الفيديو"}</span></div>{selected.video_url&&<div className="learning-video-player"><b>مشغل المحاضرة</b>{lessonVideoUrl?(getLectureEmbedUrl(lessonVideoUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoUrl)} title={selected.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen loading="lazy"/>:<video key={lessonVideoUrl} src={lessonVideoUrl} poster={selected.cover_image_url||undefined} controls playsInline preload="metadata" onError={()=>{setLessonVideoError("تعذر تشغيل ملف الفيديو. استخدم MP4 بترميز H.264 أو WEBM مدعومًا.");setLessonVideoUrl("");}}/>):<div className="course-player-error"><small>{lessonVideoError||"جارٍ تجهيز رابط تشغيل آمن للمحاضرة..."}</small>{selected.video_url&&<button type="button" onClick={retryLessonVideo}>إعادة محاولة التشغيل</button>}</div>}</div>}</>}
  </section></div>}
+ {examOpen&&selected&&page==="exams"&&<ExamRunner exam={selected} profile={profile} studentApi={studentApi} onClose={()=>setExamOpen(false)}/>}
  </div>;
 }
 
@@ -407,7 +587,8 @@ function HomeworkPage({profile}){
 }
 
 function SectionPage({page,go,profile}){
- if(page==="messages")return <SupportCenter profile={profile}/>;
+ if(page==="messages")return <ChatWorkspace profile={profile} mode="support" portal="student"/>;
+ if(page==="groups")return <ChatWorkspace profile={profile} mode="groups" portal="student"/>;
  if(page==="results")return <StudentResults/>;
  const data={homework:["الواجبات والتدريبات","تابع التكليفات والتدريبات المطلوبة منك.","task"],files:["المذكرات والملفات","مكتبة المذكرات والملخصات وأوراق العمل.","file"],schedule:["جدول الحصص","مواعيد المحاضرات والامتحانات في جدول منظم.","calendar"],live:["المحاضرات المباشرة","تابع مواعيد البث المباشر والمحاضرات التفاعلية.","live"],ai:["المساعد الذكي","مساعد رياضيات مخصص لصفك الدراسي.","spark"],groups:["الجروبات الدراسية","مساحات تواصل منظمة لطلاب نفس الصف والمجموعة، مع إشراف وإعلانات ومناقشات تعليمية.","users"],admin:["إدارة المنصة","إدارة المحتوى والطلاب والاشتراكات والصلاحيات.","settings"]}[page]||["القسم","","book"];
  const unavailable={homework:"لا يوجد حتى الآن جدول واجبات مرتبط بحسابك في قاعدة البيانات.",files:"مكتبة الملفات لم يتم تجهيز جدولها ورفع ملفاتها بعد.",schedule:"جدول الحصص يحتاج إلى ربط مواعيد الحصص الفعلية من الإدارة.",live:"لا توجد خدمة بث مباشر مفعّلة ومتصلة بالمنصة حتى الآن.",ai:"المساعد الذكي يحتاج إلى ربط خدمة الذكاء الاصطناعي ومصادر المنهج.",groups:"خدمة الجروبات الدراسية لم يتم تجهيزها بعد."};
