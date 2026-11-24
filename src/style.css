@@ -2028,3 +2028,10 @@ body.admin-scroll-mode{width:100%!important}
 .learning-video-player-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .learning-video-player-heading b{font-size:14px;color:#f3dfb4}
 .learning-video-player-heading span{font-size:10px;color:#9fb1c8}
+
+.teacher-live-pending-title{font-size:17px;color:#f2d493}
+.teacher-live-form p{margin:0;color:#b4c3d5;font-size:11px;line-height:2}
+.teacher-live-provider{display:grid;gap:5px;padding:13px;border:1px solid #d8b67555;border-radius:12px;background:linear-gradient(120deg,#1b3b56,#102438)}
+.teacher-live-provider span{font-size:12px;font-weight:900;color:#f1d493}
+.teacher-live-provider small{font-size:9px;color:#9fb0c5}
+.teacher-live-form button:disabled{opacity:.55;cursor:not-allowed}
