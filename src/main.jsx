@@ -121,10 +121,12 @@ function TeacherConsole(){
    if(me?.role!=="teacher")throw new Error("not_teacher");
    const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,cover_image_url,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setCourses(list||[]);
-   const [studentRows,messageRows]=await Promise.all([
-    portalApi("teacher", "profiles?select=id,full_name,student_number,grade,group_name,phone,parent_name,parent_phone,governorate,city,avatar_url,created_at&role=eq.student&limit=500"),
-    portalApi("teacher", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=200")
-   ]);
+   const courseGrades=[...new Set((list||[]).map(course=>course.grade).filter(Boolean))];
+   const gradeFilter=courseGrades.map(grade=>encodeURIComponent('"'+grade+'"')).join(",");
+   const studentPath="profiles?select=id,full_name,student_number,grade,group_name,phone,parent_name,parent_phone,governorate,city,avatar_url,created_at&role=eq.student"+(courseGrades.length?"&grade=in.("+gradeFilter+")":"&limit=0");
+   const studentRows=courseGrades.length?await portalApi("teacher",studentPath):[];
+   const studentIds=(studentRows||[]).map(student=>student.id);
+   const messageRows=studentIds.length?await portalApi("teacher","support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&user_id=in.("+studentIds.join(",")+")&order=created_at.desc&limit=200"):[];
    setStudents(studentRows||[]);setMessages(messageRows||[]);
    const first=(list||[]).find(x=>x.id===selected)?.id||(list||[])[0]?.id||"";
    setSelected(first);
@@ -139,7 +141,7 @@ function TeacherConsole(){
   const fetchLessons=async()=>{
    if(!selected){setLessons([]);return;}
    try{const rows=await portalApi("teacher", "lessons?select=id,course_id,title,description,content,video_url,duration_minutes,duration_seconds,sort_order,is_published,cover_image_url,created_at&course_id=eq."+encodeURIComponent(selected)+"&order=sort_order.asc,created_at.asc");if(active)setLessons(rows||[]);}
-   catch{if(active)setError("تعذر تحميل المحاضرات لهذا الكورس.");}
+   catch{if(active)setError("تعذر تحميل الفيديوهات لهذا الكورس.");}
   };
   fetchLessons();return()=>{active=false;};
  },[selected]);
@@ -165,7 +167,7 @@ function TeacherConsole(){
  };
  const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setUploadingVideo(true);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));setLessonForm(old=>({...old,video_url:path,duration_minutes:"0",duration_seconds:"0"}));setLessonVideoPreviewUrl("");setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");try{const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonVideoPreviewUrl(previewUrl);const measured=await new Promise(resolve=>{const probe=document.createElement("video");probe.preload="metadata";probe.onloadedmetadata=()=>{const value=Number.isFinite(probe.duration)?Math.round(probe.duration):0;probe.removeAttribute("src");probe.load();resolve(value);};probe.onerror=()=>resolve(0);probe.src=previewUrl;});if(measured>0)setLessonForm(old=>({...old,duration_seconds:String(measured),duration_minutes:String(Math.ceil(measured/60))}));setNotice(measured>0?"تم رفع الفيديو واستخراج مدته تلقائيًا. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.":"تم رفع الفيديو. تعذر قراءة المدة تلقائيًا من الملف الحالي.");}catch(previewError){console.error("teacher_video_preview",previewError);setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");}}catch(e){console.error("teacher_video_upload",e);setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"فشل رفع الفيديو نفسه. راجع الاتصال وصلاحية التخزين ثم حاول مرة أخرى.");}finally{setSaving(false);setUploadingVideo(false);}};
  const createLesson=async(e)=>{
-  e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
+  e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للفيديو قبل حفظه.");setSaving(true);setError("");setNotice("");
   try{
    const payload={...lessonForm,course_id:selected,sort_order:editingLessonId?(lessons.find(x=>x.id===editingLessonId)?.sort_order||1):lessons.length+1,duration_seconds:Number(lessonForm.duration_seconds)||null,duration_minutes:Number(lessonForm.duration_minutes)||null};
    if(editingLessonId){
@@ -178,7 +180,7 @@ function TeacherConsole(){
     setLessons(old=>[...old,created]);setNotice("تم حفظ الفيديو كمسودة.");
    }
    setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});setLessonVideoPreviewUrl("");setEditingLessonId("");
-  }catch(e){setError("لم يتم حفظ المحاضرة. "+(e.message||"تحقق من صلاحية الكورس والبيانات."));}
+  }catch(e){setError("لم يتم حفظ الفيديو. "+(e.message||"تحقق من صلاحية الكورس والبيانات."));}
   finally{setSaving(false);}
  };
  const editLesson=async(lesson)=>{
@@ -196,16 +198,16 @@ function TeacherConsole(){
  const toggleLesson=async(lesson)=>{
   const is_published=!lesson.is_published;setSaving(true);setError("");setNotice("");
   try{await portalApi("teacher", "lessons?id=eq."+encodeURIComponent(lesson.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({is_published})});setLessons(old=>old.map(x=>x.id===lesson.id?{...x,is_published}:x));setNotice(is_published?"تم نشر الفيديو.":"تم إخفاء الفيديو.");}
-  catch{setError("تعذر تحديث المحاضرة.");}finally{setSaving(false);}
+  catch{setError("تعذر تحديث الفيديو.");}finally{setSaving(false);}
  };
  const deleteLesson=async(lesson)=>{
-  if(!window.confirm("حذف المحاضرة «"+lesson.title+"» نهائيًا؟"))return;
+  if(!window.confirm("حذف الفيديو «"+lesson.title+"» نهائيًا؟"))return;
   setSaving(true);setError("");setNotice("");
   try{
    await portalApi("teacher","lessons?id=eq."+encodeURIComponent(lesson.id),{method:"DELETE",headers:{Prefer:"return=minimal"}});
    try{await deletePortalVideo(lesson.video_url,"teacher");}catch(mediaError){console.warn("lecture_media_cleanup",mediaError);}
    setLessons(old=>old.filter(x=>x.id!==lesson.id));setNotice("تم حذف الفيديو.");
-  }catch(e){setError("تعذر حذف المحاضرة. "+(e.message||""));}
+  }catch(e){setError("تعذر حذف الفيديو. "+(e.message||""));}
   finally{setSaving(false);}
  };
  const current=courses.find(x=>x.id===selected);
@@ -243,17 +245,17 @@ function TeacherConsole(){
    <div className="teacher-studio-content">
   {section==="overview"&&<section className="teacher-panel teacher-overview-panel" dir="rtl">
    <div className="teacher-panel-heading"><div><span>TEACHER CONTROL CENTER</span><h2>ملخص إدارة المدرس</h2></div><small>أهلاً {profile.full_name||"مستر عماد"}</small></div>
-   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>إدارة الكورسات والمحاضرات والفيديوهات والبث المباشر من مكان واحد.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
+   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>إدارة الكورسات والفيديوهات والبث المباشر ومتابعة الطلاب من مكان واحد.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
    <div className="teacher-overview-actions">
     <button onClick={()=>setSection("courses")}><span>01</span><b>إدارة الكورسات</b><small>إنشاء الكورسات وتعديلها ونشرها</small><strong>{courses.length} كورس</strong></button>
-    <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة الفيديوهات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} محاضرة</strong></button>
+    <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة الفيديوهات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} فيديو</strong></button>
     <button onClick={()=>setSection("students")}><span>03</span><b>متابعة الطلاب</b><small>عرض الطلاب المرتبطين بكورساتك</small><strong>{students.length} طالب</strong></button>
     <button onClick={()=>setSection("live")}><span>03</span><b>البث المباشر</b><small>ابدأ حصة مباشرة وتواصل مع الطلاب</small><strong>فتح استوديو البث</strong></button>
     <button onClick={()=>setSection("groups")}><span>04</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
     <button onClick={()=>setSection("messages")}><span>05</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
    </div>
    <div className="teacher-overview-bottom">
-    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p></article>
+    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>فيديوهات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p></article>
     <article><h3>تذكير بالصلاحيات</h3><p>هذه اللوحة مخصصة لإدارة كورساتك وطلاب الصفوف المرتبطة بها. إعدادات المالك والحسابات والاشتراكات العامة تظل في لوحة المالك.</p></article>
    </div>
   </section>}
@@ -266,7 +268,7 @@ function TeacherConsole(){
     {current?<>{current.cover_image_url&&<img className="teacher-course-detail-image" src={current.cover_image_url} alt={current.title}/>}<div className="teacher-course-actions"><p>{current.description||"لا يوجد وصف للكورس."}</p><button disabled={saving} onClick={()=>toggleCourse(current)}>{current.status==="published"?"إيقاف النشر":"نشر الكورس"}</button></div>
      <div className="teacher-lesson-list">{lessons.map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="teacher-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span className="teacher-lesson-number">{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="teacher-lesson-actions"><button disabled={saving} onClick={()=>editLesson(lesson)}>تعديل</button><button disabled={saving} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="teacher-danger-button" disabled={saving} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}{!lessons.length?<div className="teacher-empty">لا توجد فيديوهات في هذا الكورس بعد.</div>:null}</div>
      <form className="teacher-form" onSubmit={createLesson}><h3>{editingLessonId?"تعديل الفيديو":"إضافة فيديو"}</h3><input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})} placeholder="عنوان الفيديو"/><input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})} placeholder="وصف مختصر"/><div className="teacher-video-selected">{lessonForm.video_url?(Number(lessonForm.duration_seconds)>0?"مدة الفيديو المستخرجة تلقائيًا: "+Math.floor(Number(lessonForm.duration_seconds)/60)+" دقيقة و"+(Number(lessonForm.duration_seconds)%60)+" ثانية":"تم اختيار الفيديو — ستظهر مدته بعد تجهيز المعاينة"):"مدة الفيديو تُستخرج تلقائيًا بعد رفعه"}</div><label className="teacher-video-label"><span>اختيار الفيديو من الهاتف أو الجهاز</span><small>افتح المعرض أو الملفات واختر الفيديو مباشرة — MP4 أو WEBM أو MOV، حتى 1GB · رفع متقطع قابل للاستكمال</small><input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={uploadingVideo} onChange={e=>uploadLessonVideo(e.target.files?.[0])}/></label>{uploadingVideo&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>لو الاتصال انقطع، اختر نفس الملف مرة أخرى لاستكمال الرفع.</small></div>}{lessonForm.video_url&&(lessonVideoPreviewUrl?(getLectureEmbedUrl(lessonVideoPreviewUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoPreviewUrl)} title="معاينة فيديو المحاضرة" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>:<video className="teacher-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>):<div className="course-player-error">تم رفع الفيديو وحفظ مساره. المعاينة الخاصة لم تجهز بعد؛ احفظ المحاضرة ثم أعد المحاولة.</div>)}<textarea value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})} placeholder="وصف الفيديو أو ملاحظات الشرح"/><label className="teacher-image-label">صورة الفيديو<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadLessonCover(e.target.files?.[0])}/></label>{lessonForm.cover_image_url&&<img className="teacher-course-preview" src={lessonForm.cover_image_url} alt="معاينة صورة الفيديو"/>}<button disabled={saving||!lessonForm.cover_image_url}>{saving?"جارٍ الحفظ...":editingLessonId?"حفظ التعديلات":"حفظ المحاضرة كمسودة"}</button>{editingLessonId&&<button type="button" onClick={()=>{setEditingLessonId("");setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});setLessonVideoPreviewUrl("");}}>إلغاء التعديل</button>}</form>
-    </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة المحاضرات.</div>}
+    </>:<div className="teacher-empty large">أنشئ كورسًا جديدًا أو اختر كورسًا من القائمة لبدء إضافة الفيديوهات.</div>}
    </section>
   </div>}
   {section==="live"&&<TeacherLiveStudio profile={profile}/>}
@@ -518,7 +520,7 @@ function HomeworkPage({profile}){
 }
 
 function LiveSessionsPage({profile}){
- return <div className="platform-page student-live-page"><PageBanner eyebrow="LIVE CLASSROOM" title="المحاضرات المباشرة" description="انضم إلى الحصص المباشرة الخاصة بصفك الدراسي واطلب التحدث مع المدرس." art="live"/><StudentLiveClassroom profile={profile}/></div>;
+ return <div className="platform-page student-live-page"><StudentLiveClassroom profile={profile}/></div>;
 }
 
 function SectionPage({page,go,profile}){
