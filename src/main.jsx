@@ -524,6 +524,7 @@ function LiveSessionsPage({profile}){
 }
 
 function SectionPage({page,go,profile}){
+ if(page==="homework")return <HomeworkPage profile={profile}/>;
  if(page==="messages")return <ChatWorkspace profile={profile} mode="support" portal="student"/>;
  if(page==="groups")return <ChatWorkspace profile={profile} mode="groups" portal="student"/>;
  if(page==="live")return <LiveSessionsPage profile={profile}/>;
