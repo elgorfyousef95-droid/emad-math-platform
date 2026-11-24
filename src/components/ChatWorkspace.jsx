@@ -17,6 +17,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const [members,setMembers]=useState([]);
  const [profiles,setProfiles]=useState({});
  const [messages,setMessages]=useState([]);
+ const [receiptSummary,setReceiptSummary]=useState({});
  const [selectedId,setSelectedId]=useState("");
  const [draft,setDraft]=useState("");
  const [file,setFile]=useState(null);
@@ -83,6 +84,20 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   try{
    const rows=await emadChatApi(portal,"emad_messages?select=id,conversation_id,sender_id,message_type,body,attachment_path,attachment_name,attachment_mime,attachment_size,reply_to,created_at,edited_at&conversation_id=eq."+encodeURIComponent(selectedId)+"&deleted_at=is.null&order=created_at.asc&limit=150");
    setMessages(rows||[]);
+   const ownMessageIds=(rows||[]).filter(m=>m.sender_id===myId).map(m=>m.id);
+   if(ownMessageIds.length){
+    try{
+     const receiptRows=await emadChatApi(portal,"emad_message_receipts?select=message_id,user_id,read_at&message_id=in.("+ownMessageIds.join(",")+")");
+     const summary={};
+     for(const receipt of receiptRows||[]){
+      const item=summary[receipt.message_id]||{delivered:0,read:0};
+      item.delivered+=1;
+      if(receipt.read_at)item.read+=1;
+      summary[receipt.message_id]=item;
+     }
+     setReceiptSummary(summary);
+    }catch(receiptError){console.warn("emad_chat_receipts",receiptError);setReceiptSummary({});}
+   }else setReceiptSummary({});
    const ids=[...new Set((rows||[]).map(m=>m.sender_id).filter(Boolean))];
    const cards=await getEmadChatProfileCards(portal,ids);
    setProfiles(old=>({...old,...Object.fromEntries((cards||[]).map(p=>[p.id,p]))}));
@@ -103,7 +118,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  },[selectedId,portal,myId,attachmentUrls]);
 
  useEffect(()=>{loadConversations();},[loadConversations]);
- useEffect(()=>{setMessages([]);setAttachmentUrls({});loadMessages();},[selectedId]);
+ useEffect(()=>{setMessages([]);setAttachmentUrls({});setReceiptSummary({});loadMessages();},[selectedId]);
  useEffect(()=>{
   if(!myId)return;
   const conversationTimer=window.setInterval(loadConversations,12000);
@@ -226,7 +241,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
           {message.body?<p>{message.body}</p>:null}
           {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:message.message_type==="audio"?<div className="emad-chat-audio"><span>رسالة صوتية</span><audio controls preload="metadata" src={url}/></div>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">📎 {message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
          </div>
-         <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?" · تم الإرسال":""}{isOwner?<button className="emad-chat-delete-message" onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</small>
+         <small className="emad-chat-time">{dateLabel(message.created_at)}{mine?(receiptSummary[message.id]?.delivered? " · تم التسليم":" · تم الإرسال"):""}{mine&&receiptSummary[message.id]?.read>0?" · قرأها "+receiptSummary[message.id].read:""}{isOwner?<button className="emad-chat-delete-message" onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</small>
         </div>
        </article>;
       })}
