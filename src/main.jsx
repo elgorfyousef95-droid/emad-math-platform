@@ -98,7 +98,7 @@ function PortalAccess({portal,onSuccess}){
 }
 
 function TeacherConsole(){
- const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[exams,setExams]=useState([]),[attempts,setAttempts]=useState([]),[examQuestions,setExamQuestions]=useState([]),[section,setSection]=useState("courses"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState(""),[selectedAttempt,setSelectedAttempt]=useState(null),[attemptAnswers,setAttemptAnswers]=useState([]),[gradeDraft,setGradeDraft]=useState("");
+ const [profile,setProfile]=useState(null),[courses,setCourses]=useState([]),[lessons,setLessons]=useState([]),[students,setStudents]=useState([]),[messages,setMessages]=useState([]),[exams,setExams]=useState([]),[attempts,setAttempts]=useState([]),[examQuestions,setExamQuestions]=useState([]),[section,setSection]=useState("overview"),[replyDrafts,setReplyDrafts]=useState({}),[selected,setSelected]=useState(""),[busy,setBusy]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[studentFilter,setStudentFilter]=useState(""),[selectedAttempt,setSelectedAttempt]=useState(null),[attemptAnswers,setAttemptAnswers]=useState([]),[gradeDraft,setGradeDraft]=useState("");
  const [courseForm,setCourseForm]=useState({title:"",subject:"رياضيات",grade:"الصف الثالث الثانوي",description:"",cover_image_url:""});
  const [lessonForm,setLessonForm]=useState({title:"",description:"",content:"",video_url:"",cover_image_url:"",duration_minutes:"0",duration_seconds:"0"});
  const [lessonVideoPreviewUrl,setLessonVideoPreviewUrl]=useState("");
@@ -273,6 +273,7 @@ function TeacherConsole(){
   {error&&<p className="teacher-alert error" role="status">{error}</p>}{notice&&<p className="teacher-alert success" role="status">{notice}</p>}
   <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article><article><small>الامتحانات</small><strong>{exams.length}</strong></article><article><small>محاولات الطلاب</small><strong>{attempts.length}</strong></article></section>
   <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
+   <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}>لوحة المتابعة</button>
    <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}>الكورسات</button>
    <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}>المحاضرات</button>
    <button className={section==="students"?"active":""} onClick={()=>setSection("students")}>متابعة الطلاب <b>{students.length}</b></button>
@@ -281,6 +282,23 @@ function TeacherConsole(){
    <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}>جروبات الصفوف</button>
    <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}>مراسلات الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
   </nav>
+  {section==="overview"&&<section className="teacher-panel teacher-overview-panel" dir="rtl">
+   <div className="teacher-panel-heading"><div><span>TEACHER CONTROL CENTER</span><h2>ملخص إدارة المدرس</h2></div><small>أهلاً {profile.full_name||"مستر عماد"}</small></div>
+   <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>تابع محتواك وطلابك وامتحاناتك ونتائجهم، وانتقل مباشرة للقسم المطلوب.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
+   <div className="teacher-overview-actions">
+    <button onClick={()=>setSection("courses")}><span>01</span><b>إدارة الكورسات</b><small>إنشاء الكورسات وتعديلها ونشرها</small><strong>{courses.length} كورس</strong></button>
+    <button onClick={()=>setSection("lessons")}><span>02</span><b>إدارة المحاضرات</b><small>رفع الفيديوهات وتنظيم الدروس</small><strong>{lessons.length} محاضرة</strong></button>
+    <button onClick={()=>setSection("students")}><span>03</span><b>متابعة الطلاب</b><small>عرض الطلاب المرتبطين بكورساتك</small><strong>{students.length} طالب</strong></button>
+    <button onClick={()=>setSection("exams")}><span>04</span><b>الامتحانات</b><small>إنشاء الامتحانات وإدارة الأسئلة</small><strong>{exams.length} امتحان</strong></button>
+    <button onClick={()=>setSection("results")}><span>05</span><b>النتائج والتصحيح</b><small>مراجعة المحاولات واعتماد الدرجات</small><strong>{attempts.length} محاولة</strong></button>
+    <button onClick={()=>setSection("groups")}><span>06</span><b>جروبات الصفوف</b><small>التواصل مع مجموعات الطلاب</small><strong>فتح مركز التواصل</strong></button>
+    <button onClick={()=>setSection("messages")}><span>07</span><b>مراسلات الطلاب</b><small>متابعة استفسارات الطلاب والرد عليها</small><strong>{messages.filter(x=>x.status!=="closed").length} بانتظار الرد</strong></button>
+   </div>
+   <div className="teacher-overview-bottom">
+    <article><h3>محتوى يحتاج متابعة</h3><p>كورسات غير منشورة: <b>{courses.filter(x=>x.status!=="published").length}</b></p><p>محاضرات غير منشورة: <b>{lessons.filter(x=>!x.is_published).length}</b></p><p>محاولات تنتظر التصحيح: <b>{attempts.filter(x=>x.submitted_at&&!x.graded_at).length}</b></p></article>
+    <article><h3>تذكير بالصلاحيات</h3><p>هذه اللوحة مخصصة لإدارة كورساتك وطلاب الصفوف المرتبطة بها. إعدادات المالك والحسابات والاشتراكات العامة تظل في لوحة المالك.</p></article>
+   </div>
+  </section>}
   {(section==="courses"||section==="lessons")&&<div className={"teacher-layout teacher-layout-"+section}>
    <section className="teacher-panel"><div className="teacher-panel-heading"><div><span>COURSE LIBRARY</span><h2>كورساتي</h2></div><small>{courses.length} كورس</small></div>
     {courses.length?<div className="teacher-course-list">{courses.map(course=><button key={course.id} className={selected===course.id?"teacher-course active":"teacher-course"} onClick={()=>setSelected(course.id)}>{course.cover_image_url?<img className="teacher-course-thumb" src={course.cover_image_url} alt=""/>:<span className="teacher-course-thumb teacher-course-thumb-empty">C</span>}<span><b>{course.title}</b><small>{course.grade||"صف غير محدد"} · {course.subject||"رياضيات"}</small></span><i className={course.status==="published"?"published":"draft"}>{course.status==="published"?"منشور":"مسودة"}</i></button>)}</div>:<div className="teacher-empty">لم تنشئ كورسات بعد. ابدأ بإنشاء أول كورس.</div>}
