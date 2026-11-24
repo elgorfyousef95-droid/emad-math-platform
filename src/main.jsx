@@ -166,7 +166,7 @@ function TeacherConsole(){
   finally{setSaving(false);}
  };
  const editCourse=(course)=>{setEditingCourseId(course.id);setCourseForm({title:course.title||"",subject:course.subject||"رياضيات",grade:course.grade||"الصف الثالث الثانوي",description:course.description||"",cover_image_url:course.cover_image_url||""});window.scrollTo({top:0,behavior:"smooth"});};
- const toggleCourse=async(course)=>{const status=course.status==="published"?"draft":"published";setSaving(true);setError("");setNotice("");try{await portalApi("teacher","courses?id=eq."+encodeURIComponent(course.id),{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({status})});setCourses(old=>old.map(x=>x.id===course.id?{...x,status}:x));setNotice(status==="published"?"تم نشر الكورس.":"تم إرجاع الكورس إلى المسودات.");}catch{setError("تعذر تحديث حالة الكورس.");}finally{setSaving(false);}};
+
  const uploadCourseCover=async(file)=>{
   if(!file)return;setError("");setNotice("");
   try{const url=await uploadPortalImage(file,"teacher");setCourseForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة غلاف الكورس.");}
