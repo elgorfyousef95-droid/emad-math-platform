@@ -105,7 +105,7 @@ function TeacherConsole(){
  const [editingLessonId,setEditingLessonId]=useState(""),[uploadingVideo,setUploadingVideo]=useState(false);
  const [uploadProgress,setUploadProgress]=useState(0);
  const [examForm,setExamForm]=useState({title:"",course_id:"",duration_minutes:"60",opens_at:"",closes_at:""});
- const [examQuestionForm,setExamQuestionForm]=useState({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
+ const [examQuestionForm,setExamQuestionForm]=useState({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
  const [examDraftQuestions,setExamDraftQuestions]=useState([]);
  const load=async()=>{
   setBusy(true);setError("");
@@ -167,6 +167,7 @@ function TeacherConsole(){
   try{const url=await uploadPortalImage(file,"teacher");setLessonForm(old=>({...old,cover_image_url:url}));setNotice("تم رفع صورة المحاضرة.");}
   catch(e){setError(e.message==="image_too_large"?"حجم الصورة أكبر من 5 ميجابايت.":"تعذر رفع صورة المحاضرة.");}
  };
+ const uploadExamQuestionImage=async(file)=>{if(!file)return;setError("");setNotice("");try{const url=await uploadPortalImage(file,"teacher");setExamQuestionForm(old=>({...old,image_url:url}));setNotice("تم رفع صورة السؤال ومعاينتها قبل إضافتها للامتحان.");}catch(e){setError(e.message==="image_too_large"?"حجم صورة السؤال أكبر من 5 ميجابايت.":"تعذر رفع صورة السؤال.");}};
  const uploadLessonVideo=async(file)=>{if(!file)return;setUploadProgress(0);setUploadingVideo(true);setSaving(true);setError("");setNotice("");try{const path=await uploadPortalVideo(file,"teacher",(percent)=>setUploadProgress(percent));setLessonForm(old=>({...old,video_url:path,duration_minutes:"0",duration_seconds:"0"}));setLessonVideoPreviewUrl("");setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");try{const previewUrl=await getLectureVideoUrl(path,"teacher");setLessonVideoPreviewUrl(previewUrl);const measured=await new Promise(resolve=>{const probe=document.createElement("video");probe.preload="metadata";probe.onloadedmetadata=()=>{const value=Number.isFinite(probe.duration)?Math.round(probe.duration):0;probe.removeAttribute("src");probe.load();resolve(value);};probe.onerror=()=>resolve(0);probe.src=previewUrl;});if(measured>0)setLessonForm(old=>({...old,duration_seconds:String(measured),duration_minutes:String(Math.ceil(measured/60))}));setNotice(measured>0?"تم رفع الفيديو واستخراج مدته تلقائيًا. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.":"تم رفع الفيديو. تعذر قراءة المدة تلقائيًا من الملف الحالي.");}catch(previewError){console.error("teacher_video_preview",previewError);setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");}}catch(e){console.error("teacher_video_upload",e);setError(e.message==="video_too_large"?"حجم الفيديو أكبر من 1 جيجابايت.":e.message==="unsupported_video_type"?"الصيغ المسموحة MP4 وWEBM وMOV.":"فشل رفع الفيديو نفسه. راجع الاتصال وصلاحية التخزين ثم حاول مرة أخرى.");}finally{setSaving(false);setUploadingVideo(false);}};
  const createLesson=async(e)=>{
   e.preventDefault();if(!selected)return;if(!lessonForm.cover_image_url)return setError("ارفع صورة للمحاضرة قبل حفظها.");setSaving(true);setError("");setNotice("");
@@ -194,12 +195,12 @@ function TeacherConsole(){
  };
  const addExamQuestion=()=>{
   const q=examQuestionForm;const choices=q.question_type==="true_false"?["صحيح","خطأ"]:q.choices.split("\n").map(x=>x.trim()).filter(Boolean);
-  if(q.prompt.trim().length<4)return setError("اكتب نص السؤال بشكل واضح.");
+  if(q.prompt.trim().length<4&&!q.image_url)return setError("اكتب نص السؤال أو ارفع صورة للسؤال.");
   if(["single_choice","multiple_choice"].includes(q.question_type)&&choices.length<2)return setError("أضف اختيارين على الأقل.");
   if(["single_choice","multiple_choice","true_false","short_answer"].includes(q.question_type)&&!q.correct_answer.trim())return setError("حدد الإجابة الصحيحة لهذا السؤال.");
   const correct=q.question_type==="multiple_choice"?q.correct_answer.split("\n").map(x=>x.trim()).filter(Boolean):q.correct_answer.trim();
-  setExamDraftQuestions(old=>[...old,{id:crypto.randomUUID(),prompt:q.prompt.trim(),question_type:q.question_type,choices,correct_answer:correct,points:Number(q.points)||1}]);
-  setExamQuestionForm({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});setError("");
+  setExamDraftQuestions(old=>[...old,{id:crypto.randomUUID(),prompt:q.prompt.trim(),image_url:q.image_url,question_type:q.question_type,choices,correct_answer:correct,points:Number(q.points)||1}]);
+  setExamQuestionForm({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});setError("");
  };
  const createExam=async(e)=>{
   e.preventDefault();if(!examForm.course_id||examForm.title.trim().length<3||!examDraftQuestions.length)return setError("اختر كورسًا واكتب عنوان الامتحان وأضف سؤالًا واحدًا على الأقل.");
@@ -208,7 +209,7 @@ function TeacherConsole(){
    const examRows=await portalApi("teacher","exams",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({course_id:examForm.course_id,title:examForm.title.trim(),duration_minutes:Number(examForm.duration_minutes)||60,opens_at:examForm.opens_at?new Date(examForm.opens_at).toISOString():null,closes_at:examForm.closes_at?new Date(examForm.closes_at).toISOString():null,is_published:false})});
    const exam=Array.isArray(examRows)?examRows[0]:examRows;if(!exam?.id)throw new Error("exam_create_failed");
    for(let i=0;i<examDraftQuestions.length;i++){
-    const q=examDraftQuestions[i];const inserted=await portalApi("teacher","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:exam.id,question_type:q.question_type,prompt:q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
+    const q=examDraftQuestions[i];const inserted=await portalApi("teacher","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:exam.id,question_type:q.question_type,prompt:(q.image_url?"[[EXAM_IMAGE:"+q.image_url+"]]\n":"")+q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
     const question=Array.isArray(inserted)?inserted[0]:inserted;if(!question?.id)throw new Error("question_create_failed");
     if(q.correct_answer!==""&&(!Array.isArray(q.correct_answer)||q.correct_answer.length))await portalApi("teacher","exam_answer_keys",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({question_id:question.id,correct_answer:q.correct_answer})});
    }
@@ -329,12 +330,12 @@ function TeacherConsole(){
      <select required value={examForm.course_id} onChange={e=>setExamForm({...examForm,course_id:e.target.value})}><option value="">اختر الكورس</option>{courses.map(c=><option key={c.id} value={c.id}>{c.title}</option>)}</select>
      <div className="teacher-form-grid"><label>مدة الامتحان بالدقائق<input type="number" min="1" max="600" value={examForm.duration_minutes} onChange={e=>setExamForm({...examForm,duration_minutes:e.target.value})}/></label><label>يفتح في<input type="datetime-local" value={examForm.opens_at} onChange={e=>setExamForm({...examForm,opens_at:e.target.value})}/></label><label>يغلق في<input type="datetime-local" value={examForm.closes_at} onChange={e=>setExamForm({...examForm,closes_at:e.target.value})}/></label></div>
      <div className="teacher-exam-question-editor"><h3>بناء الأسئلة</h3><select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="multiple_choice">اختر أكثر من إجابة</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select>
-      <textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال..."/>
+      <textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال أو ارفع صورة السؤال..."/><label className="teacher-image-label exam-question-image-label">صورة السؤال (اختياري) — JPG / PNG / WEBP<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadExamQuestionImage(e.target.files?.[0])}/></label>{examQuestionForm.image_url&&<img className="exam-question-image-preview" src={examQuestionForm.image_url} alt="معاينة صورة السؤال"/>}
       {["single_choice","multiple_choice"].includes(examQuestionForm.question_type)&&<textarea rows="4" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})} placeholder={"كل اختيار في سطر منفصل\nالاختيار الثاني\nالاختيار الثالث\nالاختيار الرابع"}/>}
       {examQuestionForm.question_type!=="essay"&&<textarea rows={examQuestionForm.question_type==="multiple_choice"?3:1} value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder={examQuestionForm.question_type==="multiple_choice"?"الإجابات الصحيحة، كل إجابة في سطر":"الإجابة الصحيحة"}/>}
       <div className="teacher-form-grid"><label>درجة السؤال<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label><button type="button" onClick={addExamQuestion}>إضافة السؤال</button></div>
      </div>
-     {examDraftQuestions.length>0&&<div className="teacher-exam-draft-list"><b>أسئلة الامتحان ({examDraftQuestions.length})</b>{examDraftQuestions.map((q,i)=><article key={q.id}><span>{i+1}. {q.prompt}</span><small>{q.points} درجة · {q.question_type}</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></article>)}</div>}
+     {examDraftQuestions.length>0&&<div className="teacher-exam-draft-list"><b>أسئلة الامتحان ({examDraftQuestions.length})</b>{examDraftQuestions.map((q,i)=><article key={q.id}><span>{i+1}. {q.prompt||"سؤال بصورة"}{q.image_url&&<img className="exam-question-draft-thumb" src={q.image_url} alt="صورة السؤال"/>}</span><small>{q.points} درجة · {q.question_type}</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></article>)}</div>}
      <button disabled={saving||!examDraftQuestions.length}>حفظ الامتحان كمسودة</button>
     </form>
    </section>
