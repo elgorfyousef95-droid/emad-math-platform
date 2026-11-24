@@ -36,3 +36,12 @@
 .emad-chat-compose-actions>button:focus-visible,.emad-chat-attach:focus-within{outline:2px solid #efd18b;outline-offset:2px}
 @media(max-width:850px){.emad-chat-layout{grid-template-columns:1fr}.emad-chat-sidebar{max-height:300px}.emad-chat-thread{min-height:600px}}
 @media(max-width:520px){.emad-chat-audio{min-width:min(230px,65vw)}.emad-chat-audio audio{max-width:100%}.emad-chat-record{padding:9px 10px}}
+
+/* Teacher group moderation controls */
+.emad-chat-add-member{display:flex;align-items:center;gap:7px;margin-right:auto;min-width:230px}
+.emad-chat-add-member select{max-width:230px;min-width:145px;padding:7px 9px;border:1px solid #d8b67555;border-radius:9px;background:#0a192a;color:#f2e8d4;font:10px 'Cairo'}
+.emad-chat-add-member button{padding:7px 12px;border:1px solid #d8b67588;border-radius:9px;background:linear-gradient(120deg,#ecd18e,#b58a4a);color:#14243a;font:800 10px 'Cairo'}
+.emad-chat-add-member button:disabled{opacity:.45}
+.emad-chat-delete-message{cursor:pointer}
+.emad-chat-remove-member{cursor:pointer}
+@media(max-width:680px){.emad-chat-roster{flex-wrap:wrap}.emad-chat-add-member{width:100%;margin:8px 0 0}.emad-chat-add-member select{flex:1;max-width:none}}

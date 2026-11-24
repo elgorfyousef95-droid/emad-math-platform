@@ -273,16 +273,22 @@ function TeacherConsole(){
   <header className="teacher-header"><div><span>EMAD EL SANAFIRY · TEACHER STUDIO</span><h1>مساحة المدرس</h1><p>إدارة كورساتك ومحاضراتك ونشر المحتوى للطلاب.</p></div><div className="teacher-header-actions"><b>{profile.full_name}</b><button onClick={()=>window.location.href="/"}>المنصة الطلابية</button><button onClick={()=>{logoutPortalSession("teacher");window.location.reload();}}>تسجيل الخروج</button></div></header>
   {error&&<p className="teacher-alert error" role="status">{error}</p>}{notice&&<p className="teacher-alert success" role="status">{notice}</p>}
   <section className="teacher-stats"><article><small>كورساتك</small><strong>{courses.length}</strong></article><article><small>كورسات منشورة</small><strong>{courses.filter(x=>x.status==="published").length}</strong></article><article><small>إجمالي المحاضرات</small><strong>{lessons.length}</strong></article><article><small>محاضرات منشورة</small><strong>{lessons.filter(x=>x.is_published).length}</strong></article><article><small>الامتحانات</small><strong>{exams.length}</strong></article><article><small>محاولات الطلاب</small><strong>{attempts.length}</strong></article></section>
-  <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
-   <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}>لوحة المتابعة</button>
-   <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}>الكورسات</button>
-   <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}>المحاضرات</button>
-   <button className={section==="students"?"active":""} onClick={()=>setSection("students")}>متابعة الطلاب <b>{students.length}</b></button>
-   <button className={section==="exams"?"active":""} onClick={()=>setSection("exams")}>الامتحانات <b>{exams.length}</b></button>
-   <button className={section==="results"?"active":""} onClick={()=>setSection("results")}>النتائج <b>{attempts.length}</b></button>
-   <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}>جروبات الصفوف</button>
-   <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}>مراسلات الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
-  </nav>
+  <div className="teacher-studio-body">
+   <aside className="teacher-studio-sidebar">
+    <div className="teacher-side-heading"><span>WORKSPACE</span><b>إدارة المنصة التعليمية</b><small>القائمة الرئيسية</small></div>
+    <nav className="teacher-tabs" aria-label="أقسام بوابة المدرس">
+     <button className={section==="overview"?"active":""} onClick={()=>setSection("overview")}><span>⌂</span> لوحة المتابعة</button>
+     <button className={section==="courses"?"active":""} onClick={()=>setSection("courses")}><span>▤</span> الكورسات</button>
+     <button className={section==="lessons"?"active":""} onClick={()=>setSection("lessons")}><span>▶</span> المحاضرات</button>
+     <button className={section==="students"?"active":""} onClick={()=>setSection("students")}><span>♙</span> الطلاب <b>{students.length}</b></button>
+     <button className={section==="exams"?"active":""} onClick={()=>setSection("exams")}><span>▣</span> الامتحانات <b>{exams.length}</b></button>
+     <button className={section==="results"?"active":""} onClick={()=>setSection("results")}><span>▥</span> النتائج والتصحيح <b>{attempts.length}</b></button>
+     <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}><span>◎</span> الجروبات</button>
+     <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> رسائل الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
+    </nav>
+    <div className="teacher-side-note"><b>اتصال مباشر</b><span>البيانات محفوظة على قاعدة المنصة الحالية.</span></div>
+   </aside>
+   <div className="teacher-studio-content">
   {section==="overview"&&<section className="teacher-panel teacher-overview-panel" dir="rtl">
    <div className="teacher-panel-heading"><div><span>TEACHER CONTROL CENTER</span><h2>ملخص إدارة المدرس</h2></div><small>أهلاً {profile.full_name||"مستر عماد"}</small></div>
    <div className="teacher-overview-intro"><div><b>كل أدوات إدارة المادة في مكان واحد</b><p>تابع محتواك وطلابك وامتحاناتك ونتائجهم، وانتقل مباشرة للقسم المطلوب.</p></div><button onClick={load}>تحديث بيانات اللوحة</button></div>
@@ -361,6 +367,8 @@ function TeacherConsole(){
     <button disabled={saving||!(replyDrafts[message.id]||"").trim()} onClick={()=>replyToMessage(message)}>إرسال الرد وإغلاق الرسالة</button>
    </article>;})}{!messages.length&&<div className="teacher-empty large">لا توجد رسائل من الطلاب حاليًا.</div>}</div>
   </section>}
+   </div>
+  </div>
   <p className="teacher-footnote">صلاحيات هذه البوابة محدودة بحساب المدرس وكورسات المدرس نفسه. لا تتيح إدارة حساب المالك أو إعدادات المنصة العليا.</p>
  </main>;
 }
