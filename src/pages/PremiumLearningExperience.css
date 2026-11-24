@@ -1,0 +1,69 @@
+/* Premium learning experience — additive, scoped visual layer */
+:root{--learn-ink:#f4f7ff;--learn-muted:#aebbd0;--learn-line:rgba(174,199,239,.17);--learn-panel:rgba(10,24,45,.94);--learn-accent:#9db9ff;--learn-gold:#e8c47d}
+.student-experience .course-lesson-browser{
+  position:relative;isolation:isolate;display:grid;gap:18px;padding:clamp(16px,2.4vw,28px)!important;
+  border:1px solid var(--learn-line)!important;border-radius:24px!important;
+  background:linear-gradient(145deg,rgba(18,37,66,.97),rgba(7,17,34,.98))!important;
+  box-shadow:0 22px 65px rgba(0,0,0,.25)!important
+}
+.student-experience .course-lesson-browser h2,.student-experience .course-lesson-browser h3{
+  color:var(--learn-ink)!important;letter-spacing:-.2px
+}
+.student-experience .course-lesson-item{
+  position:relative;display:flex;align-items:center;gap:13px;min-height:76px!important;
+  padding:13px 15px!important;border:1px solid var(--learn-line)!important;border-radius:16px!important;
+  background:linear-gradient(110deg,rgba(25,46,78,.95),rgba(12,27,49,.98))!important;
+  color:var(--learn-ink)!important;transition:transform .18s ease,border-color .18s ease,background .18s ease
+}
+.student-experience .course-lesson-item:hover{transform:translateY(-2px);border-color:#9db9ff70!important}
+.student-experience .course-lesson-item.active,.student-experience .course-lesson-item[aria-current="true"]{
+  border-color:#a9c2ff!important;background:linear-gradient(110deg,#29446f,#182e50)!important;
+  box-shadow:0 10px 28px #6e91d322!important
+}
+.student-experience .course-selected-player{
+  display:grid;gap:14px;padding:clamp(12px,2vw,22px)!important;
+  border:1px solid rgba(157,185,255,.27)!important;border-radius:22px!important;
+  background:linear-gradient(145deg,#081426,#030914)!important;
+  box-shadow:0 24px 65px rgba(0,0,0,.32)!important
+}
+.student-experience .course-selected-player video,
+.student-experience .learning-video-player video,
+.student-experience .course-selected-player iframe,
+.student-experience .learning-video-player iframe{
+  display:block;width:100%;aspect-ratio:16/9;max-height:min(72vh,760px);min-height:220px;
+  border:1px solid rgba(157,185,255,.22);border-radius:16px;background:#000;object-fit:contain
+}
+.student-experience .course-selected-player h2,.student-experience .course-selected-player h3{
+  color:#f5f7ff!important;margin:0
+}
+.student-experience .course-selected-player p{color:#bdcbe0!important;line-height:1.95}
+.student-experience .learning-detail-modal{
+  border:1px solid var(--learn-line)!important;border-radius:24px!important;
+  background:linear-gradient(145deg,#142744,#08172c)!important;
+  box-shadow:0 28px 90px #0009!important
+}
+.student-experience .learning-detail-meta>span{
+  border:1px solid var(--learn-line)!important;border-radius:12px!important;
+  background:#ffffff0a!important;color:#dce7fb!important
+}
+.student-experience .course-player-error{
+  padding:16px!important;border-radius:15px!important;border-color:#d6a85b66!important;
+  background:linear-gradient(120deg,#4b351d55,#241d16)!important
+}
+.student-experience .course-player-error button{
+  min-height:42px!important;border-radius:11px!important;background:linear-gradient(110deg,#c5d7ff,#88a8f6)!important;
+  color:#101b32!important;font-weight:900!important
+}
+@media(max-width:680px){
+ .student-experience .course-lesson-browser{padding:13px!important;border-radius:18px!important}
+ .student-experience .course-lesson-item{min-height:68px!important;padding:10px!important}
+ .student-experience .course-selected-player{padding:10px!important;border-radius:17px!important}
+ .student-experience .course-selected-player video,.student-experience .learning-video-player video,
+ .student-experience .course-selected-player iframe,.student-experience .learning-video-player iframe{
+   min-height:190px;border-radius:12px
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .student-experience .course-lesson-item{transition:none}
+ .student-experience .course-lesson-item:hover{transform:none}
+}

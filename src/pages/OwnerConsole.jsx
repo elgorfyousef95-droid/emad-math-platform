@@ -16,6 +16,7 @@ const GRADES = ["الصف الأول الثانوي", "الصف الثاني ا�
 const TABS = [
   ["overview", "نظرة عامة", "OVERVIEW"],
   ["accounts", "الحسابات", "ACCOUNTS"],
+  ["teachers", "إدارة المدرسين", "TEACHERS"],
   ["courses", "الكورسات والمحاضرات", "COURSES"],
   ["exams", "الامتحانات", "EXAMS"],
   ["homework", "الواجبات", "HOMEWORK"],
@@ -69,13 +70,13 @@ export default function OwnerConsole() {
   const [courseForm, setCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "", cover_image_url: "" });
   const [editCourseForm, setEditCourseForm] = useState({ title: "", subject: "رياضيات", grade: GRADES[2], description: "", price_egp: "0", teacher_id: "" });
   const [examForm, setExamForm] = useState({ title: "", course_id: "", duration_minutes: "60", opens_at: "", closes_at: "", cover_image_url: "" });
-  const [examQuestionForm, setExamQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
+  const [examQuestionForm, setExamQuestionForm] = useState({ prompt: "", image_url: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [examDraftQuestions, setExamDraftQuestions] = useState([]);
   const [homeworkForm, setHomeworkForm] = useState({ title: "", description: "", grade: GRADES[2], group_name: "", due_at: "", cover_image_url: "", is_published: false });
   const [announcementForm, setAnnouncementForm] = useState({ title: "", body: "", course_id: "", cover_image_url: "" });
   const [homeworkQuestionForm, setHomeworkQuestionForm] = useState({ prompt: "", question_type: "single_choice", choices: "", correct_answer: "", points: "1" });
   const [homeworkDraftQuestions, setHomeworkDraftQuestions] = useState([]);
-  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
+  const [lessonForm, setLessonForm] = useState({ title: "", description: "", content: "", video_url: "", cover_image_url: "", duration_seconds: 0 });
   const [lessonVideoPreviewUrl, setLessonVideoPreviewUrl] = useState("");
   const [editingLessonId, setEditingLessonId] = useState("");
 
@@ -93,7 +94,7 @@ export default function OwnerConsole() {
         ["profiles", "profiles?select=id,full_name,student_number,grade,group_name,role,is_verified,phone,parent_name,parent_phone,governorate,city,created_at&order=created_at.desc&limit=1000"],
         ["messages", "support_messages?select=id,user_id,subject,message,status,created_at,admin_reply,replied_at&order=created_at.desc&limit=500"],
         ["courses", "courses?select=id,teacher_id,title,description,subject,price_egp,status,grade,cover_image_url,created_at&order=created_at.desc&limit=500"],
-        ["lessons", "lessons?select=id,course_id,title,description,content,video_url,sort_order,is_published,cover_image_url,created_at&order=created_at.desc&limit=1000"],
+        ["lessons", "lessons?select=id,course_id,title,description,content,video_url,duration_seconds,duration_minutes,sort_order,is_published,cover_image_url,created_at&order=created_at.desc&limit=1000"],
         ["exams", "exams?select=id,course_id,title,duration_minutes,is_published,opens_at,closes_at,cover_image_url,created_at&order=created_at.desc&limit=500"],
         ["examQuestions", "exam_questions?select=id,exam_id,question_type,prompt,points,sort_order&order=sort_order.asc&limit=5000"],
         ["homework", "homework_assignments?select=id,title,description,grade,group_name,due_at,is_published,cover_image_url,created_by,created_at&order=created_at.desc&limit=500"],
@@ -166,6 +167,7 @@ export default function OwnerConsole() {
       const url = await uploadPortalImage(file, "owner");
       if (kind === "course") setCourseForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "exam") setExamForm((old) => ({ ...old, cover_image_url: url }));
+      if (kind === "exam-question") setExamQuestionForm((old) => ({ ...old, image_url: url }));
       if (kind === "homework") setHomeworkForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "lesson") setLessonForm((old) => ({ ...old, cover_image_url: url }));
       if (kind === "announcement") setAnnouncementForm((old) => ({ ...old, cover_image_url: url }));
@@ -205,6 +207,8 @@ export default function OwnerConsole() {
         description: lessonForm.description.trim(),
         content: lessonForm.content.trim(),
         video_url: lessonForm.video_url.trim() || null,
+        duration_seconds: Number(lessonForm.duration_seconds) || null,
+        duration_minutes: Number(lessonForm.duration_seconds) > 0 ? Math.ceil(Number(lessonForm.duration_seconds) / 60) : null,
         sort_order: editingLessonId ? (lessons.find(x => x.id === editingLessonId)?.sort_order || 1) : lessons.filter(x => x.course_id === selectedCourse).length + 1,
         cover_image_url: lessonForm.cover_image_url || null,
       };
@@ -220,7 +224,7 @@ export default function OwnerConsole() {
         setLessons(old => [...old, created]);
         setNotice("تمت إضافة المحاضرة كمسودة.");
       }
-      setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "" });
+      setLessonForm({ title: "", description: "", content: "", video_url: "", cover_image_url: "", duration_seconds: 0 });
       setLessonVideoPreviewUrl("");
       setEditingLessonId("");
     } catch (e) { setError("تعذر حفظ المحاضرة. " + (e.message || "")); }
@@ -229,7 +233,7 @@ export default function OwnerConsole() {
 
   const editLesson = async (lesson) => {
     setEditingLessonId(lesson.id);
-    setLessonForm({ title: lesson.title || "", description: lesson.description || "", content: lesson.content || "", video_url: lesson.video_url || "", cover_image_url: lesson.cover_image_url || "" });
+    setLessonForm({ title: lesson.title || "", description: lesson.description || "", content: lesson.content || "", video_url: lesson.video_url || "", cover_image_url: lesson.cover_image_url || "", duration_seconds: Number(lesson.duration_seconds) || 0 });
     setLessonVideoPreviewUrl("");
     if (lesson.video_url) {
       try { setLessonVideoPreviewUrl(await getLectureVideoUrl(lesson.video_url, "owner")); }
@@ -243,13 +247,15 @@ export default function OwnerConsole() {
     setUploading("lesson-video"); setUploadProgress(0); setError(""); setNotice("");
     try {
       const path = await uploadPortalVideo(file, "owner", (percent) => setUploadProgress(percent));
-      setLessonForm((old) => ({ ...old, video_url: path }));
+      setLessonForm((old) => ({ ...old, video_url: path, duration_seconds: 0 }));
       setLessonVideoPreviewUrl("");
       setNotice("تم رفع الفيديو وحفظ مساره. جارٍ تجهيز المعاينة...");
       try {
         const previewUrl = await getLectureVideoUrl(path, "owner");
         setLessonVideoPreviewUrl(previewUrl);
-        setNotice("تم رفع الفيديو بنجاح. احفظ المحاضرة كمسودة ثم انشرها بعد المراجعة.");
+        const measured = await new Promise(resolve => { const probe = document.createElement("video"); probe.preload = "metadata"; probe.onloadedmetadata = () => { const seconds = Number.isFinite(probe.duration) ? Math.round(probe.duration) : 0; probe.removeAttribute("src"); probe.load(); resolve(seconds); }; probe.onerror = () => resolve(0); probe.src = previewUrl; });
+        if (measured > 0) setLessonForm(old => ({ ...old, duration_seconds: measured }));
+        setNotice(measured > 0 ? "تم رفع الفيديو واستخراج مدته تلقائيًا." : "تم رفع الفيديو، لكن تعذر قراءة مدته تلقائيًا.");
       } catch (previewError) {
         console.error("owner_video_preview", previewError);
         setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");
@@ -321,11 +327,11 @@ export default function OwnerConsole() {
   const addExamQuestion = () => {
     const q = examQuestionForm;
     const choices = q.question_type === "single_choice" ? q.choices.split("\n").map(x=>x.trim()).filter(Boolean) : q.question_type === "true_false" ? ["صحيح","خطأ"] : [];
-    if (q.prompt.trim().length < 4) return setError("اكتب نص السؤال بشكل واضح.");
+    if (q.prompt.trim().length < 4 && !q.image_url) return setError("اكتب نص السؤال أو ارفع صورة للسؤال.");
     if (q.question_type === "single_choice" && choices.length < 2) return setError("أضف اختيارين على الأقل للسؤال.");
     if (["single_choice","true_false"].includes(q.question_type) && !q.correct_answer.trim()) return setError("حدد الإجابة الصحيحة.");
-    setExamDraftQuestions(old=>[...old,{...q,id:crypto.randomUUID(),choices,points:Number(q.points)||1}]);
-    setExamQuestionForm({prompt:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
+    setExamDraftQuestions(old=>[...old,{...q,id:crypto.randomUUID(),prompt:q.prompt.trim(),choices,points:Number(q.points)||1}]);
+    setExamQuestionForm({prompt:"",image_url:"",question_type:"single_choice",choices:"",correct_answer:"",points:"1"});
     setError("");
   };
 
@@ -354,7 +360,7 @@ export default function OwnerConsole() {
       const savedQuestions = [];
       for (let i=0;i<examDraftQuestions.length;i++) {
         const q=examDraftQuestions[i];
-        const inserted=await portalApi("owner","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:created.id,question_type:q.question_type,prompt:q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
+        const inserted=await portalApi("owner","exam_questions",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({exam_id:created.id,question_type:q.question_type,prompt:(q.image_url?"[[EXAM_IMAGE:"+q.image_url+"]]\n":"")+q.prompt,choices:q.choices,points:q.points,sort_order:i+1})});
         const saved=Array.isArray(inserted)?inserted[0]:inserted;
         if(!saved?.id)throw new Error("exam_question_not_created");
         savedQuestions.push(saved);
@@ -549,7 +555,7 @@ export default function OwnerConsole() {
     {section==="overview" && <section className="owner-panel owner-overview-panel">
       <div className="owner-panel-heading"><div><span>PLATFORM OVERVIEW</span><h2>ملخص المنصة</h2></div><button onClick={load}>تحديث الأرقام</button></div>
       <div className="owner-quick-grid">
-        {TABS.filter(x=>x[0]!=="overview").map(([id,label,sub])=><button key={id} onClick={()=>setSection(id)}><small>{sub}</small><b>{label}</b><span>{({accounts:users.length,courses:courses.length,exams:exams.length,homework:homework.length,announcements:announcements.length,subscriptions:subscriptions.length,payments:payments.length,messages:messages.length})[id] ?? 0}</span></button>)}
+        {TABS.filter(x=>x[0]!=="overview").map(([id,label,sub])=><button key={id} onClick={()=>setSection(id)}><small>{sub}</small><b>{label}</b><span>{({accounts:users.length,teachers:teachers.length,courses:courses.length,exams:exams.length,homework:homework.length,announcements:announcements.length,subscriptions:subscriptions.length,payments:payments.length,messages:messages.length})[id] ?? 0}</span></button>)}
       </div>
       <div className="owner-overview-columns">
         <section><h3>آخر الكورسات</h3>{courses.slice(0,5).map(x=><button className="owner-mini-row" key={x.id} onClick={()=>{setSelectedCourse(x.id);setSection("courses");}}>{x.cover_image_url?<img src={x.cover_image_url} alt=""/>:<span className="owner-mini-placeholder">C</span>}<span><b>{x.title}</b><small>{x.grade} · {statusText(x.status)}</small></span></button>)}{!courses.length&&<p className="owner-note">لا توجد كورسات بعد.</p>}</section>
@@ -564,6 +570,27 @@ export default function OwnerConsole() {
         {visibleUsers.map(user=><tr key={user.id}><td>{user.full_name||"—"}</td><td dir="ltr">{user.student_number||"بوابة إدارية"}</td><td>{user.grade||"—"}<small>{user.group_name||""}</small></td><td dir="ltr">{user.phone||"—"}<small>{[user.governorate,user.city].filter(Boolean).join(" / ")}</small></td><td>{user.parent_name||"—"}<small dir="ltr">{user.parent_phone||""}</small></td><td><span className={"owner-role role-"+user.role}>{({owner:"مالك",teacher:"مدرس",admin:"مدير",student:"طالب"})[user.role]||user.role}</span></td><td><select value={user.role} disabled={saving===user.id||user.id===profile.id||!user.student_number} onChange={e=>changeRole(user,e.target.value)}><option value="student">طالب</option><option value="teacher">مدرس</option><option value="admin">مدير</option><option value="owner">مالك</option></select></td></tr>)}
       </tbody></table></div>
       <p className="owner-note">حساب المالك الحالي محمي من تغيير دوره من داخل الجدول. تغيير الدور لا يحذف حساب الطالب أو بياناته.</p>
+    </section>}
+
+    {section==="teachers" && <section className="owner-panel owner-teachers-panel">
+      <div className="owner-panel-heading"><div><span>TEACHER MANAGEMENT</span><h2>إدارة المدرسين</h2></div><small>{teachers.length} مدرس</small></div>
+      <div className="owner-teacher-summary">
+        <article><small>إجمالي المدرسين</small><strong>{teachers.length}</strong></article>
+        <article><small>الكورسات المسندة</small><strong>{courses.filter(x=>teachers.some(t=>t.id===x.teacher_id)).length}</strong></article>
+        <article><small>المحاضرات</small><strong>{lessons.filter(l=>courses.some(course=>course.id===l.course_id&&teachers.some(t=>t.id===course.teacher_id))).length}</strong></article>
+      </div>
+      <input className="owner-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث باسم المدرس أو رقم الحساب..."/>
+      <div className="owner-teacher-grid">{teachers.filter(t=>[t.full_name,t.student_number,t.grade,t.phone].join(" ").toLowerCase().includes(filter.toLowerCase())).map(teacher=>{
+        const assigned=courses.filter(course=>course.teacher_id===teacher.id);
+        const assignedLessons=lessons.filter(lesson=>assigned.some(course=>course.id===lesson.course_id));
+        return <article className="owner-teacher-card" key={teacher.id}>
+          <div className="owner-teacher-card-head"><span className="owner-teacher-avatar">{(teacher.full_name||"م").slice(0,1)}</span><div><b>{teacher.full_name||"مدرس"}</b><small>{teacher.student_number||"حساب بوابة مدرس"}</small></div><i>{teacher.is_verified?"موثق":"مدرس"}</i></div>
+          <div className="owner-teacher-metrics"><span><b>{assigned.length}</b><small>كورسات</small></span><span><b>{assignedLessons.length}</b><small>محاضرات</small></span><span><b>{assigned.filter(x=>x.status==="published").length}</b><small>منشور</small></span></div>
+          <div className="owner-teacher-courses">{assigned.slice(0,4).map(course=><button key={course.id} onClick={()=>{setSelectedCourse(course.id);setSection("courses");}}>{course.title}<small>{course.grade}</small></button>)}{!assigned.length&&<p>لم يتم إسناد كورسات لهذا المدرس بعد.</p>}</div>
+          <div className="owner-teacher-actions"><button onClick={()=>{setFilter(teacher.full_name||"");setSection("accounts");}}>عرض الحساب والصلاحيات</button><button onClick={()=>{setCourseForm(old=>({...old,teacher_id:teacher.id}));setSection("courses");}}>إسناد كورس جديد</button></div>
+        </article>;
+      })}{!teachers.length&&<p className="owner-note">لا توجد حسابات مدرسين حاليًا.</p>}</div>
+      <p className="owner-note">إسناد الكورسات وتغيير الصلاحيات يتم من أدوات الإدارة الحالية؛ هذه الصفحة تجمع بيانات المدرسين ومحتواهم في مكان واحد دون تعديل بيانات الحسابات تلقائيًا.</p>
     </section>}
 
     {section==="courses" && <section className="owner-panel">
@@ -598,7 +625,7 @@ export default function OwnerConsole() {
             <label className="owner-inline-upload">تحديث صورة الكورس<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"courses",selected)}/></label>
             <div className="owner-lesson-manager"><h3>إدارة محاضرات الكورس</h3>
               {lessons.filter(x=>x.course_id===selected.id).map((lesson,index)=><article key={lesson.id}>{lesson.cover_image_url?<img className="owner-lesson-thumb" src={lesson.cover_image_url} alt=""/>:<span>{String(index+1).padStart(2,"0")}</span>}<div><b>{lesson.title}</b><small>{lesson.description||"بدون وصف"}</small><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"lessons",lesson)}/></label></div><i className={lesson.is_published?"published":"draft"}>{lesson.is_published?"منشورة":"مسودة"}</i><div className="owner-lesson-actions"><button disabled={saving===lesson.id} onClick={()=>editLesson(lesson)}>تعديل</button><button disabled={saving===lesson.id} onClick={()=>toggleLesson(lesson)}>{lesson.is_published?"إخفاء":"نشر"}</button><button className="owner-danger-button" disabled={saving===lesson.id} onClick={()=>deleteLesson(lesson)}>حذف</button></div></article>)}
-              <form className="owner-form" onSubmit={createLesson}><h4>{editingLessonId?"تعديل المحاضرة":"إضافة محاضرة جديدة"}</h4><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={uploading==="lesson-video"} onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 1 جيجابايت، رفع متقطع قابل للاستكمال {uploading==="lesson-video"?" · جارٍ الرفع "+uploadProgress+"%":""}</small></label>{uploading==="lesson-video"&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>يمكن إعادة اختيار الملف نفسه لاستكمال الرفع إذا انقطع الاتصال.</small></div>}{lessonForm.video_url&&(lessonVideoPreviewUrl?(getLectureEmbedUrl(lessonVideoPreviewUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoPreviewUrl)} title="معاينة فيديو المحاضرة" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>:<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>):<div className="course-player-error">تم رفع الفيديو وحفظ مساره. المعاينة الخاصة لم تجهز بعد؛ احفظ المحاضرة ثم أعد المحاولة.</div>)}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":editingLessonId?"حفظ التعديلات":"إضافة المحاضرة كمسودة"}</button>{editingLessonId&&<button type="button" className="owner-secondary-button" onClick={()=>{setEditingLessonId("");setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:""});setLessonVideoPreviewUrl("");}}>إلغاء التعديل</button>}</form>
+              <form className="owner-form" onSubmit={createLesson}><h4>{editingLessonId?"تعديل المحاضرة":"إضافة محاضرة جديدة"}</h4><label>عنوان المحاضرة<input required value={lessonForm.title} onChange={e=>setLessonForm({...lessonForm,title:e.target.value})}/></label><label>وصف المحاضرة<input value={lessonForm.description} onChange={e=>setLessonForm({...lessonForm,description:e.target.value})}/></label><label>رفع فيديو من الهاتف أو الجهاز<input type="file" accept="video/mp4,video/webm,video/quicktime" disabled={uploading==="lesson-video"} onChange={e=>uploadLessonVideo(e.target.files?.[0])}/><small>MP4 أو WEBM أو MOV — حتى 1 جيجابايت، رفع متقطع قابل للاستكمال {uploading==="lesson-video"?" · جارٍ الرفع "+uploadProgress+"%":""}</small></label>{lessonForm.video_url&&<p className="owner-note">{Number(lessonForm.duration_seconds)>0?"مدة الفيديو المكتشفة تلقائيًا: "+Math.floor(Number(lessonForm.duration_seconds)/60)+" دقيقة و"+(Number(lessonForm.duration_seconds)%60)+" ثانية":"سيتم استخراج مدة الفيديو تلقائيًا عند توفر بياناته."}</p>}{uploading==="lesson-video"&&<div className="lecture-upload-progress" role="status"><div><span>رفع الفيديو</span><b>{uploadProgress}%</b></div><progress max="100" value={uploadProgress}/><small>يمكن إعادة اختيار الملف نفسه لاستكمال الرفع إذا انقطع الاتصال.</small></div>}{lessonForm.video_url&&(lessonVideoPreviewUrl?(getLectureEmbedUrl(lessonVideoPreviewUrl)?<iframe className="lecture-video-embed" src={getLectureEmbedUrl(lessonVideoPreviewUrl)} title="معاينة فيديو المحاضرة" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>:<video className="owner-video-preview" src={lessonVideoPreviewUrl} controls playsInline preload="metadata"/>):<div className="course-player-error">تم رفع الفيديو وحفظ مساره. المعاينة الخاصة لم تجهز بعد؛ احفظ المحاضرة ثم أعد المحاولة.</div>)}<label>أو رابط فيديو خارجي<input dir="ltr" value={lessonForm.video_url} onChange={e=>setLessonForm({...lessonForm,video_url:e.target.value})} placeholder="https://..."/></label><label>محتوى المحاضرة<textarea rows="4" value={lessonForm.content} onChange={e=>setLessonForm({...lessonForm,content:e.target.value})}/></label><label>صورة المحاضرة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"lesson")}/></label>{lessonForm.cover_image_url&&<img className="owner-image-preview" src={lessonForm.cover_image_url} alt="معاينة صورة المحاضرة"/>}<button className="owner-primary-button" disabled={saving==="lesson"||!lessonForm.cover_image_url}>{saving==="lesson"?"جارٍ الحفظ...":editingLessonId?"حفظ التعديلات":"إضافة المحاضرة كمسودة"}</button>{editingLessonId&&<button type="button" className="owner-secondary-button" onClick={()=>{setEditingLessonId("");setLessonForm({title:"",description:"",content:"",video_url:"",cover_image_url:""});setLessonVideoPreviewUrl("");}}>إلغاء التعديل</button>}</form>
             </div></div>}
         </div>
       </div>
@@ -617,12 +644,12 @@ export default function OwnerConsole() {
           {examForm.cover_image_url&&<img className="owner-image-preview" src={examForm.cover_image_url} alt="معاينة صورة الامتحان"/>}
           <div className="owner-question-builder"><h4>بناء أسئلة الامتحان</h4>
             <label>نوع السؤال<select value={examQuestionForm.question_type} onChange={e=>setExamQuestionForm({...examQuestionForm,question_type:e.target.value})}><option value="single_choice">اختيار من متعدد</option><option value="true_false">صح أو خطأ</option><option value="short_answer">إجابة قصيرة</option><option value="essay">سؤال مقالي / مسألة</option></select></label>
-            <label>نص السؤال<textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})}/></label>
+            <label>نص السؤال<textarea rows="3" value={examQuestionForm.prompt} onChange={e=>setExamQuestionForm({...examQuestionForm,prompt:e.target.value})} placeholder="اكتب نص السؤال أو ارفع صورة السؤال"/></label><label className="owner-question-image-upload">صورة السؤال (اختياري)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>uploadImage(e.target.files?.[0],"exam-question")}/></label>{uploading==="exam-question"&&<small className="owner-upload-state">جارٍ رفع صورة السؤال...</small>}{examQuestionForm.image_url&&<img className="exam-question-image-preview" src={examQuestionForm.image_url} alt="معاينة صورة السؤال"/>}
             {examQuestionForm.question_type==="single_choice"&&<label>الاختيارات (كل اختيار في سطر)<textarea rows="3" value={examQuestionForm.choices} onChange={e=>setExamQuestionForm({...examQuestionForm,choices:e.target.value})}/></label>}
             {["single_choice","true_false"].includes(examQuestionForm.question_type)&&<label>الإجابة الصحيحة<input value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder="اكتب الاختيار كما هو أو صحيح / خطأ"/></label>}
             <label>الدرجة<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label>
             <button type="button" className="owner-secondary-button" onClick={addExamQuestion}>إضافة السؤال</button>
-            {examDraftQuestions.map((q,i)=><div className="owner-draft-question" key={q.id}><span>{i+1}. {q.prompt}</span><small>{q.points} درجة</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></div>)}
+            {examDraftQuestions.map((q,i)=><div className="owner-draft-question" key={q.id}><span>{i+1}. {q.prompt||"سؤال بصورة"}{q.image_url&&<img className="exam-question-draft-thumb" src={q.image_url} alt="صورة السؤال"/>}</span><small>{q.points} درجة</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></div>)}
             <small>عدد الأسئلة المضافة: {examDraftQuestions.length}</small>
           </div>
           <button className="owner-primary-button" disabled={saving==="exam"||uploading==="exam"||!courses.length||!examDraftQuestions.length}>{saving==="exam"?"جارٍ الحفظ...":"حفظ الامتحان وأسئلته كمسودة"}</button>
