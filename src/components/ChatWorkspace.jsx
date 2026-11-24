@@ -236,7 +236,8 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   }catch(e){setError("تعذر إزالة العضو من الجروب.");}
  };
  const deleteMessage=async(messageId)=>{
-  if(!isManager)return;
+  const targetMessage=messages.find(m=>m.id===messageId);
+  if(!isManager&&targetMessage?.sender_id!==myId)return;
   if(!window.confirm("حذف الرسالة من المحادثة؟"))return;
   try{
    await emadChatApi(portal,"emad_messages?id=eq."+encodeURIComponent(messageId),{method:"DELETE",headers:{Prefer:"return=minimal"}});
@@ -308,7 +309,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  };
 
  return <section className={"emad-chat-page "+(selected?.kind==="support"?"is-direct-chat":"is-group-chat")} dir="rtl">
-  <header className="emad-chat-hero"><div className="emad-chat-hero-mark">✉</div><div><span>EMAD MESSENGER</span><h1>{title}</h1><p>{isOwner?"مركز محادثات الطلاب والجروبات.":isSupport?"محادثاتك الخاصة مع فريق المنصة.":"تواصل مباشر مع المدرس والطلاب."}</p></div><div className="emad-chat-status"><i/> متصل الآن</div></header>
+  <header className="emad-chat-hero"><div className="emad-chat-hero-mark">CHAT</div><div><span>EMAD MESSENGER</span><h1>{title}</h1><p>{isOwner?"مركز محادثات الطلاب والجروبات.":isSupport?"محادثاتك الخاصة مع فريق المنصة.":"تواصل مباشر مع المدرس والطلاب."}</p></div><div className="emad-chat-status">منصة مستر عماد</div></header>
   {error&&<div className="emad-chat-error" role="alert">{error}</div>}
   <div className={"emad-chat-layout "+(mobileView==="thread"?"mobile-thread-open":"mobile-list-open")}>
    <aside className="emad-chat-sidebar">
@@ -324,7 +325,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
       const latest=lastMessages[c.id];
       const ownMember=members.find(m=>m.conversation_id===c.id&&m.user_id===myId);
       const unread=!!latest&&latest.sender_id!==myId&&(!ownMember?.last_read_at||new Date(latest.created_at)>new Date(ownMember.last_read_at));
-      const preview=latest?(latest.message_type==="image"?"📷 صورة":latest.message_type==="audio"?"🎤 رسالة صوتية":latest.message_type==="file"?"📎 "+(latest.attachment_name||"ملف"):latest.body||"رسالة"):(c.kind==="support"?"ابدأ المحادثة الآن":"لا توجد رسائل بعد");
+      const preview=latest?(latest.message_type==="image"?"صورة":latest.message_type==="audio"?"رسالة صوتية":latest.message_type==="file"?"ملف: "+(latest.attachment_name||"مرفق"):latest.body||"رسالة"):(c.kind==="support"?"ابدأ المحادثة الآن":"لا توجد رسائل بعد");
       return <button key={c.id} className={"emad-chat-conversation "+(selectedId===c.id?"active":"")} onClick={()=>{setSelectedId(c.id);setMobileView("thread");}}>
        <span className={"emad-chat-conv-avatar "+(c.kind==="support"?"support":"group")}>{c.kind==="support"?(person?.avatar_url?<img src={person.avatar_url} alt=""/>:initials(person?.full_name||c.title)):"#"}</span>
        <span className="emad-chat-conv-copy"><b>{c.kind==="support"?(person?.full_name||c.title):c.title}</b><small>{preview}</small></span>
@@ -338,7 +339,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
     {selected?<>
      <header className="emad-chat-thread-head">
       <button type="button" className="emad-chat-mobile-back" onClick={()=>setMobileView("list")} aria-label="العودة إلى المحادثات">‹ <span>المحادثات</span></button>
-      <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة · متصل الآن":selected.grade+" · مجموعة الصف"}</small></div></div>
+      <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة":"مجموعة · "+selected.grade}</small></div></div>
       <div className="emad-chat-thread-actions"><button type="button" onClick={()=>setMessageSearch(v=>v?"":" ")} title="البحث في الرسائل">بحث</button>{isManager?<button type="button" onClick={()=>setGroupInfoOpen(v=>!v)} title="تفاصيل المحادثة">التفاصيل</button>:null}{isManager&&selected.kind==="grade_group"?<button onClick={togglePin} disabled={pinBusy}>{selectedMember?.is_pinned?"إلغاء التثبيت":"تثبيت"}</button>:null}<span>{members.filter(m=>m.conversation_id===selectedId).length} أعضاء</span></div>
      </header>
      {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <span className="emad-chat-roster-member" key={m.user_id}><button title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>{isManager&&m.user_id!==myId&&(mode!=="teacher"||m.member_role==="student")?<button className="emad-chat-remove-member" title="إزالة من الجروب" onClick={()=>removeMember(m.user_id)}>×</button>:null}</span>;})}{mode==="teacher"?<div className="emad-chat-add-member"><select value={addStudentId} onChange={e=>setAddStudentId(e.target.value)}><option value="">إضافة طالب من نفس الصف</option>{availableStudents.map(p=><option key={p.id} value={p.id}>{p.full_name||"طالب"} · {p.student_number||"—"}</option>)}</select><button disabled={!addStudentId||memberBusy} onClick={addStudent}>{memberBusy?"جارٍ الإضافة...":"إضافة"}</button></div>:null}</div>:null}
@@ -356,7 +357,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
          {message.reply_to&&messages.find(m=>m.id===message.reply_to)?<div className="emad-chat-reply-quote"><b>رد على رسالة</b><span>{messages.find(m=>m.id===message.reply_to)?.body||"مرفق"}</span></div>:null}
          <div className="emad-chat-bubble">
           {message.body?<p>{message.body}</p>:null}
-          {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:message.message_type==="audio"?<div className="emad-chat-audio"><span>رسالة صوتية</span><audio controls preload="metadata" src={url}/></div>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">📎 {message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
+          {message.attachment_path&&url?(message.message_type==="image"?<a href={url} target="_blank" rel="noreferrer"><img className="emad-chat-attachment-image" src={url} alt={message.attachment_name||"صورة مرفقة"}/></a>:message.message_type==="audio"?<div className="emad-chat-audio"><span>رسالة صوتية</span><audio controls preload="metadata" src={url}/></div>:<a className="emad-chat-file" href={url} target="_blank" rel="noreferrer">{message.attachment_name||"ملف مرفق"} <small>فتح الملف</small></a>):null}
          </div>
          <div className="emad-chat-message-tools"><button onClick={()=>startReply(message)}>رد</button>{mine?<button onClick={()=>editMessage(message)}>تعديل</button>:null}<button onClick={()=>setReactionMenu(reactionMenu===message.id?"":message.id)}>تفاعل</button>{(isManager||mine)?<button onClick={()=>deleteMessage(message.id)}>حذف</button>:null}</div>
          {(reactions[message.id]||[]).length?<div className="emad-chat-reaction-list">{["like","heart","laugh","surprise","sad","thanks"].map(type=>{const list=(reactions[message.id]||[]).filter(r=>r.reaction===type);return list.length?<button key={type} className={list.some(r=>r.user_id===myId)?"mine":""} onClick={()=>toggleReaction(message,type)}><span>{({like:"＋",heart:"♥",laugh:"笑",surprise:"!",sad:"−",thanks:"✓"})[type]}</span><small>{list.length}</small></button>:null;})}</div>:null}
@@ -372,7 +373,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
       {editingMessageId?<div className="emad-chat-compose-context"><b>تعديل الرسالة</b><span>أنت تعدّل رسالتك الحالية</span><button onClick={()=>{setEditingMessageId("");setDraft("");}}>إلغاء</button></div>:null}
       {file?<div className="emad-chat-file-chip"><span>{file.name}</span><button onClick={()=>{setFile(null);if(fileRef.current)fileRef.current.value="";}}>×</button></div>:null}
       <textarea value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}}} rows={2} placeholder="اكتب رسالتك هنا..."/>
-      <div className="emad-chat-compose-actions"><label className="emad-chat-attach">＋ إرفاق ملف<input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={e=>setFile(e.target.files?.[0]||null)}/></label><button type="button" className={"emad-chat-record "+(recording?"recording":"")} onClick={recording?stopVoiceRecording:startVoiceRecording}>{recording?"إيقاف التسجيل":"تسجيل صوت"}</button><small>الحد الأقصى 15 ميجابايت</small><button onClick={send} disabled={sending||(!draft.trim()&&!file)}>{sending?"جارٍ الحفظ...":editingMessageId?"حفظ التعديل":"إرسال"} <span>➤</span></button></div>
+      <div className="emad-chat-compose-actions"><label className="emad-chat-attach">＋ إرفاق ملف<input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onChange={e=>setFile(e.target.files?.[0]||null)}/></label><button type="button" className={"emad-chat-record "+(recording?"recording":"")} onClick={recording?stopVoiceRecording:startVoiceRecording}>{recording?"إيقاف التسجيل":"تسجيل صوت"}</button><small>الحد الأقصى 15 ميجابايت</small><button onClick={send} disabled={sending||(!draft.trim()&&!file)}>{sending?"جارٍ الحفظ...":editingMessageId?"حفظ التعديل":"إرسال"}</button></div>
      </div>
     </>:<div className="emad-chat-empty large">اختار محادثة من القائمة لبدء التواصل.</div>}
    </section>
