@@ -14,6 +14,10 @@ const initials=name=>(String(name||"؟").trim().split(/\s+/)[0]||"؟").slice(0,1
 
 export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  const [conversations,setConversations]=useState([]);
+ const [lastMessages,setLastMessages]=useState({});
+ const [newChatStudentId,setNewChatStudentId]=useState("");
+ const [creatingChat,setCreatingChat]=useState(false);
+ const [conversationTab,setConversationTab]=useState("all");
  const [members,setMembers]=useState([]);
  const [profiles,setProfiles]=useState({});
  const [messages,setMessages]=useState([]);
@@ -73,6 +77,10 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
    const map=Object.fromEntries((cards||[]).map(p=>[p.id,p]));
    setProfiles(old=>({...old,...map}));
    setMembers(memberRows||[]);
+   const previewRows=ids.length?await emadChatApi(portal,"emad_messages?select=id,conversation_id,sender_id,message_type,body,attachment_name,created_at&conversation_id=in.("+ids.join(",")+")&deleted_at=is.null&order=created_at.desc&limit=500"):[];
+   const previewMap={};
+   for(const message of previewRows||[])if(!previewMap[message.conversation_id])previewMap[message.conversation_id]=message;
+   setLastMessages(previewMap);
    const sorted=[...(rows||[])].sort((a,b)=>{
     if(isOwner&&a.kind==="support"&&b.kind==="support"){
      const ap=memberRows.some(m=>m.conversation_id===a.id&&m.user_id===myId&&m.is_pinned);
@@ -91,6 +99,10 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
  },[myId,portal,mode,isSupport,isOwner,profile?.full_name,selectedId]);
 
  const loadStudentsForGroup=useCallback(async()=>{
+  if(mode==="teacher_support"){
+   try{const rows=await emadChatApi(portal,"profiles?select=id,full_name,student_number,grade,role&role=eq.student&order=full_name.asc&limit=1000");setAvailableStudents(rows||[]);}catch(e){setAvailableStudents([]);console.warn("teacher_direct_chat_students",e);}
+   return;
+  }
   if(mode!=="teacher"||!selected||selected.kind!=="grade_group"){setAvailableStudents([]);return;}
   try{
    const rows=await emadChatApi(portal,"profiles?select=id,full_name,student_number,grade,role&role=eq.student&grade=eq."+encodeURIComponent(selected.grade)+"&limit=500");
@@ -214,9 +226,30 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
 
  const visibleConversations=useMemo(()=>conversations.filter(c=>{
   const person=profiles[c.created_by];
-  return [c.title,c.grade,person?.full_name,person?.student_number].join(" ").toLowerCase().includes(filter.toLowerCase());
- }),[conversations,profiles,filter]);
+  const textMatch=[c.title,c.grade,person?.full_name,person?.student_number].join(" ").toLowerCase().includes(filter.toLowerCase());
+  const latest=lastMessages[c.id];
+  const member=members.find(m=>m.conversation_id===c.id&&m.user_id===myId);
+  const unread=!!latest&&latest.sender_id!==myId&&(!member?.last_read_at||new Date(latest.created_at)>new Date(member.last_read_at));
+  return textMatch&&(conversationTab==="all"||unread);
+ }),[conversations,profiles,filter,lastMessages,members,myId,conversationTab]);
  const selectedMember=members.find(m=>m.conversation_id===selectedId&&m.user_id===myId);
+ const startDirectChat=async()=>{
+  if(mode!=="teacher_support"||!newChatStudentId||creatingChat)return;
+  const student=availableStudents.find(item=>item.id===newChatStudentId);
+  if(!student)return;
+  setCreatingChat(true);setError("");
+  try{
+   const existing=conversations.find(item=>item.kind==="support"&&item.created_by===student.id);
+   if(existing){setSelectedId(existing.id);setMobileView("thread");setNewChatStudentId("");return;}
+   const rows=await emadChatApi(portal,"emad_conversations",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({kind:"support",title:"محادثة مباشرة — "+(student.full_name||"طالب"),created_by:student.id})});
+   const created=Array.isArray(rows)?rows[0]:rows;
+   if(!created?.id)throw new Error("conversation_create_failed");
+   await emadChatApi(portal,"emad_conversation_members",{method:"POST",headers:{Prefer:"return=minimal"},body:JSON.stringify({conversation_id:created.id,user_id:myId,member_role:"teacher"})});
+   setProfiles(old=>({...old,[student.id]:student}));setNewChatStudentId("");
+   await loadConversations();setSelectedId(created.id);setMobileView("thread");
+  }catch(e){console.error("teacher_direct_chat_create",e);setError("تعذر بدء المحادثة مع الطالب. حدّث الصفحة وحاول مرة أخرى.");}
+  finally{setCreatingChat(false);}
+ };
  const addStudent=async()=>{
   if(!isManager||mode!=="teacher"||!selectedId||!addStudentId||memberBusy)return;
   setMemberBusy(true);setError("");
@@ -232,22 +265,27 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
   if(person)setProfileCard(person);
  };
 
- return <section className="emad-chat-page" dir="rtl">
-  <header className="emad-chat-hero"><div className="emad-chat-hero-mark">✦</div><div><span>EMAD EL SANAFIRY · SECURE MESSAGING</span><h1>{title}</h1><p>{isOwner?"كل محادثات الطلاب والجروبات في مركز واحد.":isSupport?"محادثة خاصة ومستمرة مع خدمة العملاء.":"تواصل منظم مع زملائك والمدرس داخل جروب الصف."}</p></div><div className="emad-chat-status"><i/> متصل بقاعدة البيانات</div></header>
+ return <section className={"emad-chat-page "+(selected?.kind==="support"?"is-direct-chat":"is-group-chat")} dir="rtl">
+  <header className="emad-chat-hero"><div className="emad-chat-hero-mark">✉</div><div><span>EMAD MESSENGER</span><h1>{title}</h1><p>{isOwner?"مركز محادثات الطلاب والجروبات.":isSupport?"محادثاتك الخاصة مع فريق المنصة.":"تواصل مباشر مع المدرس والطلاب."}</p></div><div className="emad-chat-status"><i/> متصل الآن</div></header>
   {error&&<div className="emad-chat-error" role="alert">{error}</div>}
   <div className={"emad-chat-layout "+(mobileView==="thread"?"mobile-thread-open":"mobile-list-open")}>
    <aside className="emad-chat-sidebar">
-    <div className="emad-chat-sidebar-head"><b>{isOwner?"المحادثات والجروبات":"المحادثات"}</b><small>{visibleConversations.length} مساحة</small></div>
+    <div className="emad-chat-sidebar-head"><div><b>{isOwner?"المحادثات والجروبات":"الدردشات"}</b><small>{conversations.length} محادثة</small></div>{mode==="teacher_support"?<span className="emad-chat-new-mark">مراسلة الطلاب</span>:null}</div>
+    {mode==="teacher_support"?<div className="emad-chat-new-direct"><select value={newChatStudentId} onChange={e=>setNewChatStudentId(e.target.value)}><option value="">اختر طالبًا لبدء محادثة</option>{availableStudents.map(student=><option key={student.id} value={student.id}>{student.full_name||"طالب"} · {student.student_number||student.grade||""}</option>)}</select><button type="button" disabled={!newChatStudentId||creatingChat} onClick={startDirectChat}>{creatingChat?"جارٍ الفتح...":"محادثة جديدة +"}</button></div>:null}
     <input className="emad-chat-search" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="ابحث في المحادثات..."/>
+    <div className="emad-chat-list-tabs"><button className={conversationTab==="all"?"active":""} onClick={()=>setConversationTab("all")}>الكل</button><button className={conversationTab==="unread"?"active":""} onClick={()=>setConversationTab("unread")}>غير مقروءة</button></div>
     {busy?<div className="emad-chat-empty">جارٍ تحميل المحادثات...</div>:visibleConversations.map(c=>{
       const person=profiles[c.created_by];
       const pinned=members.some(m=>m.conversation_id===c.id&&m.user_id===myId&&m.is_pinned);
       const count=members.filter(m=>m.conversation_id===c.id).length;
-      const latest=messages.find(m=>m.conversation_id===c.id);
+      const latest=lastMessages[c.id];
+      const ownMember=members.find(m=>m.conversation_id===c.id&&m.user_id===myId);
+      const unread=!!latest&&latest.sender_id!==myId&&(!ownMember?.last_read_at||new Date(latest.created_at)>new Date(ownMember.last_read_at));
+      const preview=latest?(latest.message_type==="image"?"📷 صورة":latest.message_type==="audio"?"🎤 رسالة صوتية":latest.message_type==="file"?"📎 "+(latest.attachment_name||"ملف"):latest.body||"رسالة"):(c.kind==="support"?"ابدأ المحادثة الآن":"لا توجد رسائل بعد");
       return <button key={c.id} className={"emad-chat-conversation "+(selectedId===c.id?"active":"")} onClick={()=>{setSelectedId(c.id);setMobileView("thread");}}>
        <span className={"emad-chat-conv-avatar "+(c.kind==="support"?"support":"group")}>{c.kind==="support"?(person?.avatar_url?<img src={person.avatar_url} alt=""/>:initials(person?.full_name||c.title)):"#"}</span>
-       <span className="emad-chat-conv-copy"><b>{c.kind==="support"?(person?.full_name||c.title):c.title}</b><small>{c.kind==="support"?"خدمة العملاء · "+(person?.student_number||"حساب طالب"):(c.grade||"جروب دراسي")+" · "+count+" أعضاء"}</small></span>
-       <span className="emad-chat-conv-meta">{pinned?<i title="مثبت">★</i>:null}<small>{shortDate(c.updated_at||c.created_at)}</small></span>
+       <span className="emad-chat-conv-copy"><b>{c.kind==="support"?(person?.full_name||c.title):c.title}</b><small>{preview}</small></span>
+       <span className="emad-chat-conv-meta">{pinned?<i title="مثبت">★</i>:null}<small>{latest?dateLabel(latest.created_at):shortDate(c.updated_at||c.created_at)}</small>{unread?<i className="emad-chat-unread">جديد</i>:null}</span>
       </button>;
     })}
     {!busy&&!visibleConversations.length?<div className="emad-chat-empty">{isOwner?"لا توجد محادثات أو جروبات حتى الآن.":"لا توجد محادثات متاحة لحسابك."}</div>:null}
@@ -257,7 +295,7 @@ export default function ChatWorkspace({profile,mode="groups",portal="student"}){
     {selected?<>
      <header className="emad-chat-thread-head">
       <button type="button" className="emad-chat-mobile-back" onClick={()=>setMobileView("list")} aria-label="العودة إلى المحادثات">‹ <span>المحادثات</span></button>
-      <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة مع خدمة العملاء":selected.grade+" · مجموعة الصف"}</small></div></div>
+      <div className="emad-chat-thread-title"><span className={"emad-chat-conv-avatar "+(selected.kind==="support"?"support":"group")}>{selected.kind==="support"?(profiles[selected.created_by]?.avatar_url?<img src={profiles[selected.created_by].avatar_url} alt=""/>:initials(profiles[selected.created_by]?.full_name||selected.title)):"#"}</span><div><b>{selected.kind==="support"?(profiles[selected.created_by]?.full_name||selected.title):selected.title}</b><small>{selected.kind==="support"?"محادثة خاصة · متصل الآن":selected.grade+" · مجموعة الصف"}</small></div></div>
       <div className="emad-chat-thread-actions">{isOwner&&selected.kind==="support"?<button onClick={togglePin} disabled={pinBusy}>{selectedMember?.is_pinned?"إلغاء التثبيت":"تثبيت المحادثة"}</button>:null}<span>{members.filter(m=>m.conversation_id===selectedId).length} أعضاء</span></div>
      </header>
      {selected.kind==="grade_group"?<div className="emad-chat-roster"><span>الأعضاء:</span>{members.filter(m=>m.conversation_id===selectedId).slice(0,18).map(m=>{const p=profiles[m.user_id];return <span className="emad-chat-roster-member" key={m.user_id}><button title={p?.full_name||"عضو"} onClick={()=>openProfile(m.user_id)}>{p?.avatar_url?<img src={p.avatar_url} alt=""/>:initials(p?.full_name)}</button>{isManager&&m.user_id!==myId&&(mode!=="teacher"||m.member_role==="student")?<button className="emad-chat-remove-member" title="إزالة من الجروب" onClick={()=>removeMember(m.user_id)}>×</button>:null}</span>;})}{mode==="teacher"?<div className="emad-chat-add-member"><select value={addStudentId} onChange={e=>setAddStudentId(e.target.value)}><option value="">إضافة طالب من نفس الصف</option>{availableStudents.map(p=><option key={p.id} value={p.id}>{p.full_name||"طالب"} · {p.student_number||"—"}</option>)}</select><button disabled={!addStudentId||memberBusy} onClick={addStudent}>{memberBusy?"جارٍ الإضافة...":"إضافة"}</button></div>:null}</div>:null}
