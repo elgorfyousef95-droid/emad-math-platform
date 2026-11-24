@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { notify } from "./MessageProvider.jsx";
 import { portalApi } from "../lib/portalAuth.js";
-import { studentApi } from "../lib/auth.js";
+import { refreshStudentSession, studentApi } from "../lib/auth.js";
 import "./LiveClassroomControls.css";
 
 const statusLabels = {
@@ -24,6 +24,7 @@ export function TeacherMicRequestConsole({ profile }) {
   const [busy, setBusy] = useState(true);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
+  const seenRequests = useRef(null);
 
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setBusy(true);
@@ -40,6 +41,12 @@ export function TeacherMicRequestConsole({ profile }) {
       const ids = activeSessions.map(item => item.id);
       const rows = await portalApi("teacher", "emad_live_mic_requests?select=id,session_id,student_id,status,mic_enabled,created_at,responded_at&session_id=in.(" + ids.join(",") + ")&order=created_at.desc");
       setRequests(rows || []);
+      const currentIds = new Set((rows || []).map(item => item.id));
+      if (seenRequests.current) {
+        const incoming = (rows || []).filter(item => !seenRequests.current.has(item.id) && item.status === "requested");
+        if (incoming.length) notify({ type: "warning", title: "طلب مايك جديد", message: "وصلك " + incoming.length + " طلب جديد من الطلاب." });
+      }
+      seenRequests.current = currentIds;
       const studentIds = [...new Set((rows || []).map(item => item.student_id))];
       if (studentIds.length) {
         const people = await portalApi("teacher", "profiles?select=id,full_name,student_number,avatar_url&id=in.(" + studentIds.join(",") + ")");
@@ -170,10 +177,12 @@ export function StudentLiveClassroom({ profile }) {
   const [busy, setBusy] = useState(true);
   const [sending, setSending] = useState("");
   const [error, setError] = useState("");
+  const previousStatuses = useRef({});
 
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setBusy(true);
     try {
+      await refreshStudentSession();
       const live = await studentApi("emad_teacher_live_sessions?select=id,title,grade,room_name,started_at,teacher_id&status=eq.live&grade=eq." + encodeURIComponent(profile.grade || "") + "&order=started_at.desc");
       const activeSessions = live || [];
       setSessions(activeSessions);
@@ -184,7 +193,15 @@ export function StudentLiveClassroom({ profile }) {
       }
       const ids = activeSessions.map(item => item.id);
       const rows = await studentApi("emad_live_mic_requests?select=id,session_id,status,mic_enabled,created_at,responded_at&student_id=eq." + encodeURIComponent(profile.id) + "&session_id=in.(" + ids.join(",") + ")");
-      setRequests(Object.fromEntries((rows || []).map(item => [item.session_id, item])));
+      const nextRequests = Object.fromEntries((rows || []).map(item => [item.session_id, item]));
+      for (const item of rows || []) {
+        const before = previousStatuses.current[item.session_id];
+        if (before && before !== item.status && ["approved", "rejected", "removed"].includes(item.status)) {
+          notify({ type: item.status === "approved" ? "success" : "warning", title: statusLabels[item.status], message: item.status === "approved" ? "المدرس وافق على طلب المايك." : item.status === "removed" ? "المدرس أوقف صلاحية المايك." : "المدرس لم يوافق على طلب المايك حاليًا." });
+        }
+        previousStatuses.current[item.session_id] = item.status;
+      }
+      setRequests(nextRequests);
       setError("");
     } catch (e) {
       console.error("student_live_classroom_load", e);
@@ -204,7 +221,7 @@ export function StudentLiveClassroom({ profile }) {
     setSending(session.id);
     try {
       const existing = requests[session.id];
-      if (existing && ["rejected", "cancelled"].includes(existing.status)) {
+      if (existing && ["rejected", "cancelled", "removed"].includes(existing.status)) {
         await studentApi("emad_live_mic_requests?id=eq." + encodeURIComponent(existing.id), { method: "DELETE", headers: { Prefer: "return=minimal" } });
       }
       await studentApi("emad_live_mic_requests", {
