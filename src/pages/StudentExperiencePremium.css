@@ -478,3 +478,9 @@
 @media(max-width:760px){
  .se-content:has(.homework-page),.se-content:has(.learning-page-exams){background-attachment:scroll!important}
 }
+
+
+/* Reliable visual fallback for every student service card, including practice */
+.sd-card-image{background-image:var(--sd-card-image),linear-gradient(135deg,#31536e,#13243a)!important;background-repeat:no-repeat!important;background-position:center!important;background-size:cover!important}
+.sd-service-card:nth-child(4) .sd-card-image{background-image:var(--sd-card-image),url("https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=85"),linear-gradient(135deg,#31536e,#13243a)!important}
+.sd-service-card:nth-child(4) .sd-card-shade{background:linear-gradient(180deg,#07152530 0%,#08152542 28%,#081525f2 100%)!important}

@@ -238,7 +238,7 @@ function TeacherConsole(){
      <button className={section==="students"?"active":""} onClick={()=>setSection("students")}><span>♙</span> الطلاب <b>{students.length}</b></button>
      <button className={section==="live"?"active":""} onClick={()=>setSection("live")}><span>●</span> البث المباشر</button>
      <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}><span>◎</span> الجروبات</button>
-     <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> رسائل الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
+     <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> محادثات الطلاب</button>
     </nav>
     <div className="teacher-side-note"><b>اتصال مباشر</b><span>البيانات محفوظة على قاعدة المنصة الحالية.</span></div>
    </aside>
@@ -273,6 +273,7 @@ function TeacherConsole(){
   </div>}
   {section==="live"&&<TeacherLiveStudio profile={profile}/>}
   {section==="groups"&&<ChatWorkspace profile={profile} mode="teacher" portal="teacher"/>}
+  {section==="live"&&<TeacherLiveStudio profile={profile}/>}
   {section==="students"&&<section className="teacher-panel teacher-directory" dir="rtl">
    <div className="teacher-panel-heading"><div><span>STUDENT FOLLOW-UP</span><h2>إدارة ومتابعة الطلاب</h2></div><small>{students.length} طالب</small></div>
    <input className="teacher-student-search" value={studentFilter} onChange={e=>setStudentFilter(e.target.value)} placeholder="ابحث باسم الطالب أو رقم الحساب أو المجموعة..."/>
@@ -282,16 +283,7 @@ function TeacherConsole(){
     <dl><div><dt>الصف</dt><dd>{student.grade||"—"}</dd></div><div><dt>المجموعة</dt><dd>{student.group_name||"—"}</dd></div><div><dt>الهاتف</dt><dd dir="ltr">{student.phone||"—"}</dd></div><div><dt>ولي الأمر</dt><dd>{student.parent_name||"—"}</dd></div><div><dt>هاتف ولي الأمر</dt><dd dir="ltr">{student.parent_phone||"—"}</dd></div><div><dt>المحافظة / المدينة</dt><dd>{[student.governorate,student.city].filter(Boolean).join(" / ")||"—"}</dd></div></dl>
    </article>)}{!students.length&&<div className="teacher-empty large">لا يوجد طلاب ظاهرون حتى الآن في الصفوف المرتبطة بكورساتك.</div>}</div>
   </section>}
-  {section==="messages"&&<section className="teacher-panel teacher-inbox" dir="rtl">
-   <div className="teacher-panel-heading"><div><span>STUDENT COMMUNICATION</span><h2>مراسلات الطلاب</h2></div><small>{messages.length} رسالة</small></div>
-   <div className="teacher-message-list">{messages.map(message=>{const student=students.find(x=>x.id===message.user_id);return <article className="teacher-message-card" key={message.id}>
-    <div className="teacher-message-head"><div><b>{message.subject||"رسالة طالب"}</b><small>{student?.full_name||"طالب"} · {student?.student_number||"—"} · {new Date(message.created_at).toLocaleString("ar-EG")}</small></div><span className={message.status==="closed"?"closed":"open"}>{message.status==="closed"?"تم الرد":"بانتظار الرد"}</span></div>
-    <p>{message.message}</p>
-    {message.admin_reply&&<div className="teacher-existing-reply"><b>آخر رد من الإدارة</b><p>{message.admin_reply}</p></div>}
-    <textarea value={replyDrafts[message.id]||""} onChange={e=>setReplyDrafts(old=>({...old,[message.id]:e.target.value}))} placeholder="اكتب ردك للطالب..."/>
-    <button disabled={saving||!(replyDrafts[message.id]||"").trim()} onClick={()=>replyToMessage(message)}>إرسال الرد وإغلاق الرسالة</button>
-   </article>;})}{!messages.length&&<div className="teacher-empty large">لا توجد رسائل من الطلاب حاليًا.</div>}</div>
-  </section>}
+  {section==="messages"&&<ChatWorkspace profile={profile} mode="teacher_support" portal="teacher"/>}
    </div>
   </div>
   <p className="teacher-footnote">صلاحيات هذه البوابة محدودة بحساب المدرس وكورسات المدرس نفسه. لا تتيح إدارة حساب المالك أو إعدادات المنصة العليا.</p>
@@ -337,7 +329,7 @@ const pageArtwork={
  book:"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1500&q=85",
  play:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=85",
  exam:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
- task:"https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1500&q=85",
+ task:"https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1500&q=85",
  file:"https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1500&q=85",
  chart:"https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1500&q=85",
  calendar:"https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1500&q=85",
@@ -361,7 +353,7 @@ function HomePage({profile,subscription,go,grade,unread}){
   {id:"courses",n:"01",title:"المسارات التعليمية",desc:"افهم المنهج من الأساس إلى مستوى الامتحان.",image:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=85",tag:"تعلم"},
   {id:"lessons",n:"02",title:"المحاضرات",desc:"ارجع للشرح وراجع كل فكرة في وقتك.",image:"https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1000&q=85",tag:"شاهد"},
   {id:"exams",n:"03",title:"الامتحانات",desc:"اختبر فهمك واستعد بثقة.",image:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=85",tag:"اختبر"},
-  {id:"homework",n:"04",title:"التدريبات والواجبات",desc:"حوّل كل درس إلى مهارة بالتطبيق.",image:"https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1000&q=85",tag:"تدرّب"}
+  {id:"homework",n:"04",title:"التدريبات والواجبات",desc:"حوّل كل درس إلى مهارة بالتطبيق.",image:"https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=85",tag:"تدرّب"}
  ];
  const quick=[["schedule","جدول الحصص","calendar"],["files","المذكرات والملفات","file"],["results","نتائجي","chart"],["groups","الجروبات الدراسية","users"],["ai","المساعد الذكي","spark"],["messages","الدعم الفني","support"]];
  return <div className="se-dashboard">
@@ -524,6 +516,7 @@ function LiveSessionsPage({profile}){
 }
 
 function SectionPage({page,go,profile}){
+ if(page==="homework")return <HomeworkPage profile={profile}/>;
  if(page==="messages")return <ChatWorkspace profile={profile} mode="support" portal="student"/>;
  if(page==="groups")return <ChatWorkspace profile={profile} mode="groups" portal="student"/>;
  if(page==="live")return <LiveSessionsPage profile={profile}/>;

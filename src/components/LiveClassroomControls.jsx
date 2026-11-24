@@ -24,6 +24,8 @@ export function TeacherMicRequestConsole({ profile }) {
   const [busy, setBusy] = useState(true);
   const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastGrade, setBroadcastGrade] = useState("الصف الثالث الثانوي");
   const seenRequests = useRef(null);
 
   const load = useCallback(async (quiet = false) => {
@@ -69,6 +71,10 @@ export function TeacherMicRequestConsole({ profile }) {
     return () => window.clearInterval(timer);
   }, [load]);
 
+  const requestBroadcastSetup = () => {
+    notify({ type: "warning", title: "البث يحتاج تفعيل خدمة الفيديو", message: "تم تجهيز اختيار الصف وإدارة طلبات المايك، لكن لا يمكن فتح بث فيديو حقيقي قبل ربط LiveKit وإضافة مفاتيحه الآمنة على الخادم." });
+  };
+
   const decide = async (request, status) => {
     setSaving(request.id);
     try {
@@ -107,6 +113,15 @@ export function TeacherMicRequestConsole({ profile }) {
         </div>
         <div className="live-control-counter"><b>{waiting.length}</b><small>طلبات تنتظر قرارك</small></div>
       </header>
+      <div className="live-control-launch-card">
+        <div className="live-control-launch-copy"><span>TEACHER BROADCAST STUDIO</span><h3>إعداد حصة مباشرة جديدة</h3><p>المدرس فقط هو الذي يبدأ البث ويظهر بالصورة. الطلاب يشاهدون الحصة، ولا يفتح المايك لأي طالب إلا بعد موافقتك.</p></div>
+        <div className="live-control-launch-fields">
+          <label>عنوان الحصة<input value={broadcastTitle} onChange={event => setBroadcastTitle(event.target.value)} maxLength={140} placeholder="مثال: مراجعة قوانين نيوتن"/></label>
+          <label>الصف المستهدف<select value={broadcastGrade} onChange={event => setBroadcastGrade(event.target.value)}><option>الصف الأول الثانوي</option><option>الصف الثاني الثانوي</option><option>الصف الثالث الثانوي</option></select></label>
+          <button type="button" onClick={requestBroadcastSetup}>تجهيز بدء البث للصف المحدد</button>
+        </div>
+        <small className="live-control-provider-warning">حالة الربط: خدمة البث المرئي غير مضافة بعد. لن يتم نشر حصة وهمية للطلاب قبل تفعيل مزود البث الآمن.</small>
+      </div>
       <div className="live-control-stats">
         <article><small>جلسات مباشرة</small><b>{sessions.length}</b></article>
         <article><small>طلبات جديدة</small><b>{waiting.length}</b></article>
