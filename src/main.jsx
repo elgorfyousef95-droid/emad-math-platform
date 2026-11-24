@@ -238,7 +238,7 @@ function TeacherConsole(){
      <button className={section==="students"?"active":""} onClick={()=>setSection("students")}><span>♙</span> الطلاب <b>{students.length}</b></button>
      <button className={section==="live"?"active":""} onClick={()=>setSection("live")}><span>●</span> البث المباشر</button>
      <button className={section==="groups"?"active":""} onClick={()=>setSection("groups")}><span>◎</span> الجروبات</button>
-     <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> رسائل الطلاب <b>{messages.filter(x=>x.status!=="closed").length}</b></button>
+     <button className={section==="messages"?"active":""} onClick={()=>setSection("messages")}><span>✉</span> محادثات الطلاب</button>
     </nav>
     <div className="teacher-side-note"><b>اتصال مباشر</b><span>البيانات محفوظة على قاعدة المنصة الحالية.</span></div>
    </aside>
@@ -329,7 +329,7 @@ const pageArtwork={
  book:"https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1500&q=85",
  play:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1500&q=85",
  exam:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1500&q=85",
- task:"https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1500&q=85",
+ task:"https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1500&q=85",
  file:"https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=1500&q=85",
  chart:"https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1500&q=85",
  calendar:"https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=1500&q=85",
@@ -353,7 +353,7 @@ function HomePage({profile,subscription,go,grade,unread}){
   {id:"courses",n:"01",title:"المسارات التعليمية",desc:"افهم المنهج من الأساس إلى مستوى الامتحان.",image:"https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1000&q=85",tag:"تعلم"},
   {id:"lessons",n:"02",title:"المحاضرات",desc:"ارجع للشرح وراجع كل فكرة في وقتك.",image:"https://images.unsplash.com/photo-1588072432836-e10032774350?auto=format&fit=crop&w=1000&q=85",tag:"شاهد"},
   {id:"exams",n:"03",title:"الامتحانات",desc:"اختبر فهمك واستعد بثقة.",image:"https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1000&q=85",tag:"اختبر"},
-  {id:"homework",n:"04",title:"التدريبات والواجبات",desc:"حوّل كل درس إلى مهارة بالتطبيق.",image:"https://images.unsplash.com/photo-1455390582262-044c6a8a7d5b?auto=format&fit=crop&w=1000&q=85",tag:"تدرّب"}
+  {id:"homework",n:"04",title:"التدريبات والواجبات",desc:"حوّل كل درس إلى مهارة بالتطبيق.",image:"https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1200&q=85",tag:"تدرّب"}
  ];
  const quick=[["schedule","جدول الحصص","calendar"],["files","المذكرات والملفات","file"],["results","نتائجي","chart"],["groups","الجروبات الدراسية","users"],["ai","المساعد الذكي","spark"],["messages","الدعم الفني","support"]];
  return <div className="se-dashboard">
