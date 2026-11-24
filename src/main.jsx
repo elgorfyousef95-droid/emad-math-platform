@@ -530,25 +530,11 @@ function HomeworkPage({profile}){
 }
 
 function LiveSessionsPage({profile}){
- const [sessions,setSessions]=useState([]);
- const [busy,setBusy]=useState(true);
- const [error,setError]=useState("");
- const [selected,setSelected]=useState(null);
- const load=async()=>{
-  setBusy(true);setError("");
-  try{
-   const grade=profile?.grade;
-   if(!grade){setSessions([]);return;}
-   const rows=await studentApi("emad_teacher_live_sessions?select=id,title,grade,room_name,started_at&grade=eq."+encodeURIComponent(grade)+"&status=eq.live&order=started_at.desc&limit=20");
-   setSessions(rows||[]);
-  }catch(e){console.error("live_sessions_load",e);setError("تعذر تحميل الحصص المباشرة. حاول تحديث الصفحة.");}
-  finally{setBusy(false);}
- };
- useEffect(()=>{load();const timer=window.setInterval(load,15000);return()=>window.clearInterval(timer);},[profile?.grade]);
- const roomUrl=session=>"https://meet.jit.si/"+session.room_name+"#config.prejoinPageEnabled=false&config.startWithVideoMuted=true&config.startWithAudioMuted=false&userInfo.displayName="+encodeURIComponent(profile?.full_name||"طالب");
  return <div className="platform-page student-live-page"><PageBanner eyebrow="LIVE CLASSROOM" title="المحاضرات المباشرة" description="انضم إلى الحصص المباشرة الخاصة بصفك الدراسي." art="live"/>
-  {error&&<div className="student-live-alert">{error}</div>}
-  {selected?<section className="student-live-room"><header><div><span className="student-live-dot"/> بث مباشر الآن<h2>{selected.title}</h2><small>{selected.grade} · مستر عماد السنافيري</small></div><button onClick={()=>setSelected(null)}>العودة للحصص</button></header><iframe src={roomUrl(selected)} title={selected.title} allow="camera; microphone; fullscreen; display-capture; autoplay" allowFullScreen/><p>أنت داخل الحصة المباشرة. اسمح باستخدام الميكروفون إذا أردت المشاركة بالصوت.</p></section>:busy?<div className="platform-empty-state">جارٍ البحث عن الحصص المباشرة لصفك...</div>:sessions.length?<div className="student-live-grid">{sessions.map(session=><article key={session.id}><div className="student-live-card-art"><span>LIVE NOW</span><b>حصة مباشرة</b></div><div><small>{session.grade}</small><h3>{session.title}</h3><p>مستر {"عماد السنافيري"} · بدأت {new Date(session.started_at).toLocaleTimeString("ar-EG",{hour:"2-digit",minute:"2-digit"})}</p><button onClick={()=>setSelected(session)}>انضم للحصة الآن</button></div></article>)}</div>:<div className="platform-empty-state"><Icon name="live" size={36}/><b>لا توجد حصة مباشرة الآن</b><span>عندما يبدأ المدرس بثًا لصفك، سيظهر هنا تلقائيًا.</span><button className="platform-gold-button" onClick={load}>تحديث الحصص</button></div>}
+  <section className="student-live-room student-live-not-ready">
+   <div className="student-live-card-art"><span>LIVE CLASSROOM</span><b>فصول مباشرة داخل المنصة</b></div>
+   <div><h2>استوديو البث قيد الإعداد</h2><p>سيظهر رابط الحصة هنا تلقائيًا عند تفعيل خدمة البث الآمنة وبدء المدرس للحصة المخصصة لصفك.</p><small>حسابك: {profile?.full_name||"طالب"} · {profile?.grade||"الصف الدراسي"}</small></div>
+  </section>
  </div>;
 }
 
