@@ -45,6 +45,7 @@ export default function OwnerConsole() {
   const [codes, setCodes] = useState([]);
   const [payments, setPayments] = useState([]);
   const [attempts, setAttempts] = useState([]);
+  const [attemptScoreDrafts, setAttemptScoreDrafts] = useState({});
   const [section, setSection] = useState("overview");
   const [filter, setFilter] = useState("");
   const [saving, setSaving] = useState("");
@@ -136,6 +137,22 @@ export default function OwnerConsole() {
     load();
     return () => nodes.forEach((node) => node.classList.remove("admin-scroll-mode"));
   }, []);
+
+
+  const saveAttemptScore = async (attempt) => {
+    const raw = attemptScoreDrafts[attempt.id] ?? (attempt.score === null || attempt.score === undefined ? "" : String(attempt.score));
+    const score = Number(raw);
+    const maximum = examQuestions.filter((q) => q.exam_id === attempt.exam_id).reduce((sum, q) => sum + Number(q.points || 0), 0);
+    if (!attempt.submitted_at) { setError("لا يمكن اعتماد نتيجة قبل تسليم الطالب للامتحان."); return; }
+    if (raw === "" || !Number.isFinite(score) || score < 0 || score > maximum) { setError("اكتب درجة صحيحة بين صفر والدرجة النهائية (" + maximum + ")."); return; }
+    setSaving("attempt:" + attempt.id); setError(""); setNotice("");
+    try {
+      await portalApi("owner", "exam_attempts?id=eq." + encodeURIComponent(attempt.id), { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ score, graded_at: new Date().toISOString() }) });
+      setAttempts((old) => old.map((x) => x.id === attempt.id ? { ...x, score, graded_at: new Date().toISOString() } : x));
+      setNotice("تم حفظ نتيجة الطالب واعتماد الدرجة.");
+    } catch (e) { setError("تعذر حفظ النتيجة. تأكد من صلاحيات المالك واتصال قاعدة البيانات."); }
+    finally { setSaving(""); }
+  };
 
   const studentUsers = useMemo(() => users.filter((x) => x.role === "student"), [users]);
   const teachers = useMemo(() => users.filter((x) => x.role === "teacher"), [users]);
@@ -660,8 +677,8 @@ export default function OwnerConsole() {
           <div className="owner-media-actions"><span className={exam.is_published?"published":"draft"}>{exam.is_published?"منشور":"مسودة"}</span><button disabled={saving===exam.id} onClick={()=>toggleExam(exam)}>{exam.is_published?"إيقاف النشر":"نشر"}</button><label className="owner-file-mini">تغيير الصورة<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>updateMediaImage(e.target.files?.[0],"exams",exam)}/></label></div>
         </article>)}</div>{!exams.length&&<p className="owner-note">لا توجد امتحانات حتى الآن.</p>}</div>
       </div>
-      <div className="owner-panel-subsection"><h3>محاولات ونتائج الطلاب</h3><div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>الطالب</th><th>الامتحان</th><th>تاريخ البداية</th><th>التسليم</th><th>الدرجة</th><th>التصحيح</th></tr></thead><tbody>{attempts.map(attempt=><tr key={attempt.id}><td>{studentName(attempt.student_id)}</td><td>{exams.find(x=>x.id===attempt.exam_id)?.title||"امتحان"}</td><td>{dateText(attempt.started_at)}</td><td>{attempt.submitted_at?dateText(attempt.submitted_at):"لم يسلّم"}</td><td>{attempt.score===null||attempt.score===undefined?"—":attempt.score}</td><td>{attempt.graded_at?"مصحح":"يحتاج مراجعة"}</td></tr>)}</tbody></table></div>{!attempts.length&&<p className="owner-note">لا توجد محاولات امتحانات مسجلة حتى الآن.</p>}</div>
-      <p className="owner-warning">الأسئلة الموضوعية تُصحح تلقائيًا عند التسليم. الأسئلة المقالية تظهر ضمن المحاولات التي تحتاج مراجعة يدوية؛ شاشة التصحيح التفصيلية سنضيفها في المرحلة التالية.</p>
+      <div className="owner-panel-subsection"><h3>محاولات ونتائج الطلاب</h3><div className="owner-table-wrap"><table className="owner-table"><thead><tr><th>الطالب</th><th>الامتحان</th><th>تاريخ البداية</th><th>التسليم</th><th>الدرجة والتحكم</th><th>التصحيح</th></tr></thead><tbody>{attempts.map(attempt=><tr key={attempt.id}><td>{studentName(attempt.student_id)}</td><td>{exams.find(x=>x.id===attempt.exam_id)?.title||"امتحان"}</td><td>{dateText(attempt.started_at)}</td><td>{attempt.submitted_at?dateText(attempt.submitted_at):"لم يسلّم"}</td><td><div className="owner-score-editor"><input type="number" min="0" step="0.5" value={attemptScoreDrafts[attempt.id]??(attempt.score===null||attempt.score===undefined?"":String(attempt.score))} onChange={(e)=>setAttemptScoreDrafts((old)=>({...old,[attempt.id]:e.target.value}))} disabled={!attempt.submitted_at}/><button type="button" disabled={!attempt.submitted_at||saving==="attempt:"+attempt.id} onClick={()=>saveAttemptScore(attempt)}>{saving==="attempt:"+attempt.id?"حفظ...":"اعتماد الدرجة"}</button></div></td><td>{attempt.graded_at?"مصحح":"يحتاج مراجعة"}</td></tr>)}</tbody></table></div>{!attempts.length&&<p className="owner-note">لا توجد محاولات امتحانات مسجلة حتى الآن.</p>}</div>
+      <p className="owner-warning">تقدر تعتمد الدرجة النهائية لكل محاولة مسلّمة من هنا. الأسئلة المقالية تُراجع يدويًا قبل اعتماد النتيجة.</p>
     </section>}
 
     {section==="homework" && <section className="owner-panel">
