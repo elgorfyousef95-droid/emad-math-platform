@@ -479,16 +479,118 @@ function LearningPage({page,grade,profile}){
 }
 
 function HomeworkPage({profile}){
- const [items,setItems]=useState([]),[submissions,setSubmissions]=useState([]),[busy,setBusy]=useState(true),[active,setActive]=useState(null),[questions,setQuestions]=useState([]),[answers,setAnswers]=useState({}),[submission,setSubmission]=useState(null),[saving,setSaving]=useState(false),[loadingQuestions,setLoadingQuestions]=useState(false);
- const load=async()=>{setBusy(true);try{const [a,s]=await Promise.all([studentApi("homework_assignments?select=id,title,description,grade,group_name,due_at,cover_image_url,created_at&is_published=eq.true&order=created_at.desc"),studentApi("homework_submissions?select=id,assignment_id,answers,status,objective_score,manual_score,feedback,submitted_at&order=created_at.desc")]);setItems(a||[]);setSubmissions(s||[]);}catch(e){console.error("homework_load",e);notify({type:"error",title:"تعذر تحميل الواجبات",message:"راجع اتصالك بالإنترنت وحاول مرة أخرى."});}finally{setBusy(false);}};
- useEffect(()=>{load();},[]);
- const open=async item=>{setActive(item);setLoadingQuestions(true);setQuestions([]);setSubmission(null);setAnswers({});try{const [qs,ss]=await Promise.all([studentApi("homework_questions?select=id,position,question_type,prompt,choices,points&assignment_id=eq."+item.id+"&order=position.asc"),studentApi("homework_submissions?select=id,assignment_id,answers,status,objective_score,manual_score,feedback,submitted_at&assignment_id=eq."+item.id+"&limit=1")]);const sub=ss?.[0]||null;setQuestions(qs||[]);setSubmission(sub);setAnswers(sub?.answers||{});}catch(e){console.error("homework_open",e);notify({type:"error",title:"تعذر فتح الواجب",message:"لم نتمكن من تحميل الأسئلة."});setActive(null);}finally{setLoadingQuestions(false);}};
- const save=async()=>{if(!active||!profile?.id)return;setSaving(true);try{let saved=submission;if(!saved){const rows=await studentApi("homework_submissions?on_conflict=assignment_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({assignment_id:active.id,student_id:profile.id,answers,status:"draft"})});saved=rows?.[0];}else{const rows=await studentApi("homework_submissions?id=eq."+saved.id,{method:"PATCH",headers:{Prefer:"return=representation"},body:JSON.stringify({answers,updated_at:new Date().toISOString()})});saved=rows?.[0]||{...saved,answers};}setSubmission(saved);notify({type:"success",title:"تم حفظ إجاباتك",message:"تقدر ترجع تكمل الحل قبل موعد التسليم."});}catch(e){console.error("homework_save",e);notify({type:"error",title:"تعذر حفظ الإجابات",message:"تأكد من الاتصال وحاول مرة أخرى."});}finally{setSaving(false);}};
- const submit=async()=>{if(!active)return;const missing=questions.filter(q=>!String(answers[q.id]??"").trim());if(missing.length){notify({type:"warning",title:"لسه فيه أسئلة من غير إجابة",message:"جاوب على كل الأسئلة قبل التسليم."});return;}setSaving(true);try{let saved=submission;if(!saved){const rows=await studentApi("homework_submissions?on_conflict=assignment_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({assignment_id:active.id,student_id:profile.id,answers,status:"draft"})});saved=rows?.[0];}else{await studentApi("homework_submissions?id=eq."+saved.id,{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({answers})});}const result=await studentApi("rpc/emad_submit_homework",{method:"POST",body:JSON.stringify({p_submission_id:saved.id})});notify({type:"success",title:"تم تسليم الواجب بنجاح",message:result?.objective_max>0?"درجتك الموضوعية: "+result.objective_score+" من "+result.objective_max:"تم استلام إجاباتك وهي في انتظار التصحيح."});setActive(null);await load();}catch(e){console.error("homework_submit",e);notify({type:"error",title:"تعذر تسليم الواجب",message:e.message==="deadline_passed"?"انتهى موعد تسليم هذا الواجب.":"حصلت مشكلة أثناء التسليم؛ إجاباتك لم تُعتمد بعد."});}finally{setSaving(false);}};
+ const [items,setItems]=useState([]),[submissions,setSubmissions]=useState([]),[busy,setBusy]=useState(true),[active,setActive]=useState(null),[questions,setQuestions]=useState([]),[answers,setAnswers]=useState({}),[submission,setSubmission]=useState(null),[review,setReview]=useState(null),[saving,setSaving]=useState(false),[loadingQuestions,setLoadingQuestions]=useState(false),[autoSaveState,setAutoSaveState]=useState("idle");
+ const load=async()=>{
+  setBusy(true);
+  try{
+   const [a,s]=await Promise.all([
+    studentApi("homework_assignments?select=id,title,description,grade,group_name,cover_image_url,created_at&is_published=eq.true&order=created_at.asc"),
+    studentApi("homework_submissions?select=id,assignment_id,student_id,answers,status,objective_score,manual_score,feedback,submitted_at&student_id=eq."+encodeURIComponent(profile.id)+"&order=created_at.desc")
+   ]);
+   const subjectOrder={"الجبر":0,"التفاضل":1,"الاستاتيكا":2};
+   const sorted=(a||[]).slice().sort((x,y)=>{
+    const sx=Object.keys(subjectOrder).find(k=>x.title.startsWith(k))||"";
+    const sy=Object.keys(subjectOrder).find(k=>y.title.startsWith(k))||"";
+    if(subjectOrder[sx]!==subjectOrder[sy])return (subjectOrder[sx]??9)-(subjectOrder[sy]??9);
+    return Number((x.title.match(/[٠-٩]+$/)||["٠"])[0].replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)))-Number((y.title.match(/[٠-٩]+$/)||["٠"])[0].replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)));
+   });
+   setItems(sorted);setSubmissions(s||[]);
+  }catch(e){console.error("homework_load",e);notify({type:"error",title:"تعذر تحميل النماذج",message:"راجع اتصالك بالإنترنت وحاول مرة أخرى."});}
+  finally{setBusy(false);}
+ };
+ useEffect(()=>{if(profile?.id)load();},[profile?.id]);
+ const open=async item=>{
+  setActive(item);setLoadingQuestions(true);setQuestions([]);setSubmission(null);setReview(null);setAnswers({});setAutoSaveState("idle");
+  try{
+   const [qs,ss]=await Promise.all([
+    studentApi("homework_questions?select=id,position,question_type,prompt,choices,points&assignment_id=eq."+item.id+"&order=position.asc"),
+    studentApi("homework_submissions?select=id,assignment_id,student_id,answers,status,objective_score,manual_score,feedback,submitted_at&assignment_id=eq."+item.id+"&student_id=eq."+encodeURIComponent(profile.id)+"&limit=1")
+   ]);
+   const sub=ss?.[0]||null;setQuestions(qs||[]);setSubmission(sub);setAnswers(sub?.answers||{});
+   if(sub?.status==="submitted"){
+    const result=await studentApi("rpc/emad_homework_review",{method:"POST",body:JSON.stringify({p_submission_id:sub.id})});
+    setReview(result);
+   }
+  }catch(e){console.error("homework_open",e);notify({type:"error",title:"تعذر فتح النموذج",message:"لم نتمكن من تحميل الأسئلة أو تقدمك المحفوظ."});setActive(null);}
+  finally{setLoadingQuestions(false);}
+ };
+ const upsertDraft=async(currentAnswers)=>{
+  const rows=await studentApi("homework_submissions?on_conflict=assignment_id,student_id",{method:"POST",headers:{Prefer:"resolution=merge-duplicates,return=representation"},body:JSON.stringify({assignment_id:active.id,student_id:profile.id,answers:currentAnswers,status:"draft"})});
+  return rows?.[0]||null;
+ };
+ useEffect(()=>{
+  if(!active||loadingQuestions||!questions.length||submission?.status==="submitted"||!profile?.id)return;
+  const timer=setTimeout(async()=>{
+   setAutoSaveState("saving");
+   try{const saved=await upsertDraft(answers);if(saved)setSubmission(saved);setAutoSaveState("saved");}
+   catch(e){console.error("homework_autosave",e);setAutoSaveState("error");}
+  },750);
+  return()=>clearTimeout(timer);
+ },[active?.id,answers,loadingQuestions,questions.length,submission?.status,profile?.id]);
+ const save=async()=>{
+  if(!active||!profile?.id)return;setSaving(true);
+  try{const saved=await upsertDraft(answers);if(saved)setSubmission(saved);setAutoSaveState("saved");notify({type:"success",title:"تم حفظ تقدمك",message:"إجاباتك محفوظة على حسابك وتقدر ترجع تكمل في أي وقت."});}
+  catch(e){console.error("homework_save",e);notify({type:"error",title:"تعذر حفظ الإجابات",message:"تأكد من الاتصال وحاول مرة أخرى."});}
+  finally{setSaving(false);}
+ };
+ const submit=async()=>{
+  if(!active)return;
+  const missing=questions.filter(q=>!String(answers[q.id]??"").trim());
+  if(missing.length){notify({type:"warning",title:"لسه فيه أسئلة من غير إجابة",message:"راجع الأسئلة غير المجابة قبل التسليم."});return;}
+  setSaving(true);
+  try{
+   const saved=await upsertDraft(answers);
+   if(!saved?.id)throw new Error("submission_save_failed");
+   const result=await studentApi("rpc/emad_submit_homework",{method:"POST",body:JSON.stringify({p_submission_id:saved.id})});
+   const reviewResult=await studentApi("rpc/emad_homework_review",{method:"POST",body:JSON.stringify({p_submission_id:saved.id})});
+   setSubmission({...saved,status:"submitted",submitted_at:new Date().toISOString(),objective_score:result?.objective_score??null,manual_score:null});
+   setReview(reviewResult);setAutoSaveState("saved");
+   notify({type:"success",title:"تم تسليم النموذج",message:"تم تصحيح الاختيار من متعدد وحفظ إجاباتك المقالية للمراجعة."});
+   await load();
+  }catch(e){console.error("homework_submit",e);notify({type:"error",title:"تعذر تسليم النموذج",message:"حصلت مشكلة أثناء التسليم؛ إجاباتك المحفوظة لم تُحذف. حاول مرة أخرى."});}
+  finally{setSaving(false);}
+ };
  const done=submissions.filter(s=>s.status==="submitted").length;
- if(active)return <div className="platform-page homework-page"><PageBanner eyebrow="YOUR HOMEWORK / SOLVE" title={active.title} description={active.description||"حل الأسئلة وسلّم إجاباتك من داخل المنصة."} art="task"/><div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للواجبات</button><span>{questions.length} سؤال</span>{active.due_at&&<span>آخر موعد: {new Date(active.due_at).toLocaleString("ar-EG")}</span>}</div>{loadingQuestions?<div className="platform-empty-state">جارٍ تحميل الأسئلة...</div>:submission?.status==="submitted"?<section className="hw-submitted"><b>تم تسليم هذا الواجب بالفعل</b><p>تاريخ التسليم: {submission.submitted_at?new Date(submission.submitted_at).toLocaleString("ar-EG"):"—"}</p>{submission.objective_score!==null&&<strong>الدرجة الموضوعية: {submission.objective_score}</strong>}{submission.manual_score!==null&&<strong>الدرجة النهائية: {submission.manual_score}</strong>}{submission.feedback&&<p>ملاحظات المدرس: {submission.feedback}</p>}</section>:<><div className="hw-question-list">{questions.map((q,i)=><article className="hw-question" key={q.id}><header><span>السؤال {i+1}</span><small>{q.points} درجة</small></header><h3>{q.prompt}</h3>{q.question_type==="single_choice"?<div className="hw-options">{(Array.isArray(q.choices)?q.choices:[]).map((choice,j)=><label key={j} className={answers[q.id]===String(choice)?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===String(choice)} onChange={()=>setAnswers(old=>({...old,[q.id]:String(choice)}))}/><span>{choice}</span></label>)}</div>:q.question_type==="true_false"?<div className="hw-options two">{["صحيح","خطأ"].map(choice=><label key={choice} className={answers[q.id]===choice?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===choice} onChange={()=>setAnswers(old=>({...old,[q.id]:choice}))}/><span>{choice}</span></label>)}</div>:<textarea rows={q.question_type==="essay"?6:3} value={answers[q.id]||""} onChange={e=>setAnswers(old=>({...old,[q.id]:e.target.value}))} placeholder="اكتب إجابتك هنا..."/>}</article>)}</div><div className="hw-submit-bar"><button onClick={save} disabled={saving}>{saving?"جارٍ الحفظ...":"حفظ ومتابعة لاحقًا"}</button><button className="platform-gold-button" onClick={submit} disabled={saving}>{saving?"جارٍ التسليم...":"تسليم الواجب نهائيًا"}<Icon name="arrow"/></button></div></>}</div>;
- return <div className="platform-page homework-page"><PageBanner eyebrow="HOMEWORK & PRACTICE" title="الواجبات والتدريبات" description="حل واجباتك داخل المنصة، احفظ إجاباتك، وسلّمها للمدرس وتابع نتيجتك." art="task"/><div className="hw-summary"><article><b>{items.length}</b><span>واجب متاح</span></article><article><b>{done}</b><span>تم تسليمه</span></article><article><b>{items.length-done}</b><span>لم يُسلّم بعد</span></article></div>{busy?<div className="platform-empty-state">جارٍ تحميل واجبات صفك ومجموعتك...</div>:items.length?<div className="hw-assignment-grid">{items.map(item=>{const sub=submissions.find(s=>s.assignment_id===item.id);const expired=item.due_at&&new Date(item.due_at)<new Date();return <article key={item.id} className="hw-assignment-card">{item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"صورة "+item.title}/>:<span className="hw-assignment-mark"><Icon name="task" size={23}/></span>}<div className="hw-card-meta"><span>{item.grade}</span><span>{sub?.status==="submitted"?"تم التسليم":expired?"انتهى الموعد":"متاح للحل"}</span></div><h2>{item.title}</h2><p>{item.description||"واجب تدريبي لقياس فهمك وتطبيقك."}</p>{item.due_at&&<small>آخر موعد: {new Date(item.due_at).toLocaleString("ar-EG")}</small>}{sub?.status==="submitted"?<div className="hw-card-result">تم التسليم{sub.objective_score!==null?" · "+sub.objective_score+" درجة":""}</div>:<button onClick={()=>open(item)} disabled={!!expired}> {sub?"استكمال الحل":"ابدأ الحل"} <Icon name="arrow"/></button>}</article>;})}</div>:<div className="platform-empty-state"><Icon name="task" size={36}/><b>مفيش واجبات منشورة لصفك حاليًا</b><span>أول ما المدرس ينشر واجب للصف أو المجموعة بتاعتك هيظهر هنا.</span></div>}</div>;
+ const draftCount=submissions.filter(s=>s.status==="draft").length;
+ const answered=Object.values(answers).filter(v=>String(v??"").trim()).length;
+ const progress=questions.length?Math.round(answered/questions.length*100):0;
+ const subjectOf=title=>title.startsWith("الجبر")?"الجبر":title.startsWith("التفاضل")?"التفاضل":"الاستاتيكا";
+ if(active)return <div className="platform-page homework-page" dir="rtl">
+  <PageBanner eyebrow="EXAM MODEL / SOLVE" title={active.title} description={active.description||"نموذج تدريبي بنظام امتحان الثانوية العامة."} art="task"/>
+  <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
+  <div className="hw-progress-track"><span style={{width:progress+"%"}}/></div>
+  {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
+   <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} <small>درجة موضوعية</small></strong></div>
+   <p>تاريخ التسليم: {submission.submitted_at?new Date(submission.submitted_at).toLocaleString("ar-EG"):"—"}</p>
+   {review?.items?.map((item,i)=><article className="hw-review-item" key={item.question_id}>
+    <header><b>السؤال {arNumber(i+1)}</b><span>{item.question_type==="essay"?"سؤال مقالي":(String(item.student_answer).trim()===String(item.correct_answer).trim()?"إجابة صحيحة":"راجع الإجابة")}</span></header>
+    <h3>{item.prompt}</h3><p><b>إجابتك:</b> {item.student_answer||"لم تُسجل إجابة"}</p>
+    {item.question_type==="essay"?<div className="hw-model-answer"><b>نموذج الإجابة للمراجعة</b><p>{item.correct_answer}</p></div>:<div className="hw-model-answer"><b>الإجابة الصحيحة:</b> {item.correct_answer}</div>}
+    {item.explanation&&<small>{item.explanation}</small>}
+   </article>)}
+   {submission.feedback&&<p className="hw-teacher-feedback">ملاحظات المدرس: {submission.feedback}</p>}
+  </section>:<>
+   <div className="hw-exam-instructions"><b>تعليمات الحل</b><span>لا يوجد وقت محدد. تقدمك يُحفظ تلقائيًا أثناء الحل، ويمكنك الخروج والعودة لاحقًا من نفس الحساب.</span></div>
+   <div className="hw-question-list">{questions.map((q,i)=><article className="hw-question" key={q.id}>
+    <header><span>السؤال {arNumber(i+1)}</span><small>{arNumber(q.points)} درجة</small></header><h3>{q.prompt}</h3>
+    {q.question_type==="single_choice"?<div className="hw-options">{(Array.isArray(q.choices)?q.choices:[]).map((choice,j)=><label key={j} className={answers[q.id]===String(choice)?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===String(choice)} onChange={()=>setAnswers(old=>({...old,[q.id]:String(choice)}))}/><span>{["أ","ب","ج","د"][j]} — {choice}</span></label>)}</div>:<textarea rows={7} value={answers[q.id]||""} onChange={e=>setAnswers(old=>({...old,[q.id]:e.target.value}))} placeholder="اكتب خطوات الحل والإجابة هنا..."/>}
+   </article>)}</div>
+   <div className="hw-submit-bar"><span className="hw-answer-count">تمت الإجابة عن {arNumber(answered)} من {arNumber(questions.length)}</span><button onClick={save} disabled={saving}>{saving?"جارٍ الحفظ...":"حفظ التقدم"}</button><button className="platform-gold-button" onClick={submit} disabled={saving}>{saving?"جارٍ التسليم...":"تسليم النموذج وتصحيح الإجابات"}<Icon name="arrow"/></button></div>
+  </>}
+ </div>;
+ return <div className="platform-page homework-page" dir="rtl">
+  <PageBanner eyebrow="THANAWYA AMMA / EXAM MODELS" title="نماذج امتحانات الرياضيات" description="٣٠ نموذجًا تدريبيًا للصف الثالث الثانوي — أسئلة متنوعة على نمط امتحان آخر السنة، مع حفظ تلقائي للتقدم وتصحيح بعد التسليم." art="task"/>
+  <div className="hw-summary"><article><b>{arNumber(items.length)}</b><span>نموذج متاح</span></article><article><b>{arNumber(done)}</b><span>تم تسليمه</span></article><article><b>{arNumber(draftCount)}</b><span>قيد الحل ومحفوظ</span></article></div>
+  {busy?<div className="platform-empty-state">جارٍ تحميل النماذج...</div>:items.length?<><div className="hw-subject-intro"><b>اختر الفرع الذي تريد التدريب عليه</b><span>كل نموذج مستقل، درجته ٣٠ درجة، ولا يوجد وقت محدد للحل.</span></div><div className="hw-assignment-grid">{items.map((item,index)=>{const sub=submissions.find(s=>s.assignment_id===item.id);const answeredCount=Object.values(sub?.answers||{}).filter(v=>String(v??"").trim()).length;const pct=sub?.status==="submitted"?100:Math.round(answeredCount/20*100);const subject=subjectOf(item.title);return <article key={item.id} className={"hw-assignment-card hw-model-card hw-model-"+(subject==="الجبر"?"algebra":subject==="التفاضل"?"calculus":"statics")}>
+    {item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"غلاف "+item.title}/>:null}
+    <div className="hw-card-shade"/>
+    <div className="hw-card-content"><div className="hw-card-meta"><span>{subject}</span><span>{sub?.status==="submitted"?"تم التسليم":sub?.status==="draft"?"تم حفظ التقدم":"متاح للحل"}</span></div><h2>{item.title}</h2><p>{item.description}</p>
+    <div className="hw-model-stats"><span>٢٠ سؤالًا</span><span>٣٠ درجة</span><span>بدون توقيت</span></div>
+    {sub?.status==="submitted"?<div className="hw-card-result">تم التسليم · {sub.objective_score??"بانتظار مراجعة المقالي"} درجة موضوعية</div>:<><div className="hw-card-progress"><span>تقدمك</span><b>{arNumber(pct)}٪</b></div><div className="hw-card-progress-track"><i style={{width:pct+"%"}}/></div><button onClick={()=>open(item)}>{sub?"استكمال النموذج":"ابدأ النموذج"}<Icon name="arrow"/></button></>}
+    </div></article>;})}</div></>:<div className="platform-empty-state"><Icon name="task" size={36}/><b>لا توجد نماذج متاحة لهذا الحساب</b><span>تأكد أن حسابك على الصف الثالث الثانوي.</span></div>}
+ </div>;
 }
+function arNumber(value){return String(value??"").replace(/\d/g,d=>"٠١٢٣٤٥٦٧٨٩"[Number(d)]);}
 
 function LiveSessionsPage({profile}){
  return <div className="platform-page student-live-page"><StudentLiveClassroom profile={profile}/></div>;
