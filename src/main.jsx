@@ -16,6 +16,7 @@ import ChatWorkspace from "./components/ChatWorkspace.jsx";
 import { TeacherMicRequestConsole, StudentLiveClassroom } from "./components/LiveClassroomControls.jsx";
 import { getLectureVideoUrl, getLectureEmbedUrl } from "./lib/lectureMedia.js";
 import "./pages/PlatformExperienceRefresh.css";
+import "./pages/HomeworkPremium.css";
 import "./pages/TeacherStudio.css";
 
 const gradeNames=["الصف الأول الثانوي","الصف الثاني الثانوي","الصف الثالث الثانوي"];
@@ -552,11 +553,11 @@ function HomeworkPage({profile}){
  const progress=questions.length?Math.round(answered/questions.length*100):0;
  const subjectOf=title=>title.startsWith("الاستاتيكا")?"الاستاتيكا":"الرياضيات البحتة";
  if(active)return <div className="platform-page homework-page" dir="rtl">
-  <PageBanner eyebrow="EXAM MODEL / SOLVE" title={active.title} description={active.description||"نموذج تدريبي بنظام امتحان الثانوية العامة."} art="task"/>
+  <PageBanner eyebrow="HOMEWORK ASSIGNMENT / SOLVE" title={active.title} description={active.description||"واجب تدريبي مستقل — ٢٠ سؤالًا و٣٠ درجة مع تصحيح فوري."} art="task"/>
   <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
   <div className="hw-progress-track"><span style={{width:progress+"%"}}/></div>
   {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
-   <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} / {review?.objective_max??26} <small>من ٢٦ موضوعي · المقالي {review?.essay_max??4} درجات</small></strong></div>
+   <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} / {review?.objective_max??30} <small>من ٣٠ درجة · تصحيح تلقائي</small></strong></div>
    <p>تاريخ التسليم: {submission.submitted_at?new Date(submission.submitted_at).toLocaleString("ar-EG"):"—"}</p>
    {review?.items?.map((item,i)=><article className="hw-review-item" key={item.question_id}>
     <header><b>السؤال {arNumber(i+1)}</b><span>{item.question_type==="essay"?"سؤال مقالي":(String(item.student_answer).trim()===String(item.correct_answer).trim()?"إجابة صحيحة":"راجع الإجابة")}</span></header>
@@ -572,18 +573,18 @@ function HomeworkPage({profile}){
     {q.diagram_url&&<figure className="hw-question-diagram"><img src={q.diagram_url} alt="رسم توضيحي للسؤال" loading="lazy"/></figure>}
     {q.question_type==="single_choice"?<div className="hw-options">{(Array.isArray(q.choices)?q.choices:[]).map((choice,j)=><label key={j} className={answers[q.id]===String(choice)?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===String(choice)} onChange={()=>setAnswers(old=>({...old,[q.id]:String(choice)}))}/><span>{["أ","ب","ج","د"][j]} — {choice}</span></label>)}</div>:<textarea rows={7} value={answers[q.id]||""} onChange={e=>setAnswers(old=>({...old,[q.id]:e.target.value}))} placeholder="اكتب خطوات الحل والإجابة هنا..."/>}
    </article>)}</div>
-   <div className="hw-submit-bar"><span className="hw-answer-count">تمت الإجابة عن {arNumber(answered)} من {arNumber(questions.length)}</span><button onClick={save} disabled={saving}>{saving?"جارٍ الحفظ...":"حفظ التقدم"}</button><button className="platform-gold-button" onClick={submit} disabled={saving}>{saving?"جارٍ التسليم...":"تسليم النموذج وتصحيح الإجابات"}<Icon name="arrow"/></button></div>
+   <div className="hw-submit-bar"><span className="hw-answer-count">تمت الإجابة عن {arNumber(answered)} من {arNumber(questions.length)}</span><button onClick={save} disabled={saving}>{saving?"جارٍ الحفظ...":"حفظ التقدم"}</button><button className="platform-gold-button" onClick={submit} disabled={saving}>{saving?"جارٍ التسليم...":"تسليم الواجب وتصحيح الإجابات"}<Icon name="arrow"/></button></div>
   </>}
  </div>;
  return <div className="platform-page homework-page" dir="rtl">
-  <PageBanner eyebrow="THANAWYA AMMA / EXAM MODELS" title="نماذج امتحانات الرياضيات" description="١٠٠ نموذج تدريبي للصف الثالث الثانوي: ٥٠ نموذج بحتة مختلطة و٥٠ استاتيكا، مع حفظ تلقائي للتقدم وتصحيح بعد التسليم." art="task"/>
+  <PageBanner eyebrow="THANAWYA AMMA / HOMEWORK COLLECTION" title="واجبات الرياضيات — الصف الثالث الثانوي" description="٢٠ واجبًا تدريبيًا: ١٠ واجبات رياضيات بحتة و١٠ واجبات استاتيكا. كل واجب ٢٠ سؤالًا بإجمالي ٣٠ درجة، مع حفظ تلقائي وتصحيح فوري." art="task"/>
   <div className="hw-summary"><article><b>{arNumber(items.length)}</b><span>نموذج متاح</span></article><article><b>{arNumber(done)}</b><span>تم تسليمه</span></article><article><b>{arNumber(draftCount)}</b><span>قيد الحل ومحفوظ</span></article></div>
-  {busy?<div className="platform-empty-state">جارٍ تحميل النماذج...</div>:items.length?<><div className="hw-subject-intro"><b>اختر نموذج الامتحان الذي تريد التدريب عليه</b><span>كل نموذج مستقل، درجته ٣٠ درجة، ولا يوجد وقت محدد للحل.</span></div><div className="hw-assignment-grid">{items.map((item,index)=>{const sub=submissions.find(s=>s.assignment_id===item.id);const answeredCount=Object.values(sub?.answers||{}).filter(v=>String(v??"").trim()).length;const pct=sub?.status==="submitted"?100:Math.round(answeredCount/20*100);const subject=subjectOf(item.title);return <article key={item.id} className={"hw-assignment-card hw-model-card hw-model-"+(subject==="الاستاتيكا"?"statics":"algebra")}>
+  {busy?<div className="platform-empty-state">جارٍ تحميل النماذج...</div>:items.length?<><div className="hw-subject-intro"><b>اختار الواجب اللي عايز تبدأ تحله</b><span>كل واجب مستقل، ٢٠ سؤالًا و٣٠ درجة، من غير توقيت، وإجاباتك بتتحفظ تلقائيًا.</span></div><div className="hw-assignment-grid">{items.map((item,index)=>{const sub=submissions.find(s=>s.assignment_id===item.id);const answeredCount=Object.values(sub?.answers||{}).filter(v=>String(v??"").trim()).length;const pct=sub?.status==="submitted"?100:Math.round(answeredCount/20*100);const subject=subjectOf(item.title);return <article key={item.id} className={"hw-assignment-card hw-model-card hw-model-"+(subject==="الاستاتيكا"?"statics":"algebra")}>
     {item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"غلاف "+item.title}/>:null}
     <div className="hw-card-shade"/>
     <div className="hw-card-content"><div className="hw-card-meta"><span>{subject}</span><span>{sub?.status==="submitted"?"تم التسليم":sub?.status==="draft"?"تم حفظ التقدم":"متاح للحل"}</span></div><h2>{item.title}</h2><p>{item.description}</p>
     <div className="hw-model-stats"><span>٢٠ سؤالًا</span><span>٣٠ درجة</span><span>بدون توقيت</span></div>
-    {sub?.status==="submitted"?<div className="hw-card-result">تم التسليم · {sub.objective_score??"بانتظار مراجعة المقالي"} درجة موضوعية</div>:<><div className="hw-card-progress"><span>تقدمك</span><b>{arNumber(pct)}٪</b></div><div className="hw-card-progress-track"><i style={{width:pct+"%"}}/></div><button onClick={()=>open(item)}>{sub?"استكمال النموذج":"ابدأ النموذج"}<Icon name="arrow"/></button></>}
+    {sub?.status==="submitted"?<div className="hw-card-result">تم التسليم · {sub.objective_score??"بانتظار مراجعة المقالي"} درجة موضوعية</div>:<><div className="hw-card-progress"><span>تقدمك</span><b>{arNumber(pct)}٪</b></div><div className="hw-card-progress-track"><i style={{width:pct+"%"}}/></div><button onClick={()=>open(item)}>{sub?"استكمال الواجب":"ابدأ الواجب"}<Icon name="arrow"/></button></>}
     </div></article>;})}</div></>:<div className="platform-empty-state"><Icon name="task" size={36}/><b>لا توجد نماذج متاحة لهذا الحساب</b><span>تأكد أن حسابك على الصف الثالث الثانوي.</span></div>}
  </div>;
 }
