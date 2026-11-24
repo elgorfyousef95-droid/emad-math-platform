@@ -649,7 +649,7 @@ export default function OwnerConsole() {
             {["single_choice","true_false"].includes(examQuestionForm.question_type)&&<label>الإجابة الصحيحة<input value={examQuestionForm.correct_answer} onChange={e=>setExamQuestionForm({...examQuestionForm,correct_answer:e.target.value})} placeholder="اكتب الاختيار كما هو أو صحيح / خطأ"/></label>}
             <label>الدرجة<input type="number" min="0.5" step="0.5" value={examQuestionForm.points} onChange={e=>setExamQuestionForm({...examQuestionForm,points:e.target.value})}/></label>
             <button type="button" className="owner-secondary-button" onClick={addExamQuestion}>إضافة السؤال</button>
-            {examDraftQuestions.map((q,i)=><div className="owner-draft-question" key={q.id}><span>{i+1}. {q.prompt}</span><small>{q.points} درجة</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></div>)}
+            {examDraftQuestions.map((q,i)=><div className="owner-draft-question" key={q.id}><span>{i+1}. {q.prompt||"سؤال بصورة"}{q.image_url&&<img className="exam-question-draft-thumb" src={q.image_url} alt="صورة السؤال"/>}</span><small>{q.points} درجة</small><button type="button" onClick={()=>setExamDraftQuestions(old=>old.filter(x=>x.id!==q.id))}>حذف</button></div>)}
             <small>عدد الأسئلة المضافة: {examDraftQuestions.length}</small>
           </div>
           <button className="owner-primary-button" disabled={saving==="exam"||uploading==="exam"||!courses.length||!examDraftQuestions.length}>{saving==="exam"?"جارٍ الحفظ...":"حفظ الامتحان وأسئلته كمسودة"}</button>
