@@ -487,7 +487,7 @@ function HomeworkPage({profile}){
   setBusy(true);
   try{
    const [a,s]=await Promise.all([
-    studentApi("homework_assignments?select=id,title,description,grade,group_name,cover_image_url,created_at&is_published=eq.true&order=created_at.asc"),
+    studentApi("homework_assignments?select=id,title,description,grade,group_name,cover_image_url,created_at&is_published=eq.true&grade=eq."+encodeURIComponent(profile.grade||"الصف الثالث الثانوي")+"&order=created_at.asc"),
     studentApi("homework_submissions?select=id,assignment_id,student_id,answers,status,objective_score,manual_score,feedback,submitted_at&student_id=eq."+encodeURIComponent(profile.id)+"&order=created_at.desc")
    ]);
    const sorted=(a||[]).slice();
