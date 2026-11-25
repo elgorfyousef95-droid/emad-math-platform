@@ -580,7 +580,7 @@ function HomeworkPage({profile}){
   </div>}
  </div>;
  return <div className="platform-page homework-page" dir="rtl">
-  <PageBanner eyebrow="THANAWYA AMMA / HOMEWORK COLLECTION" title="واجبات الرياضيات — الصف الثالث الثانوي" description="٢٠ واجبًا تدريبيًا: ١٠ واجبات رياضيات بحتة و١٠ واجبات استاتيكا. كل واجب ٢٠ سؤالًا بإجمالي ٣٠ درجة، مع حفظ تلقائي وتصحيح فوري." art="task"/>
+  <PageBanner eyebrow="THANAWYA AMMA / HOMEWORK COLLECTION" title="واجبات الرياضيات — الصف الثالث الثانوي" description={`المتاح حاليًا ${arNumber(items.length)} نموذج تدريبي. نضيف النماذج تباعًا بعد مراجعة الأسئلة والإجابات والدرجات.`} art="task"/>
   <div className="hw-summary"><article><b>{arNumber(items.length)}</b><span>نموذج متاح</span></article><article><b>{arNumber(done)}</b><span>تم تسليمه</span></article><article><b>{arNumber(draftCount)}</b><span>قيد الحل ومحفوظ</span></article></div>
   {busy?<div className="platform-empty-state">جارٍ تحميل النماذج...</div>:items.length?<><div className="hw-subject-intro"><b>اختار الواجب اللي عايز تبدأ تحله</b><span>كل واجب مستقل، ٢٠ سؤالًا و٣٠ درجة، من غير توقيت، وإجاباتك بتتحفظ تلقائيًا.</span></div><div className="hw-assignment-grid">{items.map((item,index)=>{const sub=submissions.find(s=>s.assignment_id===item.id);const answeredCount=Object.values(sub?.answers||{}).filter(v=>String(v??"").trim()).length;const pct=sub?.status==="submitted"?100:Math.round(answeredCount/20*100);const subject=subjectOf(item.title);return <article key={item.id} className={"hw-assignment-card hw-model-card hw-model-"+(subject==="الاستاتيكا"?"statics":"algebra")}>
     {item.cover_image_url?<img className="hw-assignment-cover" src={item.cover_image_url} alt={"غلاف "+item.title}/>:null}
