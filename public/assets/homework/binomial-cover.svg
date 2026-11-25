@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1730"/><stop offset=".58" stop-color="#173d59"/><stop offset="1" stop-color="#17605f"/></linearGradient><pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#d7c08d" stroke-opacity=".12"/></pattern></defs>
+<rect width="1600" height="900" fill="url(#bg)"/><rect width="1600" height="900" fill="url(#grid)"/>
+<g fill="none" stroke="#e4c98f" stroke-opacity=".25" stroke-width="3"><circle cx="1260" cy="390" r="250"/><circle cx="1260" cy="390" r="190"/><path d="M930 690L1500 120M930 120L1500 690"/></g>
+<g fill="#f4e6c7" opacity=".88" font-family="Georgia,serif"><text x="118" y="250" font-size="58">BINOMIAL THEOREM</text><text x="118" y="365" font-size="82">(a + b)ⁿ</text><text x="118" y="455" font-size="36">GENERAL TERM · COEFFICIENTS · MIDDLE TERM</text></g>
+<path d="M118 520H760" stroke="#d8b879" stroke-width="5" opacity=".8"/><text x="118" y="610" fill="#e4c98f" font-family="Arial,sans-serif" font-size="30" letter-spacing="8">PURE MATHEMATICS · GRADE 12</text>
+</svg>
