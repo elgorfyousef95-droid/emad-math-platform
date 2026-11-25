@@ -557,7 +557,8 @@ function HomeworkPage({profile}){
   <PageBanner eyebrow="HOMEWORK ASSIGNMENT / SOLVE" title={active.title} description={active.description||"واجب تدريبي مستقل — ٢٠ سؤالًا و٣٠ درجة مع تصحيح فوري."} art="task"/>
   <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><button className="hw-calculator-launch" onClick={()=>setCalculatorOpen(true)}>⌗ الآلة الحاسبة العلمية</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
   <div className="hw-progress-track"><span style={{width:progress+"%"}}/></div>
-  {calculatorOpen&&<ScientificCalculator onClose={()=>setCalculatorOpen(false)}/>}\n  {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
+  {calculatorOpen&&<ScientificCalculator onClose={()=>setCalculatorOpen(false)}/>}
+  {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
    <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} / {review?.objective_max??30} <small>من ٣٠ درجة · تصحيح تلقائي</small></strong></div>
    <p>تاريخ التسليم: {submission.submitted_at?new Date(submission.submitted_at).toLocaleString("ar-EG"):"—"}</p>
    {review?.items?.map((item,i)=><article className="hw-review-item" key={item.question_id}>
