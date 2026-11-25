@@ -12,6 +12,7 @@ import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logo
 import OwnerConsole from "./pages/OwnerConsole.jsx";
 import ReviewGate from "./pages/ReviewGate.jsx";
 import ExamRunner from "./components/ExamRunner.jsx";
+import ScientificCalculator from "./components/ScientificCalculator.jsx";
 import ChatWorkspace from "./components/ChatWorkspace.jsx";
 import { TeacherMicRequestConsole, StudentLiveClassroom } from "./components/LiveClassroomControls.jsx";
 import { getLectureVideoUrl, getLectureEmbedUrl } from "./lib/lectureMedia.js";
@@ -482,7 +483,7 @@ function LearningPage({page,grade,profile}){
 }
 
 function HomeworkPage({profile}){
- const [items,setItems]=useState([]),[submissions,setSubmissions]=useState([]),[busy,setBusy]=useState(true),[active,setActive]=useState(null),[questions,setQuestions]=useState([]),[answers,setAnswers]=useState({}),[submission,setSubmission]=useState(null),[review,setReview]=useState(null),[saving,setSaving]=useState(false),[loadingQuestions,setLoadingQuestions]=useState(false),[autoSaveState,setAutoSaveState]=useState("idle");
+ const [items,setItems]=useState([]),[submissions,setSubmissions]=useState([]),[busy,setBusy]=useState(true),[active,setActive]=useState(null),[questions,setQuestions]=useState([]),[answers,setAnswers]=useState({}),[submission,setSubmission]=useState(null),[review,setReview]=useState(null),[saving,setSaving]=useState(false),[loadingQuestions,setLoadingQuestions]=useState(false),[autoSaveState,setAutoSaveState]=useState("idle"),[calculatorOpen,setCalculatorOpen]=useState(false);
  const load=async()=>{
   setBusy(true);
   try{
@@ -554,9 +555,9 @@ function HomeworkPage({profile}){
  const subjectOf=title=>title.startsWith("الاستاتيكا")?"الاستاتيكا":"الرياضيات البحتة";
  if(active)return <div className="platform-page homework-page" dir="rtl">
   <PageBanner eyebrow="HOMEWORK ASSIGNMENT / SOLVE" title={active.title} description={active.description||"واجب تدريبي مستقل — ٢٠ سؤالًا و٣٠ درجة مع تصحيح فوري."} art="task"/>
-  <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
+  <div className="hw-work-toolbar"><button className="hw-back" onClick={()=>setActive(null)}>العودة للنماذج</button><button className="hw-calculator-launch" onClick={()=>setCalculatorOpen(true)}>⌗ الآلة الحاسبة العلمية</button><span>{arNumber(questions.length)} سؤال</span><span>{arNumber(answered)} من {arNumber(questions.length)} تمت الإجابة</span><span className={"hw-save-state "+autoSaveState}>{autoSaveState==="saving"?"جارٍ حفظ التقدم…":autoSaveState==="saved"?"تم حفظ التقدم":autoSaveState==="error"?"تعذر الحفظ — تحقق من الاتصال":"الحفظ التلقائي يعمل"}</span></div>
   <div className="hw-progress-track"><span style={{width:progress+"%"}}/></div>
-  {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
+  {calculatorOpen&&<ScientificCalculator onClose={()=>setCalculatorOpen(false)}/>}\n  {loadingQuestions?<div className="platform-empty-state">جارٍ تحميل النموذج...</div>:submission?.status==="submitted"?<section className="hw-review-panel">
    <div className="hw-review-head"><div><small>نتيجة النموذج</small><h2>تم تسليم إجاباتك بنجاح</h2></div><strong>{submission.objective_score??review?.objective_score??"—"} / {review?.objective_max??30} <small>من ٣٠ درجة · تصحيح تلقائي</small></strong></div>
    <p>تاريخ التسليم: {submission.submitted_at?new Date(submission.submitted_at).toLocaleString("ar-EG"):"—"}</p>
    {review?.items?.map((item,i)=><article className="hw-review-item" key={item.question_id}>
@@ -568,7 +569,7 @@ function HomeworkPage({profile}){
    {submission.feedback&&<p className="hw-teacher-feedback">ملاحظات المدرس: {submission.feedback}</p>}
   </section>:<>
    <div className="hw-exam-instructions"><b>تعليمات الحل</b><span>لا يوجد وقت محدد. تقدمك يُحفظ تلقائيًا أثناء الحل، ويمكنك الخروج والعودة لاحقًا من نفس الحساب.</span></div>
-   <div className="hw-question-list">{questions.map((q,i)=><article className="hw-question" key={q.id}>
+   <section className="hw-paper-sheet"><header className="hw-paper-heading"><div><b>منصة مستر عماد السنافيري</b><span>الصف الثالث الثانوي · الرياضيات</span></div><div><strong>ورقة واجب تدريبي</strong><span>{active.title}</span></div><div className="hw-paper-student"><span>اسم الطالب: ................................</span><span>الفصل: ............</span></div></header><div className="hw-paper-instructions">أجب عن الأسئلة الآتية، موضحًا خطوات الحل في الأسئلة المقالية. الدرجة الكلية: ٣٠ درجة.</div><div className="hw-question-list">{questions.map((q,i)=><article className="hw-question hw-paper-question" key={q.id}>
     <header><span>السؤال {arNumber(i+1)}</span><small>{arNumber(q.points)} درجة</small></header><h3>{q.prompt}</h3>
     {q.diagram_url&&<figure className="hw-question-diagram"><img src={q.diagram_url} alt="رسم توضيحي للسؤال" loading="lazy"/></figure>}
     {q.question_type==="single_choice"?<div className="hw-options">{(Array.isArray(q.choices)?q.choices:[]).map((choice,j)=><label key={j} className={answers[q.id]===String(choice)?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===String(choice)} onChange={()=>setAnswers(old=>({...old,[q.id]:String(choice)}))}/><span>{["أ","ب","ج","د"][j]} — {choice}</span></label>)}</div>:<textarea rows={7} value={answers[q.id]||""} onChange={e=>setAnswers(old=>({...old,[q.id]:e.target.value}))} placeholder="اكتب خطوات الحل والإجابة هنا..."/>}
