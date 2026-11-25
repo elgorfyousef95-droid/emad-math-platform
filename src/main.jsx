@@ -576,6 +576,7 @@ function HomeworkPage({profile}){
     {q.question_type==="single_choice"?<div className="hw-options">{(Array.isArray(q.choices)?q.choices:[]).map((choice,j)=><label key={j} className={answers[q.id]===String(choice)?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===String(choice)} onChange={()=>setAnswers(old=>({...old,[q.id]:String(choice)}))}/><span>{["أ","ب","ج","د"][j]} — {choice}</span></label>)}</div>:<textarea rows={7} value={answers[q.id]||""} onChange={e=>setAnswers(old=>({...old,[q.id]:e.target.value}))} placeholder="اكتب خطوات الحل والإجابة هنا..."/>}
    </article>)}</div>
    <div className="hw-submit-bar"><span className="hw-answer-count">تمت الإجابة عن {arNumber(answered)} من {arNumber(questions.length)}</span><button onClick={save} disabled={saving}>{saving?"جارٍ الحفظ...":"حفظ التقدم"}</button><button className="platform-gold-button" onClick={submit} disabled={saving}>{saving?"جارٍ التسليم...":"تسليم الواجب وتصحيح الإجابات"}<Icon name="arrow"/></button></div>
+   </section>
   </div>}
  </div>;
  return <div className="platform-page homework-page" dir="rtl">
