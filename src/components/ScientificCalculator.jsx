@@ -19,7 +19,7 @@ const SECOND=[
 ];
 function factorial(n){if(!Number.isInteger(n)||n<0||n>170)throw Error("factorial");let v=1;for(let i=2;i<=n;i++)v*=i;return v;}
 function calculate(raw,deg){
- let s=raw.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/π/g,"Math.PI").replace(/\be\b/g,"Math.E").replace(/Ans/g,"0");
+ let s=raw.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/\^/g,"**").replace(/π/g,"Math.PI").replace(/\be\b/g,"Math.E").replace(/Ans/g,"0");
  s=s.replace(/(\d+(?:\.\d+)?)!/g,"factorial($1)");
  s=s.replace(/√\(/g,"Math.sqrt(").replace(/√(\d+(?:\.\d+)?)/g,"Math.sqrt($1)");
  s=s.replace(/(\d+(?:\.\d+)?)²/g,"($1**2)");
