@@ -568,7 +568,7 @@ function HomeworkPage({profile}){
     {item.explanation&&<small>{item.explanation}</small>}
    </article>)}
    {submission.feedback&&<p className="hw-teacher-feedback">ملاحظات المدرس: {submission.feedback}</p>}
-  </section>:<>
+  </section>:<div className="hw-active-content">
    <div className="hw-exam-instructions"><b>تعليمات الحل</b><span>لا يوجد وقت محدد. تقدمك يُحفظ تلقائيًا أثناء الحل، ويمكنك الخروج والعودة لاحقًا من نفس الحساب.</span></div>
    <section className="hw-paper-sheet"><header className="hw-paper-heading"><div><b>منصة مستر عماد السنافيري</b><span>الصف الثالث الثانوي · الرياضيات</span></div><div><strong>ورقة واجب تدريبي</strong><span>{active.title}</span></div><div className="hw-paper-student"><span>اسم الطالب: ................................</span><span>الفصل: ............</span></div></header><div className="hw-paper-instructions">أجب عن الأسئلة الآتية، موضحًا خطوات الحل في الأسئلة المقالية. الدرجة الكلية: ٣٠ درجة.</div><div className="hw-question-list">{questions.map((q,i)=><article className="hw-question hw-paper-question" key={q.id}>
     <header><span>السؤال {arNumber(i+1)}</span><small>{arNumber(q.points)} درجة</small></header><h3>{q.prompt}</h3>
@@ -576,7 +576,7 @@ function HomeworkPage({profile}){
     {q.question_type==="single_choice"?<div className="hw-options">{(Array.isArray(q.choices)?q.choices:[]).map((choice,j)=><label key={j} className={answers[q.id]===String(choice)?"selected":""}><input type="radio" name={"q-"+q.id} value={choice} checked={answers[q.id]===String(choice)} onChange={()=>setAnswers(old=>({...old,[q.id]:String(choice)}))}/><span>{["أ","ب","ج","د"][j]} — {choice}</span></label>)}</div>:<textarea rows={7} value={answers[q.id]||""} onChange={e=>setAnswers(old=>({...old,[q.id]:e.target.value}))} placeholder="اكتب خطوات الحل والإجابة هنا..."/>}
    </article>)}</div>
    <div className="hw-submit-bar"><span className="hw-answer-count">تمت الإجابة عن {arNumber(answered)} من {arNumber(questions.length)}</span><button onClick={save} disabled={saving}>{saving?"جارٍ الحفظ...":"حفظ التقدم"}</button><button className="platform-gold-button" onClick={submit} disabled={saving}>{saving?"جارٍ التسليم...":"تسليم الواجب وتصحيح الإجابات"}<Icon name="arrow"/></button></div>
-  </>}
+  </div>}
  </div>;
  return <div className="platform-page homework-page" dir="rtl">
   <PageBanner eyebrow="THANAWYA AMMA / HOMEWORK COLLECTION" title="واجبات الرياضيات — الصف الثالث الثانوي" description="٢٠ واجبًا تدريبيًا: ١٠ واجبات رياضيات بحتة و١٠ واجبات استاتيكا. كل واجب ٢٠ سؤالًا بإجمالي ٣٠ درجة، مع حفظ تلقائي وتصحيح فوري." art="task"/>
