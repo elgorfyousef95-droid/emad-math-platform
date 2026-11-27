@@ -12,7 +12,7 @@ export default function SubscriptionsPage({subscription,onActivated}){
  const activate=async()=>{
   if(!code.trim())return notify({type:"warning",title:"كود الاشتراك مطلوب",message:"اكتب الكود الذي حصلت عليه من إدارة المنصة."});
   setBusy(true);
-  try{await redeemStudentSubscription(code.trim());setCode("");await onActivated?.();notify({type:"success",title:"تم تفعيل الاشتراك",message:"تم تحديث عضويتك وفتح المحتوى المخصص لصفك."});}
+  try{await redeemStudentSubscription(code.trim());setCode("");await onActivated?.();}
   catch(e){const map={subscription_code_invalid_or_used:"الكود غير صحيح أو مستخدم بالفعل أو غير مخصص لصفك الدراسي.",not_authenticated:"انتهت جلسة الدخول. سجّل الدخول مرة أخرى.",student_profile_not_found:"تعذر العثور على بيانات الطالب."};notify({type:"error",title:"تعذر تفعيل الاشتراك",message:map[e.message]||"حدث خطأ أثناء التفعيل. راجع الكود وحاول مرة أخرى."});}
   finally{setBusy(false);}
  };
