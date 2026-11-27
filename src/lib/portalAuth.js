@@ -304,18 +304,22 @@ const RESOURCE_TYPES = new Set([
 ]);
 
 export async function uploadPortalResource(file, portal = "teacher", onProgress = () => {}) {
-  if (!file || !RESOURCE_TYPES.has(file.type)) throw new Error("unsupported_resource_type");
+  if (!file) throw new Error("unsupported_resource_type");
+  if (file.size <= 0) throw new Error("empty_resource_file");
   if (file.size > RESOURCE_MAX_BYTES) throw new Error("resource_too_large");
+  const extension = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g,"") || "bin";
+  const mimeByExtension = {pdf:"application/pdf",doc:"application/msword",docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",xls:"application/vnd.ms-excel",xlsx:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",ppt:"application/vnd.ms-powerpoint",pptx:"application/vnd.openxmlformats-officedocument.presentationml.presentation",txt:"text/plain",jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp"};
+  const contentType = file.type || mimeByExtension[extension] || "";
+  if (!RESOURCE_TYPES.has(contentType)) throw new Error("unsupported_resource_type");
   const session = await refreshPortalSession(portal);
   if (!session?.access_token) throw new Error("portal_not_authenticated");
   const { url, key } = config();
   const host = videoStorageHost(url);
   const endpoint = "https://" + host + "/storage/v1/upload/resumable";
-  const extension = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g,"") || "bin";
   const folder = portal === "teacher" ? "teacher/" + session.user?.id : "owner/" + session.user?.id;
   const path = folder + "/resources/" + crypto.randomUUID() + "." + extension;
   const metadata = [
-    ["bucketName","emad-learning-files"],["objectName",path],["contentType",file.type],["cacheControl","3600"]
+    ["bucketName","emad-learning-files"],["objectName",path],["contentType",contentType],["cacheControl","3600"]
   ].map(([name,value])=>name+" "+encodeTusMetadata(value)).join(",");
   const created = await tusRequest(endpoint,{method:"POST",headers:{"Upload-Length":String(file.size),"Upload-Metadata":metadata,"x-upsert":"false"}},session.access_token,key);
   if(created.status!==201){const detail=await created.text().catch(()=>"");const error=new Error("resource_upload_start_failed");error.status=created.status;error.detail=detail;throw error;}
