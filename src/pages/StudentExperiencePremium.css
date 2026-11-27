@@ -768,3 +768,62 @@ html[data-student-reduce-motion="true"] *,html[data-student-reduce-motion="true"
 .se-content{font-size:calc(1rem * var(--student-content-scale,1))}
 html[data-student-theme="light"] .profile-premium-hero,html[data-student-theme="light"] .settings-premium-hero,html[data-student-theme="light"] .subscription-premium-hero{color:#fff}
 html[data-student-theme="light"] .profile-premium-cover{color:#fff}
+
+
+/* Keep the exact mathematics artwork used by the student home hero,
+   now as a dimmed photographic backdrop on the account areas only. */
+.student-experience:has(.profile-premium-page),
+.student-experience:has(.settings-premium-page),
+.student-experience:has(.subscription-premium-page){
+ position:relative;
+ isolation:isolate;
+ background:transparent!important;
+}
+.student-experience:has(.profile-premium-page)::before,
+.student-experience:has(.settings-premium-page)::before,
+.student-experience:has(.subscription-premium-page)::before{
+ content:"";
+ position:fixed;
+ inset:0;
+ z-index:-1;
+ pointer-events:none;
+ background:
+  linear-gradient(115deg,rgba(5,13,24,.91),rgba(7,20,34,.84) 52%,rgba(8,22,35,.91)),
+  url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=2200&q=90") center/cover no-repeat;
+ filter:saturate(.72);
+}
+.student-experience:has(.profile-premium-page) .se-content,
+.student-experience:has(.settings-premium-page) .se-content,
+.student-experience:has(.subscription-premium-page) .se-content{
+ background:transparent!important;
+}
+.student-experience:has(.profile-premium-page) .se-topbar,
+.student-experience:has(.settings-premium-page) .se-topbar,
+.student-experience:has(.subscription-premium-page) .se-topbar{
+ background:rgba(7,17,29,.91)!important;
+ border-bottom-color:#d8b67542!important;
+ backdrop-filter:blur(18px);
+}
+.student-experience:has(.profile-premium-page) .se-breadcrumb b,
+.student-experience:has(.settings-premium-page) .se-breadcrumb b,
+.student-experience:has(.subscription-premium-page) .se-breadcrumb b{color:#f5eddf!important}
+.student-experience:has(.profile-premium-page) .se-footer,
+.student-experience:has(.settings-premium-page) .se-footer,
+.student-experience:has(.subscription-premium-page) .se-footer{
+ background:rgba(5,14,25,.91)!important;color:#a7b3c1!important;border-top-color:#d8b67535!important;
+}
+.student-experience:has(.profile-premium-page) .se-grade-chip,
+.student-experience:has(.settings-premium-page) .se-grade-chip,
+.student-experience:has(.subscription-premium-page) .se-grade-chip{
+ background:#d8b67518!important;border-color:#d8b67555!important;color:#e8c77f!important;
+}
+.student-experience:has(.profile-premium-page) .se-notify,
+.student-experience:has(.settings-premium-page) .se-notify,
+.student-experience:has(.subscription-premium-page) .se-notify{
+ background:#ffffff0c!important;border-color:#ffffff25!important;color:#e8c77f!important;
+}
+@media(max-width:760px){
+ .student-experience:has(.profile-premium-page)::before,
+ .student-experience:has(.settings-premium-page)::before,
+ .student-experience:has(.subscription-premium-page)::before{background-position:center top}
+}
