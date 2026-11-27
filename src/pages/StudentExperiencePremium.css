@@ -66,7 +66,7 @@
 .se-footer{display:flex;justify-content:space-between;gap:10px;padding:17px clamp(14px,3vw,44px)!important;border-top:1px solid #d8b67520!important;background:#091321!important;color:#8492a5!important;font-size:9px!important}
 .se-dashboard{display:grid!important;gap:32px!important;width:100%;min-width:0}
 .sd-hero{position:relative;isolation:isolate;display:grid!important;grid-template-columns:1.08fr .92fr!important;align-items:center;gap:16px;min-height:540px!important;padding:clamp(28px,4.5vw,68px)!important;overflow:hidden;border:1px solid #d8b67550!important;border-radius:27px!important;background:linear-gradient(115deg,#091525f5,#122a45eb)!important;box-shadow:0 28px 75px #0006!important}
-.sd-hero-image{position:absolute;inset:0;z-index:-2;background-image:url("https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=2200&q=90")!important;background-position:center;background-size:cover;opacity:.24!important}
+.sd-hero-image{position:absolute;inset:0;z-index:-2;background-image:url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1800&q=85")!important;background-position:center;background-size:cover;opacity:.24!important}
 .sd-hero-overlay{position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,#071321f5 0%,#0c2039ed 54%,#122d4bc9 100%)!important}
 .sd-hero-copy{position:relative;z-index:2}.sd-kicker,.sd-section-kicker{color:#d8b675!important;font-size:9px!important;letter-spacing:1.5px!important;font-weight:900}
 .sd-kicker i{background:#d8b675!important;box-shadow:0 0 0 5px #d8b67522!important}
@@ -770,7 +770,7 @@ html[data-student-theme="light"] .profile-premium-hero,html[data-student-theme="
 html[data-student-theme="light"] .profile-premium-cover{color:#fff}
 
 
-/* Account pages: use the SAME full-page mathematics artwork as the student home hero.
+/* Account pages: reuse the exact mathematics image used by the student home hero.
    The image is painted on the app shell itself (not a negative-z pseudo layer),
    so it cannot disappear behind the shell's own background. */
 .student-experience:has(.profile-premium-page),
