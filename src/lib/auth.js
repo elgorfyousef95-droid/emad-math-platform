@@ -196,10 +196,11 @@ export async function uploadStudentAvatar(file) {
   if (!file || !["image/jpeg","image/png","image/webp"].includes(file.type)) throw new Error("unsupported_avatar_type");
   if (file.size > 3 * 1024 * 1024) throw new Error("avatar_too_large");
   const session = await refreshStudentSession();
-  if (!session?.access_token || !session.user?.id) throw new Error("not_authenticated");
+  const userId = session?.user?.id || getSessionUserId(session);
+  if (!session?.access_token || !userId) throw new Error("not_authenticated");
   const { url, key } = config();
   const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const path = session.user.id + "/" + crypto.randomUUID() + "." + extension;
+  const path = userId + "/" + crypto.randomUUID() + "." + extension;
   const response = await fetch(url + "/storage/v1/object/emad-student-avatars/" + path, {
     method: "POST",
     headers: { apikey: key, Authorization: "Bearer " + session.access_token, "Content-Type": file.type, "x-upsert": "false" },
