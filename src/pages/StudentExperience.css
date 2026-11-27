@@ -297,3 +297,26 @@
  .student-experience .sd-welcome{color:#e1e8ed!important}
  .student-experience .sd-description{color:#d0dbe2!important}
 }
+
+
+/* HOME BACKGROUND HARD FIX — paint the photo on the hero itself so it is
+   independent of negative-z child stacking and remains visible on mobile. */
+.student-experience .sd-hero{
+ background-color:#081a2b!important;
+ background-image:
+  linear-gradient(100deg,rgba(5,17,30,.76) 0%,rgba(7,25,41,.53) 58%,rgba(9,37,51,.28) 100%),
+  url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=2200&q=90")!important;
+ background-position:center center!important;
+ background-size:cover!important;
+ background-repeat:no-repeat!important;
+}
+.student-experience .sd-hero-image,
+.student-experience .sd-hero-overlay{display:none!important}
+@media(max-width:760px){
+ .student-experience .sd-hero{
+  background-image:
+   linear-gradient(100deg,rgba(5,17,30,.72),rgba(7,25,41,.48) 75%,rgba(9,37,51,.30)),
+   url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1600&q=90")!important;
+  background-position:center center!important;
+ }
+}
