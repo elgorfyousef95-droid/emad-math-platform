@@ -178,6 +178,7 @@ export default function OwnerConsole() {
     setSaving("platform-settings"); setError(""); setNotice("");
     try {
       await portalApi("owner","platform_settings?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({...platformSettings,updated_by:profile.id,updated_at:new Date().toISOString()})});
+      setPlatformSettings(old=>({...old,updated_at:new Date().toISOString()}));
       setNotice("تم حفظ إعدادات المنصة والأمان في قاعدة البيانات.");
     } catch (e) {
       setError("تعذر حفظ إعدادات المنصة. راجع صلاحيات المالك واتصال قاعدة البيانات.");
