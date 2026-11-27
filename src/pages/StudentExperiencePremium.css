@@ -544,3 +544,14 @@
 .hw-question-diagram{margin:14px 0 18px;padding:12px;border:1px solid #d8e1eb;border-radius:14px;background:#f8fbff;text-align:center;overflow:hidden}
 .hw-question-diagram img{display:block;width:min(100%,760px);max-height:360px;object-fit:contain;margin:auto}
 .hw-question-diagram figcaption{margin-top:7px;color:#64748b;font-size:11px}
+
+/* Fullscreen course detail and media-first viewing */
+.learning-detail-backdrop{position:fixed!important;inset:0!important;z-index:9999!important;display:grid!important;place-items:stretch!important;padding:0!important;background:#020812f5!important;backdrop-filter:blur(12px)!important}
+.learning-detail-modal{width:100%!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:clamp(14px,2.4vw,34px)!important;overflow-y:auto!important;border:0!important;border-radius:0!important;background:linear-gradient(135deg,#071423,#0c2035)!important}
+.learning-detail-image{display:block;width:100%!important;max-height:280px!important;aspect-ratio:21/6!important;object-fit:contain!important;object-position:center!important;background:#020812!important;border:1px solid #d8b67555!important;border-radius:16px!important;padding:6px!important}
+.course-selected-player,.learning-video-player{width:100%;min-width:0}
+.emad-player-progress input{opacity:.08!important}
+html[data-student-theme="light"] .se-content{background:#f4f5f7!important;color:#1c2c3d!important}
+html[data-student-theme="light"] .platform-page{background:linear-gradient(135deg,#f4f6f8,#e8edf2)!important;color:#1c2c3d!important}
+html[data-student-theme="light"] .profile-vip-card,html[data-student-theme="light"] .profile-vip-metrics article,html[data-student-theme="light"] .profile-vip-shortcuts,html[data-student-theme="light"] .settings-vip-section,html[data-student-theme="light"] .subscription-vip-status,html[data-student-theme="light"] .subscription-vip-activate,html[data-student-theme="light"] .subscription-vip-benefits,html[data-student-theme="light"] .files-vip-grid article{background:linear-gradient(145deg,#fff,#edf1f5)!important;color:#1c2c3d!important}
+html[data-student-theme="light"] .profile-vip-name h2,html[data-student-theme="light"] .settings-vip-section h2,html[data-student-theme="light"] .subscription-vip-activate h2,html[data-student-theme="light"] .subscription-vip-benefits h2,html[data-student-theme="light"] .files-vip-copy b{color:#1c2c3d!important}
