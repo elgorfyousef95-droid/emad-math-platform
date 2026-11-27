@@ -190,3 +190,41 @@ export async function issueStudentSubscriptionCode(grade) {
   if (!response.ok) throw new Error(data.message || data.code || "subscription_code_issue_failed");
   return data;
 }
+
+
+export async function uploadStudentAvatar(file) {
+  if (!file || !["image/jpeg","image/png","image/webp"].includes(file.type)) throw new Error("unsupported_avatar_type");
+  if (file.size > 3 * 1024 * 1024) throw new Error("avatar_too_large");
+  const session = await refreshStudentSession();
+  if (!session?.access_token || !session.user?.id) throw new Error("not_authenticated");
+  const { url, key } = config();
+  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const path = session.user.id + "/" + crypto.randomUUID() + "." + extension;
+  const response = await fetch(url + "/storage/v1/object/emad-student-avatars/" + path, {
+    method: "POST",
+    headers: { apikey: key, Authorization: "Bearer " + session.access_token, "Content-Type": file.type, "x-upsert": "false" },
+    body: file,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || data.error || "avatar_upload_failed");
+  return url + "/storage/v1/object/public/emad-student-avatars/" + path;
+}
+
+export async function getStudentResourceUrl(path) {
+  const clean = String(path || "").replace(/^\/+/, "");
+  if (!clean || clean.includes("..")) throw new Error("invalid_resource_path");
+  const session = await refreshStudentSession();
+  if (!session?.access_token) throw new Error("not_authenticated");
+  const { url, key } = config();
+  const encoded = clean.split("/").map(encodeURIComponent).join("/");
+  const response = await fetch(url + "/storage/v1/object/sign/emad-learning-files/" + encoded, {
+    method: "POST",
+    headers: { apikey: key, Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
+    body: JSON.stringify({ expiresIn: 3600 }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.message || data.error || "resource_access_denied");
+  const signed = data.signedURL || data.signedUrl || data.url;
+  if (!signed) throw new Error("resource_signed_url_missing");
+  return /^https?:\/\//i.test(signed) ? signed : url + (signed.startsWith("/") ? signed : "/" + signed);
+}
