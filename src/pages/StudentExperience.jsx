@@ -19,7 +19,7 @@ export default function StudentExperience({page,profile,grade,unread,go,logout,c
    <div className="se-brand"><div className="se-brand-mark">م</div><div><b>عماد السنافيري</b><small>أكاديمية الرياضيات</small></div><button className="se-close-drawer" onClick={()=>setDrawer(false)} aria-label="إغلاق القائمة">×</button></div>
    <div className="se-sidebar-student"><span className="se-avatar">{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:"ط"}</span><div><b>{profile?.full_name||"حساب الطالب"}</b><small>{grade||"الصف الدراسي"}</small></div><span className="se-online-dot"/></div>
    <div className="se-nav-caption">مساحتك التعليمية</div>
-   <nav className="se-nav">{primary.map(item)}</nav>
+   <nav className="se-nav">{primary.filter(([id])=>id!=="curriculum"||grade==="الصف الثالث الثانوي").map(item)}</nav>
    <div className="se-nav-caption">خدمات المنصة</div>
    <nav className="se-nav">{secondary.filter(([id])=>id!=="messages"||supportEnabled).map(item)}</nav>
    <div className="se-nav-caption">حسابك</div>
