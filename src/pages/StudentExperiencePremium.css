@@ -779,8 +779,8 @@ html[data-student-theme="light"] .profile-premium-cover{color:#fff}
  position:relative!important;
  isolation:isolate!important;
  background:
-  linear-gradient(115deg,rgba(4,12,23,.91),rgba(6,17,30,.84) 50%,rgba(5,14,25,.92)),
-  url("https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=2200&q=90") center center/cover fixed!important;
+  linear-gradient(115deg,rgba(4,12,23,.72),rgba(6,17,30,.58) 50%,rgba(5,14,25,.72)),
+  url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=2200&q=90") center center/cover fixed!important;
  color:#f3eee4!important;
 }
 .student-experience:has(.profile-premium-page) .se-main,
@@ -866,4 +866,48 @@ html[data-student-theme="light"] .profile-premium-cover{color:#fff}
  .student-experience:has(.settings-premium-page),
  .student-experience:has(.subscription-premium-page){background-attachment:scroll!important;background-position:center top!important}
  .settings-control-chips{justify-content:flex-start}
+}
+
+
+/* FINAL VISUAL FIX — keep the mathematics photograph visible and prevent
+   stale/light preference overrides from turning student account panels white. */
+.student-experience:has(.profile-premium-page),
+.student-experience:has(.settings-premium-page),
+.student-experience:has(.subscription-premium-page){
+ background-position:center center!important;
+ background-size:cover!important;
+ background-repeat:no-repeat!important;
+}
+html[data-student-theme="light"] .profile-premium-card,
+html[data-student-theme="light"] .settings-premium-section,
+html[data-student-theme="light"] .subscription-premium-status,
+html[data-student-theme="light"] .subscription-premium-activate,
+html[data-student-theme="light"] .subscription-premium-benefits,
+html[data-student-theme="light"] .profile-premium-shortcuts{
+ background:linear-gradient(145deg,rgba(17,37,58,.97),rgba(7,20,34,.97))!important;
+ color:#f3eee4!important;border-color:rgba(216,182,117,.35)!important;
+}
+html[data-student-theme="light"] .settings-choice-card,
+html[data-student-theme="light"] .settings-notification-grid article,
+html[data-student-theme="light"] .settings-password-panel,
+html[data-student-theme="light"] .settings-session-panel,
+html[data-student-theme="light"] .settings-account-summary article,
+html[data-student-theme="light"] .profile-premium-facts article,
+html[data-student-theme="light"] .profile-premium-metrics article{
+ background:rgba(5,17,30,.82)!important;
+ border-color:rgba(216,182,117,.25)!important;color:#f3eee4!important;
+}
+html[data-student-theme="light"] .profile-premium-facts b,
+html[data-student-theme="light"] .settings-choice-card b,
+html[data-student-theme="light"] .settings-notification-grid b,
+html[data-student-theme="light"] .settings-password-panel b,
+html[data-student-theme="light"] .settings-session-panel b,
+html[data-student-theme="light"] .settings-account-summary b,
+html[data-student-theme="light"] .subscription-status-main>b{
+ color:#f5ead7!important;
+}
+html[data-student-theme="light"] .profile-premium-page p,
+html[data-student-theme="light"] .settings-premium-page p,
+html[data-student-theme="light"] .subscription-premium-page p{
+ color:#b7c3d0!important;
 }
