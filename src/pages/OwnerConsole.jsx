@@ -297,7 +297,7 @@ export default function OwnerConsole() {
         setNotice("تم رفع الفيديو بنجاح وحُفظ مساره. تعذرت المعاينة الآن، لكن يمكنك حفظ المحاضرة وإعادة المحاولة.");
       }
     } catch (e) {
-      setError(e.message === "video_too_large" ? "حجم الفيديو أكبر من 1 جيجابايت." : e.message === "unsupported_video_type" ? "الصيغ المسموحة MP4 وWEBM وMOV." : "تعذر رفع الفيديو. تحقق من الاتصال وصلاحيات التخزين.");
+      setError(e.status === 413 ? "حجم الفيديو أكبر من الحد العام للتخزين في الخطة الحالية (50 ميجابايت). قلّل حجم الفيديو أو ارفع خطة التخزين." : e.message === "video_too_large" ? "حجم الفيديو أكبر من 1 جيجابايت." : e.message === "unsupported_video_type" ? "الصيغ المسموحة MP4 وWEBM وMOV." : "تعذر رفع الفيديو. تحقق من الاتصال وصلاحيات التخزين.");
     } finally { setUploading(""); }
   };
 
