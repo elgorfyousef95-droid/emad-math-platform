@@ -770,28 +770,22 @@ html[data-student-theme="light"] .profile-premium-hero,html[data-student-theme="
 html[data-student-theme="light"] .profile-premium-cover{color:#fff}
 
 
-/* Keep the exact mathematics artwork used by the student home hero,
-   now as a dimmed photographic backdrop on the account areas only. */
+/* Account pages: use the SAME full-page mathematics artwork as the student home hero.
+   The image is painted on the app shell itself (not a negative-z pseudo layer),
+   so it cannot disappear behind the shell's own background. */
 .student-experience:has(.profile-premium-page),
 .student-experience:has(.settings-premium-page),
 .student-experience:has(.subscription-premium-page){
- position:relative;
- isolation:isolate;
- background:transparent!important;
-}
-.student-experience:has(.profile-premium-page)::before,
-.student-experience:has(.settings-premium-page)::before,
-.student-experience:has(.subscription-premium-page)::before{
- content:"";
- position:fixed;
- inset:0;
- z-index:-1;
- pointer-events:none;
+ position:relative!important;
+ isolation:isolate!important;
  background:
-  linear-gradient(115deg,rgba(5,13,24,.91),rgba(7,20,34,.84) 52%,rgba(8,22,35,.91)),
-  url("https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=2200&q=90") center/cover no-repeat;
- filter:saturate(.72);
+  linear-gradient(115deg,rgba(4,12,23,.91),rgba(6,17,30,.84) 50%,rgba(5,14,25,.92)),
+  url("https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=2200&q=90") center center/cover fixed!important;
+ color:#f3eee4!important;
 }
+.student-experience:has(.profile-premium-page) .se-main,
+.student-experience:has(.settings-premium-page) .se-main,
+.student-experience:has(.subscription-premium-page) .se-main,
 .student-experience:has(.profile-premium-page) .se-content,
 .student-experience:has(.settings-premium-page) .se-content,
 .student-experience:has(.subscription-premium-page) .se-content{
@@ -800,30 +794,76 @@ html[data-student-theme="light"] .profile-premium-cover{color:#fff}
 .student-experience:has(.profile-premium-page) .se-topbar,
 .student-experience:has(.settings-premium-page) .se-topbar,
 .student-experience:has(.subscription-premium-page) .se-topbar{
- background:rgba(7,17,29,.91)!important;
- border-bottom-color:#d8b67542!important;
+ background:rgba(5,14,25,.94)!important;
+ border-bottom:1px solid rgba(216,182,117,.34)!important;
  backdrop-filter:blur(18px);
 }
-.student-experience:has(.profile-premium-page) .se-breadcrumb b,
-.student-experience:has(.settings-premium-page) .se-breadcrumb b,
-.student-experience:has(.subscription-premium-page) .se-breadcrumb b{color:#f5eddf!important}
 .student-experience:has(.profile-premium-page) .se-footer,
 .student-experience:has(.settings-premium-page) .se-footer,
 .student-experience:has(.subscription-premium-page) .se-footer{
- background:rgba(5,14,25,.91)!important;color:#a7b3c1!important;border-top-color:#d8b67535!important;
+ background:rgba(5,14,25,.94)!important;
+ color:#a7b3c1!important;
+ border-top:1px solid rgba(216,182,117,.28)!important;
 }
-.student-experience:has(.profile-premium-page) .se-grade-chip,
-.student-experience:has(.settings-premium-page) .se-grade-chip,
-.student-experience:has(.subscription-premium-page) .se-grade-chip{
- background:#d8b67518!important;border-color:#d8b67555!important;color:#e8c77f!important;
+.student-experience:has(.profile-premium-page) .platform-page,
+.student-experience:has(.settings-premium-page) .platform-page,
+.student-experience:has(.subscription-premium-page) .platform-page{
+ color:#f3eee4!important;
 }
-.student-experience:has(.profile-premium-page) .se-notify,
-.student-experience:has(.settings-premium-page) .se-notify,
-.student-experience:has(.subscription-premium-page) .se-notify{
- background:#ffffff0c!important;border-color:#ffffff25!important;color:#e8c77f!important;
+.profile-premium-card,.settings-premium-section,.subscription-premium-status,
+.subscription-premium-activate,.subscription-premium-benefits,.profile-premium-shortcuts{
+ background:linear-gradient(145deg,rgba(17,37,58,.97),rgba(7,20,34,.97))!important;
+ border:1px solid rgba(216,182,117,.35)!important;
+ color:#f3eee4!important;
+ box-shadow:0 18px 48px rgba(0,0,0,.42)!important;
 }
+.profile-premium-page h1,.profile-premium-page h2,.profile-premium-page h3,
+.settings-premium-page h1,.settings-premium-page h2,.settings-premium-page h3,
+.subscription-premium-page h1,.subscription-premium-page h2,.subscription-premium-page h3{
+ color:#f8f0e2!important;
+}
+.profile-premium-page p,.settings-premium-page p,.subscription-premium-page p{
+ color:#b7c3d0!important;
+}
+.settings-choice-card,.settings-notification-grid article,.settings-password-panel,
+.settings-session-panel,.settings-account-summary article,
+.profile-premium-facts article,.profile-premium-metrics article{
+ background:rgba(5,17,30,.76)!important;
+ border:1px solid rgba(216,182,117,.22)!important;
+ color:#f3eee4!important;
+}
+.settings-choice-card b,.settings-notification-grid b,.settings-password-panel b,
+.settings-session-panel b,.settings-account-summary b,
+.profile-premium-facts b,.profile-premium-metrics b{
+ color:#f5ead7!important;
+}
+.settings-choice-card small,.settings-notification-grid small,
+.settings-password-panel small,.settings-session-panel small,
+.settings-account-summary small,.profile-premium-facts small,
+.profile-premium-metrics small{
+ color:#9eafc0!important;
+}
+.settings-choice-card select,.settings-premium-page select,
+.settings-premium-page input,.settings-premium-page textarea{
+ background:#071827!important;color:#f5eddf!important;
+ border:1px solid rgba(216,182,117,.42)!important;
+}
+.settings-theme-choices button,.settings-control-chips button{
+ min-height:38px;padding:7px 12px;border:1px solid rgba(216,182,117,.28);
+ border-radius:9px;background:rgba(255,255,255,.045);color:#d8e0e8;
+ font:800 10px Cairo;cursor:pointer;
+}
+.settings-theme-choices button.selected,.settings-control-chips button.selected{
+ border-color:#e4c78d;background:rgba(216,182,117,.2);color:#f5dca9;
+}
+.settings-control-chips{display:flex;flex-wrap:wrap;gap:7px;justify-content:flex-start}
+.settings-fixed-theme{display:flex;align-items:center;gap:12px;max-width:100%;padding:12px 14px;border:1px solid rgba(216,182,117,.25);border-radius:12px;background:rgba(5,17,30,.72)}
+.settings-fixed-theme i{width:12px;height:12px;flex:0 0 12px;border-radius:50%;background:#d8b675;box-shadow:0 0 0 5px rgba(216,182,117,.12)}
+.settings-fixed-theme b{display:block;color:#f2e4c9!important;font-size:11px}
+.settings-fixed-theme small{display:block;margin-top:3px;color:#9eafc0!important;font-size:9px}
 @media(max-width:760px){
- .student-experience:has(.profile-premium-page)::before,
- .student-experience:has(.settings-premium-page)::before,
- .student-experience:has(.subscription-premium-page)::before{background-position:center top}
+ .student-experience:has(.profile-premium-page),
+ .student-experience:has(.settings-premium-page),
+ .student-experience:has(.subscription-premium-page){background-attachment:scroll!important;background-position:center top!important}
+ .settings-control-chips{justify-content:flex-start}
 }
