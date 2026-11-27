@@ -137,18 +137,29 @@ export async function loadStudentWorkspace() {
   // Always bind the profile lookup to the authenticated JWT subject.
   // Owner accounts can read all profiles under RLS, so an unfiltered limit=1
   // could otherwise load a different student's profile.
-  const [profiles, subscriptions, notifications] = await Promise.all([
+  const [profiles, subscriptions, notifications, preferenceRows] = await Promise.all([
     studentApi("profiles?select=id,full_name,student_number,grade,group_name,avatar_url,is_verified,role,phone,governorate,city,created_at&id=eq." + encodeURIComponent(userId) + "&limit=1"),
     studentApi("emad_student_subscriptions?select=id,grade,starts_at,ends_at&student_id=eq." + encodeURIComponent(userId) + "&ends_at=gt." + encodeURIComponent(new Date().toISOString()) + "&order=ends_at.desc&limit=1"),
     studentApi("emad_notifications?select=id,notification_type,title,body,action_url,read_at,created_at&recipient_id=eq." + encodeURIComponent(userId) + "&order=created_at.desc&limit=30"),
+    studentApi("student_preferences?select=theme,autoplay,playback_speed,notifications,reduce_motion,data_saver,compact_layout,content_scale&user_id=eq." + encodeURIComponent(userId) + "&limit=1"),
   ]);
   const profile = profiles?.[0] || null;
   if (!profile || profile.id !== userId) throw new Error("authenticated_profile_not_found");
   if (profile.role !== "student") throw new Error("student_account_required");
+  const preferences = { theme:"dark",autoplay:false,playback_speed:1,notifications:{platform:true,homework:true,exams:true,messages:true,lessons:true,files:true,subscriptions:true,results:true},reduce_motion:false,data_saver:false,compact_layout:false,content_scale:1,...(preferenceRows?.[0]||{}) };
+  preferences.notifications = {platform:true,homework:true,exams:true,messages:true,lessons:true,files:true,subscriptions:true,results:true,...(preferenceRows?.[0]?.notifications||{})};
+  if (typeof document !== "undefined") {
+    const root=document.documentElement;
+    root.dataset.studentTheme=preferences.theme==="system"?(window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):preferences.theme;
+    root.dataset.studentCompact=preferences.compact_layout?"true":"false";
+    root.dataset.studentReduceMotion=preferences.reduce_motion?"true":"false";
+    root.style.setProperty("--student-content-scale",String(preferences.content_scale||1));
+  }
   return {
     profile,
     subscription: subscriptions?.[0] || null,
     notifications: notifications || [],
+    preferences,
   };
 }
 
