@@ -334,7 +334,7 @@ export async function uploadPortalResource(file, portal = "teacher", onProgress 
 }
 
 export async function deletePortalResource(path, portal = "teacher") {
-  const clean=String(path||"").replace(/^\/+ /,"").replace(/^\/+ /,"");
+  const clean=String(path||"").replace(/^\\/+/, "");
   if(!clean||clean.includes(".."))return;
   const session=await refreshPortalSession(portal);
   if(!session?.access_token)throw new Error("portal_not_authenticated");
