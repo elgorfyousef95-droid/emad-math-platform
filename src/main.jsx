@@ -133,6 +133,7 @@ function TeacherConsole(){
    const list=await portalApi("teacher", "courses?select=id,title,description,subject,grade,status,cover_image_url,created_at&teacher_id=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    const visibleCourses=(list||[]).filter(course=>!/(الجبر|algebra)/i.test(course.title||""));
    setCourses(visibleCourses);
+   if(visibleCourses[0]?.grade)setResourceForm(old=>({...old,grade:old.file_path?old.grade:visibleCourses[0].grade}));
    const resourceRows=await portalApi("teacher","learning_resources?select=id,title,description,grade,course_id,file_path,file_name,mime_type,file_size,is_published,created_at&created_by=eq."+encodeURIComponent(me.id)+"&order=created_at.desc");
    setResources(resourceRows||[]);
    const courseGrades=[...new Set(visibleCourses.map(course=>course.grade).filter(Boolean))];
@@ -198,7 +199,7 @@ function TeacherConsole(){
  const saveResource=async(e)=>{
   e.preventDefault();if(!resourceForm.file_path)return setError("ارفع الملف أولًا قبل حفظه.");if(resourceForm.title.trim().length<3)return setError("اكتب عنوانًا واضحًا للملف.");
   setSaving(true);setError("");setNotice("");
-  try{const rows=await portalApi("teacher","learning_resources",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...resourceForm,title:resourceForm.title.trim(),description:resourceForm.description.trim(),course_id:resourceForm.course_id||null,created_by:profile.id,is_published:false})});const created=Array.isArray(rows)?rows[0]:rows;if(!created?.id)throw new Error("resource_record_missing");setResources(old=>[created,...old]);setResourceForm({title:"",description:"",grade:"الصف الثالث الثانوي",course_id:"",file_path:"",file_name:"",mime_type:"",file_size:0});setResourceProgress(0);setNotice("تم حفظ الملف في المكتبة كمسودة. انشره عندما يصبح جاهزًا.");}
+  try{const rows=await portalApi("teacher","learning_resources",{method:"POST",headers:{Prefer:"return=representation"},body:JSON.stringify({...resourceForm,title:resourceForm.title.trim(),description:resourceForm.description.trim(),grade:courses.find(x=>x.id===resourceForm.course_id)?.grade||resourceForm.grade,course_id:resourceForm.course_id||null,created_by:profile.id,is_published:false})});const created=Array.isArray(rows)?rows[0]:rows;if(!created?.id)throw new Error("resource_record_missing");setResources(old=>[created,...old]);setResourceForm({title:"",description:"",grade:"الصف الثالث الثانوي",course_id:"",file_path:"",file_name:"",mime_type:"",file_size:0});setResourceProgress(0);setNotice("تم حفظ الملف في المكتبة كمسودة. انشره عندما يصبح جاهزًا.");}
   catch(e){setError("تم رفع الملف لكن تعذر تسجيله في المكتبة. راجع الصف الدراسي وصلاحيات المدرس. "+(e.message||""));}
   finally{setSaving(false);}
  };
