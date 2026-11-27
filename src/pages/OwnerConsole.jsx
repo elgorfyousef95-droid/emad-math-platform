@@ -25,6 +25,7 @@ const TABS = [
   ["payments", "المدفوعات", "PAYMENTS"],
   ["messages", "مراسلات الطلاب", "MESSAGES"],
   ["communication", "مركز التواصل والجروبات", "COMMUNICATION"],
+  ["settings", "إعدادات المنصة والأمان", "PLATFORM SETTINGS"],
 ];
 const dateText = (value) => value ? new Date(value).toLocaleString("ar-EG", { dateStyle: "medium", timeStyle: "short" }) : "—";
 const moneyText = (value) => Number(value || 0).toLocaleString("ar-EG") + " ج.م";
@@ -49,6 +50,7 @@ export default function OwnerConsole() {
   const [attempts, setAttempts] = useState([]);
   const [attemptScoreDrafts, setAttemptScoreDrafts] = useState({});
   const [section, setSection] = useState("overview");
+  const [platformSettings,setPlatformSettings] = useState({platform_name:"أكاديمية عماد السنافيري",maintenance_mode:false,student_registration_enabled:true,support_enabled:true,default_video_speed:1,maintenance_message:"نعمل حاليًا على تحسين المنصة. سنعود للعمل قريبًا."});
   const [filter, setFilter] = useState("");
   const [saving, setSaving] = useState("");
   const [busy, setBusy] = useState(true);
@@ -108,6 +110,7 @@ export default function OwnerConsole() {
         ["codes", "emad_subscription_codes?select=id,grade,created_at,redeemed_by,redeemed_at,expires_at,code_hint&order=created_at.desc&limit=500"],
         ["payments", "payments?select=id,student_id,course_id,provider,provider_reference,amount_egp,status,verified_at,created_at&order=created_at.desc&limit=500"],
         ["attempts", "exam_attempts?select=id,exam_id,student_id,started_at,submitted_at,score,graded_at&order=started_at.desc&limit=1000"],
+        ["platformSettings", "platform_settings?select=id,platform_name,maintenance_mode,student_registration_enabled,support_enabled,default_video_speed,maintenance_message,updated_at&id=eq.1"],
       ];
       const values = await Promise.all(specs.map(async ([key, path]) => [key, await read(path)]));
       const data = Object.fromEntries(values);
@@ -128,6 +131,7 @@ export default function OwnerConsole() {
       setCodes(data.codes || []);
       setPayments(data.payments || []);
       setAttempts(data.attempts || []);
+      setPlatformSettings(old=>({...old,...(data.platformSettings?.[0]||{})}));
       if (!selectedCourse && data.courses?.[0]?.id) setSelectedCourse(data.courses[0].id);
     } catch (e) {
       setProfile(null);
@@ -169,6 +173,16 @@ export default function OwnerConsole() {
   const pendingMessages = messages.filter((x) => x.status !== "closed");
   const studentName = (id) => users.find((x) => x.id === id)?.full_name || "حساب طالب";
   const studentNumber = (id) => users.find((x) => x.id === id)?.student_number || "—";
+
+  const savePlatformSettings = async () => {
+    setSaving("platform-settings"); setError(""); setNotice("");
+    try {
+      await portalApi("owner","platform_settings?id=eq.1",{method:"PATCH",headers:{Prefer:"return=minimal"},body:JSON.stringify({...platformSettings,updated_by:profile.id,updated_at:new Date().toISOString()})});
+      setNotice("تم حفظ إعدادات المنصة والأمان في قاعدة البيانات.");
+    } catch (e) {
+      setError("تعذر حفظ إعدادات المنصة. راجع صلاحيات المالك واتصال قاعدة البيانات.");
+    } finally { setSaving(""); }
+  };
 
   const changeRole = async (user, role) => {
     if (user.id === profile.id || !window.confirm("تأكيد تغيير صلاحية " + (user.full_name || user.student_number) + " إلى " + role + "؟")) return;
@@ -766,6 +780,20 @@ export default function OwnerConsole() {
       <p className="owner-warning">هذه صفحة سجل المدفوعات الموجود في قاعدة البيانات فقط. تأكيد الدفع الإلكتروني الآلي لن يكون متاحًا حتى ربط مزود دفع حقيقي والتحقق من إشعاراته الآمنة (Webhook).</p>
     </section>}
 
+    {section==="settings" && <section className="owner-panel owner-platform-settings">
+      <div className="owner-panel-heading"><div><span>PLATFORM CONTROL & SECURITY</span><h2>إعدادات المنصة والأمان</h2></div><small>تتحكم في المنصة الطلابية مباشرة</small></div>
+      <div className="owner-settings-intro"><b>إعدادات عامة مرتبطة بالتطبيق</b><p>التغييرات هنا تُحفظ في قاعدة البيانات وتُقرأ من المنصة الطلابية. بوابة المالك تظل متاحة حتى عند تفعيل وضع الصيانة.</p></div>
+      <div className="owner-settings-grid">
+        <label className="owner-setting-field wide">اسم المنصة الظاهر<input value={platformSettings.platform_name||""} maxLength={100} onChange={e=>setPlatformSettings(old=>({...old,platform_name:e.target.value}))}/></label>
+        <label className="owner-setting-field wide">رسالة وضع الصيانة<textarea rows={3} value={platformSettings.maintenance_message||""} maxLength={500} onChange={e=>setPlatformSettings(old=>({...old,maintenance_message:e.target.value}))}/></label>
+        <article className="owner-setting-toggle"><div><b>وضع الصيانة</b><small>يوقف دخول الطلاب للمنصة مؤقتًا ويعرض رسالة الصيانة. بوابة المالك والمدرس تظل متاحة.</small></div><input type="checkbox" checked={!!platformSettings.maintenance_mode} onChange={e=>setPlatformSettings(old=>({...old,maintenance_mode:e.target.checked}))}/></article>
+        <article className="owner-setting-toggle"><div><b>السماح بإنشاء حسابات طلاب جديدة</b><small>عند الإيقاف لن يتمكن الزائر من فتح نموذج التسجيل.</small></div><input type="checkbox" checked={!!platformSettings.student_registration_enabled} onChange={e=>setPlatformSettings(old=>({...old,student_registration_enabled:e.target.checked}))}/></article>
+        <article className="owner-setting-toggle"><div><b>تفعيل الدعم الفني والمراسلات</b><small>يظهر قسم الدعم للطلاب عند تفعيل هذا الخيار.</small></div><input type="checkbox" checked={!!platformSettings.support_enabled} onChange={e=>setPlatformSettings(old=>({...old,support_enabled:e.target.checked}))}/></article>
+        <label className="owner-setting-field">سرعة الفيديو الافتراضية<select value={platformSettings.default_video_speed||1} onChange={e=>setPlatformSettings(old=>({...old,default_video_speed:Number(e.target.value)}))}>{[0.5,0.75,1,1.25,1.5,1.75,2].map(x=><option key={x} value={x}>{x===1?"عادي":x+"x"}</option>)}</select></label>
+      </div>
+      {platformSettings.maintenance_mode&&<p className="owner-warning">تنبيه: وضع الصيانة سيمنع الطلاب من استخدام المنصة حتى تقوم بإيقافه.</p>}
+      <div className="owner-settings-actions"><button disabled={saving==="platform-settings"} onClick={savePlatformSettings}>{saving==="platform-settings"?"جارٍ حفظ الإعدادات...":"حفظ إعدادات المنصة"}</button><span>آخر حفظ: {dateText(platformSettings.updated_at)}</span></div>
+    </section>}
     {section==="communication" && <ChatWorkspace profile={profile} mode="owner" portal="owner"/>}
 
     {section==="messages" && <section className="owner-panel owner-inbox">
