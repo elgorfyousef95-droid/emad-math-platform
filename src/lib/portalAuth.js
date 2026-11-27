@@ -293,3 +293,52 @@ export async function deletePortalVideo(value, portal = "owner") {
     throw new Error(data.message || "video_delete_failed");
   }
 }
+
+
+const RESOURCE_MAX_BYTES = 100 * 1024 * 1024;
+const RESOURCE_TYPES = new Set([
+  "application/pdf","application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain","image/jpeg","image/png","image/webp"
+]);
+
+export async function uploadPortalResource(file, portal = "teacher", onProgress = () => {}) {
+  if (!file || !RESOURCE_TYPES.has(file.type)) throw new Error("unsupported_resource_type");
+  if (file.size > RESOURCE_MAX_BYTES) throw new Error("resource_too_large");
+  const session = await refreshPortalSession(portal);
+  if (!session?.access_token) throw new Error("portal_not_authenticated");
+  const { url, key } = config();
+  const host = videoStorageHost(url);
+  const endpoint = "https://" + host + "/storage/v1/upload/resumable";
+  const extension = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g,"") || "bin";
+  const folder = portal === "teacher" ? "teacher/" + session.user?.id : "owner/" + session.user?.id;
+  const path = folder + "/resources/" + crypto.randomUUID() + "." + extension;
+  const metadata = [
+    ["bucketName","emad-learning-files"],["objectName",path],["contentType",file.type],["cacheControl","3600"]
+  ].map(([name,value])=>name+" "+encodeTusMetadata(value)).join(",");
+  const created = await tusRequest(endpoint,{method:"POST",headers:{"Upload-Length":String(file.size),"Upload-Metadata":metadata,"x-upsert":"false"}},session.access_token,key);
+  if(created.status!==201){const detail=await created.text().catch(()=>"");const error=new Error("resource_upload_start_failed");error.status=created.status;error.detail=detail;throw error;}
+  const location=created.headers.get("Location");
+  if(!location)throw new Error("resource_upload_location_missing");
+  const uploadUrl=new URL(location,endpoint).toString();
+  let offset=0;
+  while(offset<file.size){
+    const end=Math.min(offset+TUS_CHUNK_BYTES,file.size);
+    const response=await tusRequest(uploadUrl,{method:"PATCH",headers:{"Content-Type":"application/offset+octet-stream","Upload-Offset":String(offset)},body:file.slice(offset,end)},session.access_token,key);
+    if(response.status===204){offset=Number(response.headers.get("Upload-Offset")||end);onProgress(Math.min(100,Math.round(offset/file.size*100)),offset,file.size);continue;}
+    if(response.status===409){offset=await tusOffset(uploadUrl,session.access_token,key);continue;}
+    const detail=await response.text().catch(()=>"");const error=new Error("resource_upload_chunk_failed");error.status=response.status;error.detail=detail;throw error;
+  }
+  return path;
+}
+
+export async function deletePortalResource(path, portal = "teacher") {
+  const clean=String(path||"").replace(/^\/+ /,"").replace(/^\/+ /,"");
+  if(!clean||clean.includes(".."))return;
+  const session=await refreshPortalSession(portal);
+  if(!session?.access_token)throw new Error("portal_not_authenticated");
+  const {url,key}=config();
+  const response=await fetch(url+"/storage/v1/object/emad-learning-files/"+clean.split("/").map(encodeURIComponent).join("/"),{method:"DELETE",headers:{apikey:key,Authorization:"Bearer "+session.access_token}});
+  if(!response.ok&&response.status!==404){const data=await response.json().catch(()=>({}));throw new Error(data.message||"resource_delete_failed");}
+}
