@@ -229,3 +229,14 @@ export async function getStudentResourceUrl(path) {
   if (!signed) throw new Error("resource_signed_url_missing");
   return /^https?:\/\//i.test(signed) ? signed : url + (signed.startsWith("/") ? signed : "/" + signed);
 }
+
+
+export async function getPublicPlatformSettings() {
+  const { url, key } = config();
+  const response = await fetch(url + "/rest/v1/platform_settings?select=platform_name,maintenance_mode,student_registration_enabled,support_enabled,default_video_speed,maintenance_message&id=eq.1", {
+    headers: { apikey: key },
+  });
+  if (!response.ok) throw new Error("platform_settings_unavailable");
+  const rows = await response.json().catch(() => []);
+  return rows?.[0] || null;
+}
