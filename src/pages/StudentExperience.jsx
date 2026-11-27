@@ -3,7 +3,7 @@ import "./StudentExperience.css";
 import "./StudentExperiencePremium.css";
 
 const primary = [
- ["home","الرئيسية","home"],["courses","الكورسات","book"],["lessons","المحاضرات","play"],["exams","الامتحانات","exam"],["homework","الواجبات","task"],["files","المذكرات والملفات","file"],["results","النتائج","chart"]
+ ["home","الرئيسية","home"],["curriculum","المسار التعليمي","book"],["courses","الكورسات","book"],["lessons","المحاضرات","play"],["exams","الامتحانات","exam"],["homework","الواجبات","task"],["files","المذكرات والملفات","file"],["results","النتائج","chart"]
 ];
 const secondary = [
  ["schedule","جدول الحصص","calendar"],["live","المحاضرات المباشرة","live"],["groups","الجروبات الدراسية","users"],["ai","المساعد الذكي","spark"],["messages","الدعم الفني","support"]
@@ -30,7 +30,7 @@ export default function StudentExperience({page,profile,grade,unread,go,logout,c
   {drawer?<button className="se-backdrop" aria-label="إغلاق القائمة" onClick={()=>setDrawer(false)}/>:null}
   <div className="se-main">
    <header className="se-topbar">
-    <div className="se-top-start"><button className="se-menu-toggle" onClick={()=>setDrawer(v=>!v)} aria-label="فتح أو إغلاق القائمة" aria-expanded={drawer}><span/><span/><span/></button><div className="se-breadcrumb"><small>مساحة الطالب</small><b>{({home:"الرئيسية",courses:"الكورسات",lessons:"المحاضرات",exams:"الامتحانات",homework:"الواجبات",files:"المذكرات والملفات",results:"النتائج",schedule:"جدول الحصص",live:"المحاضرات المباشرة",groups:"الجروبات الدراسية",ai:"المساعد الذكي",messages:"الدعم الفني",subscriptions:"الاشتراكات",notifications:"الإشعارات",profile:"الملف الشخصي",settings:"الإعدادات",admin:"لوحة الإدارة"})[page]||"المنصة"}</b></div></div>
+    <div className="se-top-start"><button className="se-menu-toggle" onClick={()=>setDrawer(v=>!v)} aria-label="فتح أو إغلاق القائمة" aria-expanded={drawer}><span/><span/><span/></button><div className="se-breadcrumb"><small>مساحة الطالب</small><b>{({home:"الرئيسية",curriculum:"المسار التعليمي",courses:"الكورسات",lessons:"المحاضرات",exams:"الامتحانات",homework:"الواجبات",files:"المذكرات والملفات",results:"النتائج",schedule:"جدول الحصص",live:"المحاضرات المباشرة",groups:"الجروبات الدراسية",ai:"المساعد الذكي",messages:"الدعم الفني",subscriptions:"الاشتراكات",notifications:"الإشعارات",profile:"الملف الشخصي",settings:"الإعدادات",admin:"لوحة الإدارة"})[page]||"المنصة"}</b></div></div>
     <div className="se-top-actions"><span className="se-grade-chip">{grade||"لم يحدد الصف"}</span><button className="se-notify" onClick={()=>go("notifications")} aria-label="الإشعارات"><SEIcon name="bell"/>{unread>0?<i>{unread>99?"99+":unread}</i>:null}</button><div className="se-account-wrap"><button className="se-account" onClick={()=>setAccount(v=>!v)}><span className="se-avatar small">{profile?.avatar_url?<img src={profile.avatar_url} alt=""/>:"ط"}</span><span><b>{profile?.full_name||"الطالب"}</b><small>حسابي</small></span><span className="se-account-chevron">⌄</span></button>{account?<div className="se-account-menu"><button onClick={()=>{go("profile");setAccount(false)}}>الملف الشخصي</button><button onClick={()=>{go("settings");setAccount(false)}}>إعدادات الحساب</button><button onClick={()=>{logout();setAccount(false)}}>تسجيل الخروج</button></div>:null}</div></div>
    </header>
    <div className="se-content" ref={contentRef} key={page}>{children}</div>
