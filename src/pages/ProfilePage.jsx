@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState} from "react";
+import React,{useEffect,useState} from "react";
 import {studentApi,uploadStudentAvatar} from "../lib/auth.js";
 
 export default function ProfilePage({profile,subscription,notifications=[],grade,go,loading,onProfileUpdated}){
