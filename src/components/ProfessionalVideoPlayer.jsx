@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./ProfessionalVideoPlayer.css";
-import { studentApi } from "../lib/auth.js";
+import { studentApi, getPublicPlatformSettings } from "../lib/auth.js";
 function timeLabel(value){const n=Math.max(0,Math.floor(Number(value)||0)),h=Math.floor(n/3600),m=Math.floor(n%3600/60),s=n%60;return h?[h,m,s].map(x=>String(x).padStart(2,"0")).join(":"):[m,s].map(x=>String(x).padStart(2,"0")).join(":");}
 export default function ProfessionalVideoPlayer({src,poster,title="المحاضرة",defaultSpeed=1,autoPlay=false,onEnded}){
  const wrapRef=useRef(null),videoRef=useRef(null),hideRef=useRef(null);
@@ -8,7 +8,7 @@ export default function ProfessionalVideoPlayer({src,poster,title="المحاض�
  useEffect(()=>{setCurrent(0);setDuration(0);setError("");setPlaying(false);videoRef.current?.load();},[src]);
  useEffect(()=>{const node=wrapRef.current;if(!node)return;const onFull=()=>setFull(document.fullscreenElement===node);document.addEventListener("fullscreenchange",onFull);return()=>document.removeEventListener("fullscreenchange",onFull);},[]);
  useEffect(()=>{if(videoRef.current)videoRef.current.playbackRate=speed;},[speed]);
- useEffect(()=>{let live=true;studentApi("student_preferences?select=playback_speed,autoplay&limit=1").then(rows=>{if(live&&rows?.[0]){setSpeed(Number(rows[0].playback_speed)||1);setPreferredAutoPlay(rows[0].autoplay===true||autoPlay);}}).catch(()=>{});return()=>{live=false;};},[]);
+ useEffect(()=>{let live=true;const load=async()=>{let rows=[];try{rows=await studentApi("student_preferences?select=playback_speed,autoplay&limit=1");}catch{}if(!live)return;if(rows?.[0]){setSpeed(Number(rows[0].playback_speed)||1);setPreferredAutoPlay(rows[0].autoplay===true||autoPlay);}else{try{const settings=await getPublicPlatformSettings();if(live&&settings)setSpeed(Number(settings.default_video_speed)||1);}catch{}}};load();return()=>{live=false;};},[]);
  useEffect(()=>{if(preferredAutoPlay&&src)videoRef.current?.play().catch(()=>{});},[src,preferredAutoPlay]);
  const seek=value=>{const v=videoRef.current;if(!v||!Number.isFinite(v.duration))return;v.currentTime=Math.max(0,Math.min(v.duration,Number(value)));setCurrent(v.currentTime);};
  const togglePlay=()=>{const v=videoRef.current;if(!v)return;v.paused?v.play().catch(()=>setError("تعذر بدء تشغيل الفيديو.")):v.pause();};
