@@ -12,7 +12,7 @@ import StudentSettingsPage from "./pages/SettingsPage.jsx";
 import StudentSubscriptionsPage from "./pages/SubscriptionsPage.jsx";
 import StudentFilesPage from "./pages/FilesPage.jsx";
 import MessageProvider, { notify } from "./components/MessageProvider.jsx";
-import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode } from "./lib/auth.js";
+import { refreshStudentSession, clearStudentSession, loadStudentWorkspace, studentApi, redeemStudentSubscription, markStudentNotificationRead, issueStudentSubscriptionCode, getPublicPlatformSettings } from "./lib/auth.js";
 import { portalLogin, setupPortalAccounts, refreshPortalSession, portalApi, logoutPortalSession, uploadPortalImage, uploadPortalVideo, deletePortalVideo, uploadPortalResource, deletePortalResource } from "./lib/portalAuth.js";
 import OwnerConsole from "./pages/OwnerConsole.jsx";
 import ReviewGate from "./pages/ReviewGate.jsx";
@@ -337,9 +337,10 @@ function TeacherConsole(){
 }
 
 function App(){
- const [page,setPage]=useState("splash"),[profile,setProfile]=useState(null),[subscription,setSubscription]=useState(null),[notifications,setNotifications]=useState([]),[moreOpen,setMoreOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[mobileNav,setMobileNav]=useState(false),[loading,setLoading]=useState(false);
+ const [page,setPage]=useState("splash"),[profile,setProfile]=useState(null),[subscription,setSubscription]=useState(null),[notifications,setNotifications]=useState([]),[moreOpen,setMoreOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[mobileNav,setMobileNav]=useState(false),[loading,setLoading]=useState(false),[platformSettings,setPlatformSettings]=useState({platform_name:"أكاديمية عماد السنافيري",maintenance_mode:false,student_registration_enabled:true,support_enabled:true,default_video_speed:1,maintenance_message:"نعمل حاليًا على تحسين المنصة. سنعود للعمل قريبًا."}),[platformSettingsLoaded,setPlatformSettingsLoaded]=useState(false);
  const pageRef=useRef(page);
  useEffect(()=>{pageRef.current=page;},[page]);
+ useEffect(()=>{let live=true;getPublicPlatformSettings().then(settings=>{if(live&&settings)setPlatformSettings(old=>({...old,...settings}));}).catch(error=>console.warn("platform_settings_load",error)).finally(()=>{if(live)setPlatformSettingsLoaded(true);});return()=>{live=false;};},[]);
  useEffect(()=>{const marker="emad-platform";const current={marker,page:"splash"};try{window.history.replaceState({marker,guard:true},"",window.location.href);window.history.pushState(current,"",window.location.href);}catch{}const onPopState=event=>{const state=event.state;const validPages=["splash","login","signup","home","courses","lessons","exams","homework","files","results","schedule","live","messages","ai","subscriptions","profile","settings","groups","admin","notifications"];if(state?.marker===marker&&!state.guard&&validPages.includes(state.page)){pageRef.current=state.page;setPage(state.page);setMoreOpen(false);setAccountOpen(false);setMobileNav(false);return;}try{window.history.pushState({marker,page:pageRef.current},"",window.location.href);}catch{setPage(pageRef.current);}};window.addEventListener("popstate",onPopState);return()=>window.removeEventListener("popstate",onPopState);},[]);
  const loadWorkspace=async()=>{setLoading(true);try{const w=await loadStudentWorkspace();setProfile(w.profile);setSubscription(w.subscription);setNotifications(w.notifications);return w;}catch(e){console.error("workspace_load",e);setProfile(null);setSubscription(null);setNotifications([]);throw e;}finally{setLoading(false);}};
  const completeSplash=async()=>{try{const session=await refreshStudentSession();if(session?.access_token){await loadWorkspace();go("home");}else{setProfile(null);setSubscription(null);setNotifications([]);go("login");}}catch{clearStudentSession();setProfile(null);setSubscription(null);setNotifications([]);go("login");}};
@@ -353,12 +354,15 @@ function App(){
  if(window.location.pathname.replace(/\/$/,"")==="/review")return <ReviewGate/>;
  if(window.location.pathname.replace(/\/$/,"")==="/owner")return <OwnerConsole/>;
  if(window.location.pathname.replace(/\/$/,"")==="/teacher")return <TeacherConsole/>;
+ if(platformSettingsLoaded&&platformSettings.maintenance_mode)return <main className="platform-maintenance-screen" dir="rtl"><section><span>EMAD ACADEMY · SYSTEM CARE</span><div className="platform-maintenance-mark">✦</div><h1>{platformSettings.platform_name||"أكاديمية عماد السنافيري"}</h1><h2>المنصة في وضع الصيانة</h2><p>{platformSettings.maintenance_message||"نعمل حاليًا على تحسين المنصة. سنعود للعمل قريبًا."}</p><small>بوابة الإدارة والمدرس متاحة لإدارة المنصة.</small></section></main>;
+
  if(page==="splash")return <SplashScreen onComplete={completeSplash}/>;
+ if(page==="signup"&&!platformSettings.student_registration_enabled)return <main className="platform-maintenance-screen" dir="rtl"><section><span>STUDENT REGISTRATION</span><div className="platform-maintenance-mark">✦</div><h1>التسجيل متوقف مؤقتًا</h1><p>إنشاء حسابات جديدة غير متاح حاليًا. يمكنك تسجيل الدخول إذا كان لديك حساب بالفعل.</p><button onClick={()=>go("login")}>العودة لتسجيل الدخول</button></section></main>;
  if(page==="login"||page==="signup")return <div className="auth-entry-reveal"><AuthScreen mode={page} onModeChange={go} onSuccess={async()=>{try{await loadWorkspace();go("home");}catch(error){clearStudentSession();go("login");throw error;}}}/></div>;
  const needsSubscription=["courses","lessons","exams","homework","files","results","schedule","live","ai"].includes(page);
  const activeSubscription=subscription&&new Date(subscription.ends_at)>new Date();
  const isLocked=needsSubscription&&!activeSubscription;
- return <StudentExperience page={page} profile={profile} grade={grade} unread={unread} go={go} logout={logout}>
+ return <StudentExperience page={page} profile={profile} grade={grade} unread={unread} go={go} logout={logout} supportEnabled={platformSettings.support_enabled}>
    {page==="home"?<HomePage profile={profile} subscription={activeSubscription?subscription:null} go={go} grade={grade} unread={unread}/>:null}
    {page==="subscriptions"?<StudentSubscriptionsPage subscription={subscription} onActivated={async()=>{await loadWorkspace();notify({type:"success",title:"تم تفعيل الاشتراك",message:"تم تفعيل اشتراكك الشهري بنجاح."});}}/>:null}
    {page==="profile"?<StudentProfilePage profile={profile} subscription={subscription} notifications={notifications} grade={grade} go={go} loading={loading} onProfileUpdated={setProfile}/>:null}
@@ -368,7 +372,7 @@ function App(){
    {isLocked?<LockedPage go={go} grade={grade}/>:null}
    {!isLocked&&["courses","lessons","exams"].includes(page)?<LearningPage page={page} grade={grade} profile={profile}/>:null}
    {!isLocked&&["homework","files","results","schedule","live","ai","groups"].includes(page)?<SectionPage page={page} go={go} profile={profile}/>:null}
-   {page==="messages"?<SectionPage page={page} go={go} profile={profile}/>:null}
+   {page==="messages"?(platformSettings.support_enabled?<SectionPage page={page} go={go} profile={profile}/>:<div className="platform-page"><div className="platform-empty-state"><b>الدعم الفني متوقف مؤقتًا</b><span>يمكنك متابعة الكورسات والواجبات والاشتراك بصورة طبيعية.</span></div></div>):null}
    {page==="admin"&&profile?.role!=="admin"?<SectionPage page={page} go={go}/>:null}
   </StudentExperience>;
 }
