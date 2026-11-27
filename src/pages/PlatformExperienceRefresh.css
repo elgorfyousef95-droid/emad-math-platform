@@ -458,3 +458,7 @@
 .teacher-studio-content{min-width:0;width:100%}
 @media(max-width:1050px){.teacher-studio-body{grid-template-columns:1fr!important}.teacher-studio-sidebar{position:static!important}.teacher-tabs{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:640px){.teacher-shell{padding:8px!important}.teacher-header{min-height:0!important;padding:19px!important;border-radius:17px!important}.teacher-header-actions{display:flex;flex-wrap:wrap}.teacher-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-tabs{grid-template-columns:repeat(2,minmax(0,1fr))!important}.teacher-tabs button{min-height:46px!important;padding:8px!important;font-size:9px!important}.teacher-panel{border-radius:15px!important}.teacher-overview-actions button{min-height:112px!important;padding:13px!important}}
+
+/* Course/lecture artwork: preserve the uploaded image without unwanted zoom or cropping. */
+.teacher-course-detail-image{width:100%!important;max-height:420px!important;aspect-ratio:16/9!important;object-fit:contain!important;object-position:center!important;background:#071525!important;padding:8px!important;border:1px solid #d8b66b44!important}
+.teacher-video-preview{background:#020812!important;object-fit:contain!important}
