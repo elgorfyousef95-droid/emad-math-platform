@@ -36,3 +36,15 @@ drop policy if exists emad_student_avatar_update_self on storage.objects;
 create policy emad_student_avatar_update_self on storage.objects for update to authenticated using(bucket_id='emad-student-avatars' and (storage.foldername(name))[1]=(select auth.uid())::text) with check(bucket_id='emad-student-avatars' and (storage.foldername(name))[1]=(select auth.uid())::text);
 drop policy if exists emad_student_avatar_delete_self on storage.objects;
 create policy emad_student_avatar_delete_self on storage.objects for delete to authenticated using(bucket_id='emad-student-avatars' and (storage.foldername(name))[1]=(select auth.uid())::text);
+
+
+-- Owner-managed platform settings. Only non-secret operational settings are public-readable.
+create table if not exists public.platform_settings (id smallint primary key default 1 check(id=1),platform_name text not null default 'أكاديمية عماد السنافيري',maintenance_mode boolean not null default false,student_registration_enabled boolean not null default true,support_enabled boolean not null default true,default_video_speed numeric(3,2) not null default 1.00 check(default_video_speed between 0.5 and 2.0),maintenance_message text not null default 'نعمل حاليًا على تحسين المنصة. سنعود للعمل قريبًا.',updated_by uuid references public.profiles(id),updated_at timestamptz not null default now());
+insert into public.platform_settings(id) values(1) on conflict(id) do nothing;
+alter table public.platform_settings enable row level security;
+drop policy if exists platform_settings_public_read on public.platform_settings;
+create policy platform_settings_public_read on public.platform_settings for select to anon,authenticated using(true);
+drop policy if exists platform_settings_owner_manage_all on public.platform_settings;
+create policy platform_settings_owner_manage_all on public.platform_settings for all to authenticated using((select private.current_profile_role())='owner') with check((select private.current_profile_role())='owner');
+grant select on public.platform_settings to anon,authenticated;
+grant insert,update,delete on public.platform_settings to authenticated;
