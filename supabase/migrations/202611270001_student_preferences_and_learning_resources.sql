@@ -1,5 +1,10 @@
 -- Student settings, protected learning-resource library, and self-owned avatar uploads
 create table if not exists public.student_preferences (user_id uuid primary key references public.profiles(id) on delete cascade,theme text not null default 'dark' check(theme in ('dark','light','system')),autoplay boolean not null default false,playback_speed numeric(3,2) not null default 1.00 check(playback_speed between 0.5 and 2.0),notifications jsonb not null default '{"platform":true,"homework":true,"exams":true,"messages":true}'::jsonb,updated_at timestamptz not null default now());
+alter table public.student_preferences add column if not exists reduce_motion boolean not null default false;
+alter table public.student_preferences add column if not exists data_saver boolean not null default false;
+alter table public.student_preferences add column if not exists compact_layout boolean not null default false;
+alter table public.student_preferences add column if not exists content_scale numeric(3,2) not null default 1.00 check(content_scale between 0.90 and 1.20);
+
 alter table public.student_preferences enable row level security;
 drop policy if exists student_preferences_read_self on public.student_preferences;
 create policy student_preferences_read_self on public.student_preferences for select to authenticated using(user_id=(select auth.uid()));
