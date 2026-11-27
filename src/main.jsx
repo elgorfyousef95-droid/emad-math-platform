@@ -350,7 +350,7 @@ function App(){
  const grade=profile?.grade||"";
  const nav=navByGrade[grade]||navByGrade["الصف الأول الثانوي"];
  const unread=notifications.filter(n=>!n.read_at).length;
- const go=next=>{const validPages=["splash","login","signup","home","courses","lessons","exams","homework","files","results","schedule","live","messages","ai","subscriptions","profile","settings","groups","admin","notifications"];if(!validPages.includes(next)||next===pageRef.current)return;try{const state={marker:"emad-platform",page:next};if(["splash","login","signup"].includes(pageRef.current))window.history.replaceState(state,"",window.location.href);else window.history.pushState(state,"",window.location.href);}catch{}pageRef.current=next;setPage(next);setMoreOpen(false);setAccountOpen(false);setMobileNav(false);};
+ const go=next=>{const validPages=["splash","login","signup","home","curriculum","courses","lessons","exams","homework","files","results","schedule","live","messages","ai","subscriptions","profile","settings","groups","admin","notifications"];if(!validPages.includes(next)||next===pageRef.current)return;try{const state={marker:"emad-platform",page:next};if(["splash","login","signup"].includes(pageRef.current))window.history.replaceState(state,"",window.location.href);else window.history.pushState(state,"",window.location.href);}catch{}pageRef.current=next;setPage(next);setMoreOpen(false);setAccountOpen(false);setMobileNav(false);};
  const logout=()=>{clearStudentSession();setProfile(null);setSubscription(null);setNotifications([]);go("login");};
  if(window.location.pathname.replace(/\/$/,"")==="/review")return <ReviewGate/>;
  if(window.location.pathname.replace(/\/$/,"")==="/owner")return <OwnerConsole/>;
