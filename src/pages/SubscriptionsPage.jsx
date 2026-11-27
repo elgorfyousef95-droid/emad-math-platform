@@ -1,6 +1,6 @@
 import React,{useState} from "react";
 import {redeemStudentSubscription} from "../lib/auth.js";
-import {notify} from "./MessageProvider.jsx";
+import {notify} from "../components/MessageProvider.jsx";
 export default function SubscriptionsPage({subscription,onActivated}){
  const [code,setCode]=useState(""),[busy,setBusy]=useState(false);
  const active=subscription&&new Date(subscription.ends_at)>new Date(),start=subscription?.starts_at?new Date(subscription.starts_at):null,end=subscription?.ends_at?new Date(subscription.ends_at):null,days=end?Math.max(0,Math.ceil((end-Date.now())/86400000)):0;
