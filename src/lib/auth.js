@@ -240,3 +240,34 @@ export async function getPublicPlatformSettings() {
   const rows = await response.json().catch(() => []);
   return rows?.[0] || null;
 }
+
+export async function updateStudentPassword(newPassword) {
+  if (typeof newPassword !== "string" || newPassword.length < 8) throw new Error("password_too_short");
+  const session = await refreshStudentSession();
+  if (!session?.access_token) throw new Error("not_authenticated");
+  const { url, key } = config();
+  const response = await fetch(url + "/auth/v1/user", {
+    method: "PUT",
+    headers: { apikey: key, Authorization: "Bearer " + session.access_token, "Content-Type": "application/json" },
+    body: JSON.stringify({ password: newPassword }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.msg || data.message || data.error_description || "password_update_failed");
+  return true;
+}
+
+export async function logoutStudentEverywhere() {
+  const session = await refreshStudentSession();
+  if (!session?.access_token) { clearStudentSession(); return true; }
+  const { url, key } = config();
+  const response = await fetch(url + "/auth/v1/logout?scope=global", {
+    method: "POST",
+    headers: { apikey: key, Authorization: "Bearer " + session.access_token },
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || "global_logout_failed");
+  }
+  clearStudentSession();
+  return true;
+}
