@@ -764,3 +764,7 @@ html[data-student-theme="light"] .settings-choice-card select,html[data-student-
 html[data-student-compact="true"] .profile-premium-facts,html[data-student-compact="true"] .settings-choice-grid,html[data-student-compact="true"] .settings-notification-grid{gap:6px}
 html[data-student-compact="true"] .profile-premium-facts article,html[data-student-compact="true"] .settings-choice-card,html[data-student-compact="true"] .settings-notification-grid article{padding:9px}
 html[data-student-reduce-motion="true"] *,html[data-student-reduce-motion="true"] *:before,html[data-student-reduce-motion="true"] *:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+
+.se-content{font-size:calc(1rem * var(--student-content-scale,1))}
+html[data-student-theme="light"] .profile-premium-hero,html[data-student-theme="light"] .settings-premium-hero,html[data-student-theme="light"] .subscription-premium-hero{color:#fff}
+html[data-student-theme="light"] .profile-premium-cover{color:#fff}
